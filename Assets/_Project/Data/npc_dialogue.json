@@ -1,0 +1,263 @@
+{
+  "refusals": [
+    "그 일은 내가 그대에게 답할 수 있는 바가 아니오.",
+    "그건 내 검시 보고서에 적힌 내용이 아니오.",
+    "그 질문에는 내가 해 줄 말이 없소.",
+    "그대가 물을 수 있는 일이 아닌 듯하오.",
+    "그 일에 대해서는 알려 줄 것이 없소."
+  ],
+  "openers": ["", "들어 보시오.", "그 일이라면,", "보고서에 따르면,", "음,"],
+  "closers": ["", "이상이오.", "그뿐이오.", "더 묻겠소?", "참고하시오."],
+  "topics": [
+    {
+      "id": "T_VICTIM", "category": "Person", "label": "윤 대감", "visibleIfAny": [],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["F_HEO_TERMINAL"], "conveysFacts": ["F_HEO_TERMINAL"], "variants": [
+          "대감의 병이 깊어 길어야 두어 달이었다는 것은, 그대가 직접 아는 일이오.",
+          "그대 말대로라면 대감은 속병으로 두어 달밖에 남지 않았던 몸이오.",
+          "대감이 병을 숨기고 있었다는 건 그대가 알고 있는 사실이오." ] },
+        { "tier": 1, "requiredFacts": ["D2"], "conveysFacts": ["D2"], "variants": [
+          "대감이 직접 쓴 기록에 따르면, 올봄부터 병이 깊었다고 하오.",
+          "그대가 가진 대감의 기록에는 병을 숨기라 한 게 대감 자신이라고 적혀 있소.",
+          "대감 자필 기록대로라면 대감은 오래 앓고 있었소." ] },
+        { "tier": 0, "requiredFacts": ["P_DECLARATION"], "conveysFacts": ["P_DECLARATION"], "variants": [
+          "대감은 어제 잔치에서 양자, 열녀 표창, 장부 일을 분명히 했다고 들었소.",
+          "어제 낮 대감이 집안 어른들 앞에서 몇 가지를 못 박았다는 건 모두가 아는 일이오.",
+          "대감은 내일 아침 양자 도장을 찍겠다고 했다 하오. 다들 들은 이야기요." ] }
+      ]
+    },
+    {
+      "id": "T_CAUSE", "category": "Event", "label": "사인", "visibleIfAny": [],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["E1", "F_HEO_FAINT_MEANS_SMALL"], "conveysFacts": ["E1", "F_HEO_FAINT_MEANS_SMALL"], "variants": [
+          "은비녀는 아주 옅게 변했소. 옅은 반응이 무슨 뜻인지는 의원인 그대가 더 잘 알 것이오.",
+          "독 반응은 옅었소. 그 색이 뜻하는 바는 그대가 이미 알고 있지 않소.",
+          "은비녀 색이 옅었다는 것, 그리고 그 뜻은 그대의 지식 안에 있소." ] },
+        { "tier": 0, "requiredFacts": ["E1"], "conveysFacts": ["E1"], "variants": [
+          "한약 사발에 은비녀를 넣었더니 검게 변했소. 독이 들어 있었다는 뜻이오.",
+          "은비녀가 한약에 닿자 검게 물들었소. 다만 색은 아주 옅었소.",
+          "검사해 보니 한약에 독이 섞여 있었소. 은비녀 색이 옅게 변했지." ] }
+      ]
+    },
+    {
+      "id": "T_TOD", "category": "Event", "label": "숨진 시각", "visibleIfAny": [],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["E4", "F_BUNI_ALIVE_0045"], "conveysFacts": ["E4", "F_BUNI_ALIVE_0045"], "variants": [
+          "검시로는 새벽 1시에서 3시 사이요. 그대가 12시 45분쯤 숨소리를 들었다는 것과 어긋나지 않소.",
+          "그대가 들은 12시 45분의 숨소리는 검시 결과와 맞지 않는 데가 없소. 숨진 건 새벽 1~3시 사이요.",
+          "새벽 1시에서 3시 사이라는 검시와, 그대가 겪은 12시 45분 일은 서로 어긋나지 않소." ] },
+        { "tier": 1, "requiredFacts": ["E4", "F_BYEON_DEAD_0130"], "conveysFacts": ["E4", "F_BYEON_DEAD_0130"], "variants": [
+          "검시로는 새벽 1시에서 3시 사이요. 그대가 1시 반에 겪은 일과 어긋나지 않소.",
+          "그대가 아는 1시 반의 일은 검시 결과와 맞지 않는 데가 없소.",
+          "새벽 1~3시라는 검시와 그대가 겪은 1시 반의 일은 서로 어긋나지 않소." ] },
+        { "tier": 0, "requiredFacts": ["E4"], "conveysFacts": ["E4"], "variants": [
+          "검시해 보니 대감이 숨진 때는 새벽 1시에서 3시 사이로 보이오.",
+          "숨진 시각은 새벽 1시부터 3시 사이요. 더 좁히는 건 그대들의 몫이오.",
+          "몸의 상태로 보아 새벽 1시와 3시 사이에 숨을 거두었소." ] }
+      ]
+    },
+    {
+      "id": "T_GATE", "category": "Place", "label": "중문", "visibleIfAny": [],
+      "entries": [
+        { "tier": 0, "requiredFacts": ["E5"], "conveysFacts": ["E5"], "variants": [
+          "중문 빗장은 안쪽에서 걸려 있었고, 문지기는 밤새 연 사람이 없다고 했소.",
+          "문지기 말로는 밤새 중문은 열리지 않았소. 나도 바깥채에서 잤소.",
+          "중문은 안에서 잠겨 있었소. 바깥 사람은 들어갈 수 없었다는 뜻이오." ] }
+      ]
+    },
+    {
+      "id": "T_TANGYAK", "category": "Evidence", "label": "한약", "visibleIfAny": [],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["P_BUNI_BREWS", "N2"], "conveysFacts": ["P_BUNI_BREWS", "N2"], "variants": [
+          "부엌 약탕관 찌꺼기에서는 독 반응이 없었소. 달일 때는 독이 없었던 것이오.",
+          "약탕관에 남은 찌꺼기에 은비녀를 넣어도 그대로였소. 달이는 동안엔 독이 없었소.",
+          "부엌에서 달인 한약 찌꺼기는 깨끗했소. 그대가 직접 확인한 대로요." ] },
+        { "tier": 0, "requiredFacts": ["P_BUNI_BREWS"], "conveysFacts": ["P_BUNI_BREWS"], "variants": [
+          "한약은 늘 분이가 부엌에서 달여 사랑방으로 가져갔다고 하오.",
+          "대감의 한약을 달이는 건 분이의 일이었다 들었소.",
+          "한약은 부엌에서 달여 사랑방 상에 올렸다 하오." ] }
+      ]
+    },
+    {
+      "id": "T_RATPOISON", "category": "Evidence", "label": "쥐약 단지", "visibleIfAny": ["C2", "F_JEONG_RATPOISON_KNOWN", "F_JAEHA_TOOK_POISON"],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["C2"], "conveysFacts": ["C2"], "variants": [
+          "창고 쥐약 단지는 뚜껑이 비뚤었고 가루가 흘러 있었소. 옆에 기름 몇 방울도 있었지.",
+          "쥐약 단지를 누군가 건드린 흔적이 있었소. 바닥엔 등잔 기름이 떨어져 있었소.",
+          "단지 뚜껑이 제대로 닫혀 있지 않았고, 근처에 기름 방울이 있었소. 그대가 본 대로요." ] },
+        { "tier": 0, "requiredFacts": ["F_JEONG_RATPOISON_KNOWN"], "conveysFacts": ["F_JEONG_RATPOISON_KNOWN"], "variants": [
+          "창고 구석에 쥐약 단지가 있다는 건 그대도 아는 일이오.",
+          "쥐약 단지가 창고에 있다는 것, 그대는 이미 알고 있소.",
+          "그대 말대로 창고에는 비상으로 만든 쥐약이 있소." ] },
+        { "tier": 0, "requiredFacts": ["F_JAEHA_TOOK_POISON"], "conveysFacts": ["F_JAEHA_TOOK_POISON"], "variants": [
+          "창고에 쥐약 단지가 있다는 건 그대도 아는 일이오.",
+          "쥐약 단지가 창고에 있다는 것, 그대는 이미 알고 있소.",
+          "창고에는 비상으로 만든 쥐약이 있소. 그대가 아는 대로요." ] }
+      ]
+    },
+    {
+      "id": "T_MUD", "category": "Evidence", "label": "진흙 자국", "visibleIfAny": ["C3a", "C3b", "C3c", "C8"],
+      "entries": [
+        { "tier": 3, "requiredFacts": ["C3a"], "conveysFacts": ["C3a"], "variants": [
+          "대청 계단에서 서재 문까지 큰 가죽신 자국이 이어져 있었소. 신을 벗지 않고 오른 것이오.",
+          "마루 위에 신발 자국이 서재 쪽으로 나 있었소. 디딤돌에 신을 벗지 않았다는 뜻이오.",
+          "큰 가죽신 자국 한 줄이 툇마루를 따라 서재까지 갔소. 그대가 본 대로요." ] },
+        { "tier": 2, "requiredFacts": ["C3b"], "conveysFacts": ["C3b"], "variants": [
+          "서재 문턱에 진흙이 묻어 있었소. 큰 신발 자국 일부가 보였지.",
+          "누군가 신을 신은 채 서재 문턱을 넘었소. 진흙이 그대로 남아 있었소.",
+          "서재 문턱의 진흙은 마당을 건너온 사람의 것이오." ] },
+        { "tier": 1, "requiredFacts": ["C3c"], "conveysFacts": ["C3c"], "variants": [
+          "작은사랑 앞 디딤돌엔 진신 진흙과 재하의 신이, 사랑방 앞엔 당혜와 짚신 진흙이 있었소.",
+          "디딤돌마다 진흙이 달랐소. 작은사랑 앞은 진신, 사랑방 앞은 당혜와 짚신이었지.",
+          "그대가 본 대로, 사랑방 앞 디딤돌엔 당혜와 짚신의 진흙이 있었소." ] },
+        { "tier": 0, "requiredFacts": ["C8"], "conveysFacts": ["C8"], "variants": [
+          "별당 툇마루엔 진흙투성이 진신 한 켤레가 있었소. 변 행수의 신이오.",
+          "변 행수의 진신은 진흙투성이였소.",
+          "별당에 벗어 둔 진신에 진흙이 잔뜩 묻어 있었소." ] }
+      ]
+    },
+    {
+      "id": "T_DOCUMENTS", "category": "Evidence", "label": "문서함과 목록", "visibleIfAny": ["C4"],
+      "entries": [
+        { "tier": 0, "requiredFacts": ["C4"], "conveysFacts": ["C4"], "variants": [
+          "목록엔 다섯 통이 적혀 있었소. 禮曹, 官衙, 査頓宅, 粉伊, 許醫員. 남은 건 두 통뿐이었소.",
+          "대감은 다섯 통의 문서를 썼고, 아침엔 세 통이 사라져 있었소.",
+          "문서함 목록의 다섯 통 가운데 두 통만 남아 있었소." ] }
+      ]
+    },
+    {
+      "id": "T_PRESCRIPTION", "category": "Evidence", "label": "처방", "visibleIfAny": ["C5", "F_HEO_CHANGED_PRESCRIPTION", "F_BUNI_GOT_PACKET"],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["F_HEO_CHANGED_PRESCRIPTION"], "conveysFacts": ["F_HEO_CHANGED_PRESCRIPTION"], "variants": [
+          "처방은 그대가 어제 저녁에 바꾼 것이오. 기운을 돋우는 약재를 더했다고 했지.",
+          "그대 말대로 어제 저녁 처방이 바뀌었소.",
+          "기운을 돋우는 약재를 더한 건 그대요. 그대가 아는 대로요." ] },
+        { "tier": 0, "requiredFacts": ["C5"], "conveysFacts": ["C5"], "variants": [
+          "사랑방 서랍의 처방전을 보면 어제 처방이 바뀌었소.",
+          "어제 날짜의 처방전에 약재 몇 가지가 더해져 있었소.",
+          "처방전대로라면 어제 기운을 돋우는 약재가 더해졌소." ] },
+        { "tier": 0, "requiredFacts": ["F_BUNI_GOT_PACKET"], "conveysFacts": ["F_BUNI_GOT_PACKET"], "variants": [
+          "어젯밤 허 의원이 새 약 봉지를 줬다는 건 그대가 직접 받은 일이오.",
+          "그대 말대로 허 의원은 어제 저녁 새 약 봉지를 건넸소.",
+          "새 약 봉지를 받은 건 그대요. 그대가 아는 대로요." ] }
+      ]
+    },
+    {
+      "id": "T_MEDCHEST", "category": "Evidence", "label": "의원의 약상자", "visibleIfAny": ["C6", "F_HEO_OWN_ARSENIC"],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["F_HEO_OWN_ARSENIC"], "conveysFacts": ["F_HEO_OWN_ARSENIC"], "variants": [
+          "그대는 약상자의 비상이 줄지 않았다는 것을 알고 있소.",
+          "그대 말대로라면 약상자의 비상은 그대로요.",
+          "약상자의 비상 양은 그대만 알고, 그대는 줄지 않았다고 알고 있소." ] },
+        { "tier": 0, "requiredFacts": ["C6"], "conveysFacts": ["C6"], "variants": [
+          "허 의원의 약상자엔 약재로 쓰는 비상이 조금 있었소.",
+          "약상자에 비상이 있었소. 줄었는지는 의원만 알 것이오.",
+          "의원의 약상자에도 비상이 있었소. 그대가 본 대로요." ] }
+      ]
+    },
+    {
+      "id": "T_BURNT", "category": "Evidence", "label": "화로의 종이", "visibleIfAny": ["C1", "F_JEONG_BURNT_SMELL", "F_JAEHA_POISONED"],
+      "entries": [
+        { "tier": 2, "requiredFacts": ["C1", "C7"], "conveysFacts": ["C1", "C7"], "variants": [
+          "화로의 종이 조각과 그 청원서 초안은 같은 종이, 같은 글씨요. 그대가 둘 다 보았소.",
+          "그대가 가진 두 가지, 화로의 종이와 초안은 종이도 글씨도 같소.",
+          "초안에서 찢긴 한 장과 화로의 종이는 같은 것으로 보이오. 그대가 확인한 대로요." ] },
+        { "tier": 1, "requiredFacts": ["C1"], "conveysFacts": ["C1"], "variants": [
+          "화로 재 속의 종이에 '첩의 자식도 같은 임금의 백성이니'라는 구절이 있었소. 하얀 가루도 묻어 있었지.",
+          "타다 남은 종이는 무언가를 쌌던 것처럼 접혀 있었소.",
+          "화로의 종이엔 단정한 붓글씨와 흰 가루가 남아 있었소." ] },
+        { "tier": 0, "requiredFacts": ["F_JEONG_BURNT_SMELL"], "conveysFacts": ["F_JEONG_BURNT_SMELL"], "variants": [
+          "사랑방에서 종이 탄 냄새를 맡았다는 건 그대가 겪은 일이오.",
+          "그대 말대로 밤 11시 20분쯤 사랑방엔 종이 탄 냄새가 났소.",
+          "종이 탄 냄새를 맡은 건 그대요. 그대가 아는 대로요." ] },
+        { "tier": 0, "requiredFacts": ["F_JAEHA_POISONED"], "conveysFacts": ["F_JAEHA_POISONED"], "variants": [
+          "화로에 대해서는 그대가 아는 것이 있을 것이오.",
+          "사랑방 화로 일은 그대가 겪은 대로요.",
+          "화로에 관해 내가 더 보탤 말은 없소. 그대가 아는 대로요." ] }
+      ]
+    },
+    {
+      "id": "T_OIL", "category": "Evidence", "label": "등잔 기름", "visibleIfAny": ["N3", "F_BUNI_SAW_JAEHA_OIL", "F_JAEHA_TOOK_POISON"],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["F_BUNI_SAW_JAEHA_OIL"], "conveysFacts": ["F_BUNI_SAW_JAEHA_OIL"], "variants": [
+          "어젯밤 8시 반쯤 창고에서 기름병을 든 재하를 보았다는 건 그대가 겪은 일이오.",
+          "그대 말대로 재하는 기름병을 들고 창고에서 나왔소.",
+          "기름병을 든 재하를 본 건 그대요. 그대가 아는 대로요." ] },
+        { "tier": 1, "requiredFacts": ["F_JAEHA_TOOK_POISON"], "conveysFacts": ["F_JAEHA_TOOK_POISON"], "variants": [
+          "어젯밤 창고에 다녀온 일은 그대가 아는 대로요.",
+          "등잔 기름 일은 그대가 겪은 대로요.",
+          "기름에 관해 내가 더 보탤 말은 없소. 그대가 아는 대로요." ] },
+        { "tier": 0, "requiredFacts": ["N3"], "conveysFacts": ["N3"], "variants": [
+          "사랑채 등잔엔 기름이 새로 채워져 있었고, 빈 기름병은 작은사랑 앞에 있었소.",
+          "어젯밤 누군가 창고에서 기름을 가져왔소. 빈 병이 작은사랑 앞에 있었지.",
+          "등잔들에 새 기름이 채워져 있었소. 그대가 본 대로요." ] }
+      ]
+    },
+    {
+      "id": "T_SHADOW", "category": "Event", "label": "밤중의 그림자", "visibleIfAny": ["F_BYEON_SHADOW_2305", "F_JAEHA_SAW_SKIRT_0048"],
+      "entries": [
+        { "tier": 0, "requiredFacts": ["F_BYEON_SHADOW_2305"], "conveysFacts": ["F_BYEON_SHADOW_2305"], "variants": [
+          "밤 11시 5분쯤 사랑방 불빛 앞을 지난 키 큰 남자를 본 건 그대요. 갓은 쓰지 않았다 했지.",
+          "그대 말대로 그 그림자는 키가 컸고 갓을 쓰지 않았소.",
+          "그 그림자를 본 건 그대요. 그대가 아는 대로요." ] },
+        { "tier": 0, "requiredFacts": ["F_JAEHA_SAW_SKIRT_0048"], "conveysFacts": ["F_JAEHA_SAW_SKIRT_0048"], "variants": [
+          "밤 12시 48분쯤 치맛자락 소리와 작은 그림자를 본 건 그대요.",
+          "그대 말대로 그 그림자는 작았고 치맛자락 소리가 났소.",
+          "그 그림자를 본 건 그대요. 그대가 아는 대로요." ] }
+      ]
+    },
+    {
+      "id": "T_P_JEONG", "category": "Person", "label": "큰며느리 정씨", "visibleIfAny": [],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["F_JEONG_SAW_DRINK"], "conveysFacts": ["F_JEONG_SAW_DRINK"], "variants": [
+          "밤 11시 반쯤 대감이 그대 앞에서 한약을 반쯤 마셨다는 건 그대가 겪은 일이오.",
+          "그대 말대로 대감은 그대가 권하자 한약을 반쯤 마셨소.",
+          "대감이 한약을 마시는 걸 본 건 그대요. 그대가 아는 대로요." ] },
+        { "tier": 0, "requiredFacts": [], "conveysFacts": [], "variants": [
+          "큰며느리는 3년 전 남편을 잃고 이 집 살림을 맡아 왔다 하오.",
+          "정씨는 이 집 안살림을 맡은 큰며느리요.",
+          "큰며느리는 어제 열녀 표창 이야기의 당사자였소." ] }
+      ]
+    },
+    {
+      "id": "T_P_JAEHA", "category": "Person", "label": "윤재하", "visibleIfAny": [],
+      "entries": [
+        { "tier": 0, "requiredFacts": [], "conveysFacts": [], "variants": [
+          "재하는 대감의 서자요. 사랑채 작은사랑에서 지낸다 하오.",
+          "윤재하는 글을 잘하지만 서자라 과거를 볼 수 없다 들었소.",
+          "재하는 어제 양자 이야기와 얽힌 사람이오." ] }
+      ]
+    },
+    {
+      "id": "T_P_BUNI", "category": "Person", "label": "분이", "visibleIfAny": [],
+      "entries": [
+        { "tier": 0, "requiredFacts": [], "conveysFacts": [], "variants": [
+          "분이는 안채 여종이오. 대감의 한약을 달이는 일을 맡았소.",
+          "분이는 이 집에서 태어난 노비라 하오.",
+          "분이는 오늘 새벽 대감을 처음 발견한 사람이오." ] }
+      ]
+    },
+    {
+      "id": "T_P_HEO", "category": "Person", "label": "허 의원", "visibleIfAny": [],
+      "entries": [
+        { "tier": 0, "requiredFacts": [], "conveysFacts": [], "variants": [
+          "허 의원은 몇 해째 대감을 돌본 주치의요. 별당에 묵었소.",
+          "허 의원은 어제 저녁에도 대감의 맥을 짚었다 하오.",
+          "허 의원은 대감의 약을 지어 온 사람이오." ] }
+      ]
+    },
+    {
+      "id": "T_P_BYEON", "category": "Person", "label": "변 행수", "visibleIfAny": [],
+      "entries": [
+        { "tier": 1, "requiredFacts": ["F_HEO_SAW_BYEON_0145"], "conveysFacts": ["F_HEO_SAW_BYEON_0145"], "variants": [
+          "새벽 1시 45분쯤 비에 젖은 채 돌아온 변 행수를 본 건 그대요.",
+          "그대 말대로 변 행수는 젖은 채 숨을 몰아쉬며 돌아왔고, 화장실에 다녀왔다고 했소.",
+          "그 새벽의 변 행수를 본 건 그대요. 그대가 아는 대로요." ] },
+        { "tier": 0, "requiredFacts": [], "conveysFacts": [], "variants": [
+          "변 행수는 마을 객주의 대표요. 대감 댁에 물건을 대 왔소.",
+          "변 행수는 별당에 묵은 손님이오.",
+          "변 행수는 어제 장부 이야기와 얽힌 사람이오." ] }
+      ]
+    }
+  ]
+}
