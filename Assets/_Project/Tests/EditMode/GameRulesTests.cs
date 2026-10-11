@@ -85,6 +85,19 @@ namespace MurderMystery.Tests
         }
 
         [Test]
+        public void PublicOnlySpot_IsFree_AndTakenEvidenceLeavesATrace()
+        {
+            var s = NewSession(GamePhase.Investigation1);
+            s.Investigate("heo", "05");
+            Assert.AreEqual(3, s.Players["heo"].InvestigationPoints, "public bowl costs nothing");
+
+            s.Investigate("jaeha", "04");                       // culprit pockets the burnt paper
+            var later = s.Investigate("jeong", "04");
+            Assert.IsEmpty(later.GainedItems);
+            Assert.IsTrue(later.Messages.Any(m => m.Contains("화로")), "disturbed hearth must be visible");
+        }
+
+        [Test]
         public void NotEnoughPoints_IsRejected()
         {
             var s = NewSession(GamePhase.Investigation1);

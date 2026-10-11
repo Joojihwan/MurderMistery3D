@@ -67,6 +67,8 @@ namespace MurderMystery.Core
             }
         }
 
+        public const string DefaultDisturbedText = "누군가 이미 무언가를 가져간 흔적이 있다.";
+
         public int InvestigationRound => Phase == GamePhase.Investigation1 ? 1 : Phase == GamePhase.Investigation2 ? 2 : 0;
 
         // ------------------------------------------------------------------ phases
@@ -112,9 +114,13 @@ namespace MurderMystery.Core
             if (InvestigationRound == 0) return ActionResult.Fail("조사 단계가 아닙니다.");
             if (!spots.TryGetValue(spotId, out var spot)) return ActionResult.Fail("조사할 것이 없는 곳입니다.");
             if (spot.Deep && InvestigationRound < 2) return ActionResult.Fail("이곳은 2차 조사부터 살필 수 있습니다.");
-            if (p.InvestigationPoints < GameRules.SpotCost) return ActionResult.Fail("조사 점수가 부족합니다.");
+            // Looking again at something everyone already knows (e.g. the public tangyak bowl) is free.
+            var cost = spot.RemainingItems.Count == 0 && !spot.Disturbed && spot.Traces.All(Data.PublicFacts.Contains)
+                ? 0
+                : GameRules.SpotCost;
+            if (p.InvestigationPoints < cost) return ActionResult.Fail("조사 점수가 부족합니다.");
 
-            p.InvestigationPoints -= GameRules.SpotCost;
+            p.InvestigationPoints -= cost;
             var result = new ActionResult { Success = true };
 
             foreach (var traceId in spot.Traces) Learn(p, traceId, $"spot:{spotId}", result);
@@ -128,12 +134,10 @@ namespace MurderMystery.Core
             }
             else if (spot.Disturbed)
             {
-                var trace = Data.RetrievedTraceText(spotId);
-                if (trace != null)
-                {
-                    result.Messages.Add(trace);
-                    p.Notebook.Add(new NotebookEntry { Source = $"spot:{spotId}", Text = trace });
-                }
+                // Taking evidence always leaves a sign, so hiding it is never invisible.
+                var trace = Data.RetrievedTraceText(spotId) ?? DefaultDisturbedText;
+                result.Messages.Add(trace);
+                p.Notebook.Add(new NotebookEntry { Source = $"spot:{spotId}", Text = trace });
             }
 
             if (result.GainedItems.Count == 0 && result.LearnedClues.Count == 0 && result.Messages.Count == 0)
