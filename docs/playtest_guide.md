@@ -9,13 +9,14 @@
    - Unity: **File > Build Profiles** → Windows → **Build** → 출력 폴더 `Builds/Win64/`
    - 또는 Claude에게 "빌드해 줘"
 2. **`Builds/Win64` 폴더를 통째로 압축**한다 (`MurderMystery.exe`만 보내면 실행되지 않음).
-   - 약 200MB. 구글 드라이브 등에 올리고 링크를 보낸다.
+   - 약 690MB (김명관 고택·한복 텍스처 포함). 구글 드라이브 등에 올리고 링크를 보낸다.
+   - 빌드하려면 이 PC에 KHS 에셋(`Assets/ThirdParty/KHS/`)이 있어야 한다 (git에는 없음, asset_plan.md 2절).
    - `Builds/`는 git에 올라가지 않는다.
 3. Unity Cloud 연결·Vivox·Relay는 이미 켜져 있다 (프로젝트 `MurderMistery3D`). 무료 사용량 안이면 따로 할 일 없음.
 
 ## 2. 진행 (호스트)
 
-1. Unity에서 `Assets/_Project/Scenes/Manor_Blockout.unity`를 열고 **Play**. (빌드 exe로 호스트해도 된다)
+1. Unity에서 `Assets/_Project/Scenes/Manor_KHS.unity`(김명관 고택)를 열고 **Play**. (빌드 exe로 호스트해도 된다. 회색 블록아웃은 `Manor_Blockout.unity`)
 2. 로비에서 이름 입력 → **방 만들기 (온라인)** → 화면에 나온 **방 코드(6자리)**를 테스터들에게 알린다.
 3. 전원이 들어와 인물을 고르면 **호스트: 다음 단계로 (배역 선택 마감)**.
 4. 이후 단계는 시간이 다 되거나 **전원이 수첩(Tab)에서 "준비"**를 누르면 넘어간다.

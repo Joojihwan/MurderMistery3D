@@ -9,8 +9,9 @@ namespace MurderMystery.Network
 {
     /// <summary>
     /// Networked body. The owner gets the first-person rig (movement replicates through an owner-authority
-    /// NetworkTransform on the prefab); everyone else sees a capsule shaped by the character's build,
-    /// which matters for the "tall man without a gat" sighting.
+    /// NetworkTransform on the prefab); everyone else sees the character in hanbok (Resources/Characters,
+    /// built from the KHS garments at each character's height), or a capsule of that build if the outfit
+    /// is missing. Build matters for the "tall man without a gat" sighting.
     /// </summary>
     public class NetPlayer : NetworkBehaviour
     {
@@ -18,6 +19,7 @@ namespace MurderMystery.Network
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         private Transform body;
+        private string bodySeat;
 
         public string SeatId => seat.Value.ToString();
 
@@ -55,15 +57,24 @@ namespace MurderMystery.Network
 
         private void RefreshBody()
         {
-            if (IsOwner) return;
-            if (body == null)
+            if (IsOwner || bodySeat == SeatId) return;
+            if (body != null) Destroy(body.gameObject);
+            body = null;
+            bodySeat = SeatId;
+
+            var outfit = string.IsNullOrEmpty(SeatId) ? null : Resources.Load<GameObject>($"Characters/{SeatId}");
+            if (outfit != null)
             {
-                var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                Destroy(go.GetComponent<Collider>());
-                go.name = "Body";
-                body = go.transform;
-                body.SetParent(transform, false);
+                body = Instantiate(outfit, transform, false).transform;
+                body.name = "Body";
+                return;
             }
+
+            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            Destroy(go.GetComponent<Collider>());
+            go.name = "Body";
+            body = go.transform;
+            body.SetParent(transform, false);
 
             // Heights from docs/design/timeline.md §0 (build matters for sightings).
             var (height, width) = SeatId switch

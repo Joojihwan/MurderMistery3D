@@ -51,3 +51,15 @@
 - Unity MCP: 서버(8080)는 healthy인데 Unity 세션 미연결 상태였음 (2026-10-11 13:3x). Unity 창 `Window > MCP for Unity > Start Session` 필요. 미연결 시 Editor.log로 컴파일 오류 확인.
 - T5 메모: 플레이어는 씬에 배치하지 않고 `PrototypeBootstrap`이 Play 시 자동 생성. 블록아웃 생성기에 안채 섬돌·찬방 문 위치 수정이 들어갔으므로 **씬 재생성 필요**(Tools > Manor > Build Blockout Scene).
 - 오프라인 컴파일 확인: scratchpad의 Editor.csproj 방식 (Unity DLL 참조, dotnet build). 새 .cs 파일들의 .meta는 Unity가 열릴 때 생성 → 이후 커밋 필요.
+
+## 4차 작업 — KHS 에셋 적용, 2026-10-11
+
+- [x] K1 지인 테스트 안내서 → `docs/playtest_guide.md`
+- [x] K2 KHS 패키지 2종(김명관 고택, Joseon Royal Wear)을 필요한 폴더만 `Assets/ThirdParty/KHS/`로 추출 (TMP·URP 설정 제외), 고택 재질 URP 변환, 텍스처 상한
+- [x] K3 `Manor_KHS` 씬 생성기: 실제 건물에 장소 배정(map_layout.md 8절), 충돌체 복구, 섬돌·차단벽, 시야·동선 재검증
+- [x] K4 플레이어 몸 프로필 + 계단 보조(StepAssist), NavMesh 검증 + 실제 주행 테스트 21/21
+- [x] K5 인물 6명 한복 조합(CharacterOutfitBuilder), 원격 플레이어·도 검률 적용, LAN 2인 테스트로 확인
+- [ ] K6 **사용자 작업**: KHS Unhyeongung Collect 받기 → 조사 지점 소품 배치
+- [ ] K7 방 문 열림 처리, 메시 압축·LOD·라이트 굽기
+- [ ] K8 인물 애니메이션 방식 결정 (asset_plan.md 3·4절)
+

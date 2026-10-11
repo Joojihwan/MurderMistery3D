@@ -10,46 +10,48 @@
 
 ## 2. 환경 에셋
 
-| 후보 | 출처 | 상태 | 용도 |
-|---|---|---|---|
-| KHS House of Gyedong | Unity Asset Store, 무료 | Built-in 전용, 약 936MB, 메시 199개 | 메인 건물 후보 |
-| KHS Unhyeongung Collection | Unity Asset Store, 무료 | 생활유물(가구·부엌·그릇·침구) | 실내 소품 |
-| KHS Unhyeongung | Unity Asset Store, 무료 | 궁 건물 | 별당·담장 보조 |
-| KHS 김명관 고택 | FAB (국가유산청 2025 제작) | 가격·형식 미확인 (FAB 페이지 로그인 필요) | 행랑채·사랑채·안채를 모두 갖춘 양반가 → **배치가 우리 맵과 가장 비슷할 가능성** |
+| 에셋 (Asset Store 이름) | 상태 | 용도 |
+|---|---|---|
+| **KHS Kim Myeong-gwans House Jeongeup** (김명관 고택) | **적용 완료** (2026-10-11), 790MB | 게임 맵 전체. 배정표는 map_layout.md 8절 |
+| **KHS Joseon Royal Wear** | **적용 완료**, 3.2GB | 인물 의상 (3절) |
+| KHS Unhyeongung Collect (운현궁 생활유물) | 받기 전 | 조사 지점 소품(서안·문갑·화로·소반·약탕관·쌀독·반닫이 등)과 방 꾸미기 — **다음에 필요** |
+| KHS House of Gyedong, KHS Unhyungung | 불필요 | 김명관 고택으로 대체 |
 
-### 적용 절차
+### 받는 법과 적용 절차
 
-1. **[사용자 작업]** Unity Asset Store에서 위 KHS 패키지를 "My Assets"에 추가하고 Package Manager > My Assets에서 임포트. 김명관 고택은 FAB에서 가격·형식(FBX/Unity) 확인 후 다운로드.
-2. 임포트 위치는 `Assets/ThirdParty/KHS/` 로 고정한다. **원본 패키지는 git에 올리지 않는다** (용량·LFS 한도·에셋 스토어 재배포 금지 조항). `.gitignore`에 추가하고, 다시 받는 방법만 이 문서에 남긴다.
-3. `Window > Rendering > Render Pipeline Converter`로 Built-in → URP 재질 변환.
-4. **크기 맞추기**: 임포트 원본 스케일을 믿지 않는다. 각 건물의 실제 치수를 측정해 `map_layout.md` 2절의 목표 치수(예: 사랑채 26m × 7m, 기단 0.6m)에 맞춰 배율을 정한다.
-5. 배치 방식 결정:
-   - 건물이 채(棟)별로 분리돼 있으면 → **블록아웃 바닥 윤곽 위에 채 단위로 얹는다** (맵 우선).
-   - 집 전체가 한 덩어리면 → 김명관 고택과 비교해 배치가 더 맞는 쪽을 고르고, 차이가 크면 `ManorBlockoutBuilder` 좌표를 에셋에 맞게 고친 뒤 `map_layout.md` 5절 시야·동선 검증을 다시 한다.
-6. 실내: 스캔 자원은 외관 위주일 가능성이 크다. 방 내부는 블록아웃 벽에 한지·마루 재질을 입히고 Unhyeongung Collection 소품을 배치한다. 조사 지점 소품(문갑, 화로, 쌀독 등)은 단서 위치이므로 `InvestigationSpot` 좌표를 지킨다.
-7. 성능: 건물당 수십만 버텍스 수준이므로 LOD 생성, 오클루전 컬링, 라이트맵 굽기(`manage_graphics` bake)를 적용한다.
+1. **[사용자 작업]** Unity Asset Store에서 "Add to My Assets" → Unity의 Package Manager > My Assets에서 **Download만** 한다 (Import 누르지 않음). 받은 파일은 `%APPDATA%/Unity/Asset Store-5.x/KOREA HERITAGE SERVICE/`에 쌓인다.
+2. Claude가 패키지에서 필요한 폴더만 GUID를 유지한 채 `Assets/ThirdParty/KHS/`로 푼다. KHS 패키지에는 TextMesh Pro 사본과 URP 전역 설정 파일이 섞여 있어, 그대로 Import하면 프로젝트 설정을 덮어쓴다. **원본은 git에 올리지 않는다** (`.gitignore`).
+3. `Tools > Murder Mystery > KHS > Convert Built-in Materials to URP` (고택 재질 42개가 Built-in Standard). 의복은 자체 URP Shader Graph라 변환 불필요.
+4. `Tools > Murder Mystery > KHS > Cap Texture Sizes`: 의복 1024, 고택 2048 (빌드 1.04GB → 686MB).
+5. `Tools > Murder Mystery > KHS > Build Character Outfits` → `Tools > Manor > Build KHS Manor Scene`.
+6. 크기: 두 패키지 모두 실측 미터 단위라 배율 조정이 필요 없었다 (기둥 높이·문 높이로 확인).
 
-### MCP로 할 수 있는 일
+### 남은 일
 
-임포트 후에는 MCP for Unity로 이어서 작업할 수 있다: `manage_asset`(정리·검색), `manage_material`(재질 일괄 수정), `manage_prefabs`(건물 프리팹화), `manage_gameobject`(배치·스케일), `manage_camera` 스크린샷(블록아웃 캡처와 비교), `manage_graphics`(조명·볼륨·베이크).
+- 실내 소품: 지금 조사 지점은 빈 바닥 위 위치만 있다. Unhyeongung Collect의 생활유물로 각 지점에 실제 물건을 놓는다.
+- 문: 방 문짝은 닫힌 모습 그대로 통과된다. 열리는 문(상호작용) 또는 열린 모습으로 바꾸기.
+- 성능: 스캔 메시가 무겁다 (빌드의 메시 데이터 약 210MB). 메시 압축, LOD, 라이트맵 굽기.
 
 ## 3. 한복 캐릭터 (6명: 플레이어 5 + 도 검률)
 
-| 방안 | 비용 | 장점 | 단점 |
-|---|---|---|---|
-| A. Asset Store "3D Game – Korean Hanbok character" | $19 | 리깅 완료, 저폴리(5~7.7k) | 남녀 2종뿐, Built-in, 애니메이션 없음, 6명 구분 어려움 |
-| B. **AI 생성(Meshy 등) + 자동 리깅(Mixamo)** | 구독제 | 6명 각자 다른 외형·체형, 컨셉 반복이 빠름 | 토폴로지·손가락·얼굴 품질 편차, 정리 작업 필요, 생성물 라이선스 확인 필요 |
-| C. 외주/직접 모델링 (Blender) | 높음 | 품질·일관성 최고 | 시간·비용 |
-| D. Asset Store 한복 의상팩($30) + 기본 휴먼 모델 | $30 + α | 의상 품질 | 의상 맞추기(리타깃) 작업 필요 |
+**적용 (2026-10-11): KHS Joseon Royal Wear 의복 조각을 인물별로 조합.** 생성기 `Assets/_Project/Scripts/Editor/CharacterOutfitBuilder.cs` → `Resources/Characters/<id>.prefab`. 원격 플레이어(`NetPlayer`)와 도 검률 NPC가 이 프리팹을 쓴다.
 
-**추천: B로 시제품 → 핵심 인물만 C로 교체.**
-- 먼저 B로 6명을 빠르게 만들어 실루엣·신분 구분이 추리에 충분한지 플레이테스트로 확인한다.
-- 체형 차이(키·몸집)는 생성 프롬프트와 리깅 후 본 스케일로 확실히 준다.
-- 애니메이션: Mixamo 기본 걷기·서기 + **좌식 동작(양반다리, 무릎 꿇기, 절)**은 Mixamo에 마땅한 것이 없으니 별도 제작 또는 구매 필요.
-- 이전 작업의 교훈대로 임포트한 모델은 반드시 목표 키(예: 재하 1.78m, 허 의원 1.58m)에 맞춰 스케일을 정규화한다.
+| 인물 | 차림 (신분 고증) | 키 | 비고 |
+|---|---|---|---|
+| 윤재하 (서자 선비) | 도포 · 갓 · 바지 · 버선 · 태사혜 | 1.80m | 키 크고 호리호리 |
+| 허 의원 (중인 의원) | 두루마기 · 탕건(실내라 갓 없음) | 1.55m | 작달막 |
+| 변 행수 (상인 행수) | 두루마기 위 쾌자(전복) · 갓 · 행전 | 1.70m | 너비·두께 1.3배 (배 나온 체격) |
+| 큰며느리 정씨 (과부) | 흰 적삼 · 치마 · 쪽머리 · 당혜 | 1.58m | 수수한 차림 |
+| 분이 (미혼 여종) | 속저고리 · 대슘치마 · 땋은 댕기머리 | 1.52m | |
+| 도 검률 (관리) | 흑단령 · 사모 · 품대 · 흑화 | 1.68m | 사랑채 툇마루에서 마당을 향해 섬 |
+
+- 한계: 의복은 **리깅 없는 정지 메시(A자 자세)**이고 몸이 없다. 그래서 단순한 얼굴(달걀형 머리·눈)과 목만 붙였다. 걷기 동작은 없다 (위치·방향만 동기화).
+- 다음 단계 후보: (1) 리깅된 기본 인체 + 의복을 본에 붙이기(스키닝 재작업 필요), (2) 기존 안대로 AI 생성 + Mixamo 리깅. 플레이테스트에서 정지 인형이 거슬리는지 먼저 확인한다.
+- 이전 후보 표(A~D)는 위 적용으로 보류.
 
 ## 4. 사용자 결정이 필요한 것
 
-- [ ] 김명관 고택 FAB 페이지의 가격·형식 확인 (로그인 필요)
-- [ ] 캐릭터 방안 B 진행 여부 (Meshy 등 유료 구독 사용)
+- [x] ~~김명관 고택 수급~~ → Asset Store 무료 패키지로 해결
+- [ ] KHS Unhyeongung Collect 받기 (실내 소품)
+- [ ] 인물 애니메이션 방식 (정지 의복 유지 / 리깅 인체 + 의복 / AI 생성 + Mixamo)
 - [ ] 좌식 애니메이션 수급 방식

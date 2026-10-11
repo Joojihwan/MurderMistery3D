@@ -18,6 +18,40 @@ namespace MurderMystery.EditorTools
         [MenuItem("Tools/Murder Mystery/KHS/Convert Built-in Materials to URP")]
         public static void ConvertMaterials() => Debug.Log($"[KHS] converted {ConvertMaterialsCount()} materials to URP/Lit");
 
+        /// <summary>
+        /// Caps texture import sizes to keep the player build small: garments are seen at a few metres
+        /// (1024), the house up close (2048). The KHS sources are up to 4096.
+        /// </summary>
+        [MenuItem("Tools/Murder Mystery/KHS/Cap Texture Sizes")]
+        public static void CapTextureSizes()
+        {
+            var changed = CapTextureSizes(Root + "/Joseon_Royal_Wear", 1024) + CapTextureSizes(Root + "/KimMyeonggwanHouse", 2048);
+            Debug.Log($"[KHS] capped {changed} textures");
+        }
+
+        public static int CapTextureSizes(string folder, int maxSize)
+        {
+            if (!AssetDatabase.IsValidFolder(folder)) return 0;
+            var changed = 0;
+            AssetDatabase.StartAssetEditing();
+            try
+            {
+                foreach (var guid in AssetDatabase.FindAssets("t:Texture2D", new[] { folder }))
+                {
+                    var importer = AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid)) as TextureImporter;
+                    if (importer == null || importer.maxTextureSize <= maxSize) continue;
+                    importer.maxTextureSize = maxSize;
+                    importer.SaveAndReimport();
+                    changed++;
+                }
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+            }
+            return changed;
+        }
+
         public static int ConvertMaterialsCount()
         {
             if (!AssetDatabase.IsValidFolder(Root)) return 0;

@@ -57,9 +57,9 @@ namespace MurderMystery.EditorTools
         //  z -10.1~-12.7), 작은사랑 = east end room (x 15~17), 툇마루 = z -12.8~-14.1, 섬돌 at z -14.6.
         //  안채: 부엌 = west wing (x -19~-16, z 0~7.6), 곳간 = south-row bay with the jars (x -13.8~-11),
         //  중문간 = south-row bay x -8~-2.5, 건넌방 = east arm of the north wing (x -3.7~1, z 6.6~15).
-        //  손님방 (grey-box 별당): the two wood-floored rooms at the east end of the 행랑채 long wing, facing
-        //  사랑마당 — 허 의원 x 8.7~11.2, 변 행수 x 11.2~13.6 (z -26.8~-29.9). The east arm beyond is an
-        //  earth-floored barn. 뒷간 = walled hut at (20.3, -29.2).
+        //  별당 (the guests' rooms; the scenario keeps the name): the two wood-floored rooms at the east end
+        //  of the 행랑채 long wing, facing 사랑마당 — 허 의원 x 8.7~11.2, 변 행수 x 11.2~13.6
+        //  (z -26.8~-29.9). The east arm beyond is an earth-floored barn. 뒷간 = walled hut at (20.3, -29.2).
         private static readonly SpotDef[] Spots =
         {
             S("01", "서재 서안", 11.2f, -8.9f, 0.45f, SpotLayer.Surface, "N1"),
@@ -68,7 +68,7 @@ namespace MurderMystery.EditorTools
             S("04", "사랑방 화로", 7.2f, -10.6f, 0.45f, SpotLayer.Surface, "C1"),
             S("05", "사랑방 소반", 6.2f, -10.0f, 0.45f, SpotLayer.Surface, "E1"),
             S("06", "사랑방 서랍", 5.0f, -9.0f, 0.7f, SpotLayer.Surface, "C5"),
-            S("07", "대청·툇마루 바닥", 12.2f, -13.4f, 0.1f, SpotLayer.Surface, "C3a"),
+            S("07", "대청·툇마루 바닥", 11.0f, -13.4f, 0.1f, SpotLayer.Surface, "C3a"),
             S("08a", "작은사랑 앞 섬돌", 13.5f, -14.6f, 0.1f, SpotLayer.Surface, "C3c"),
             S("08b", "사랑방 앞 섬돌", 8.0f, -14.6f, 0.1f, SpotLayer.Surface, "C3c"),
             S("09", "등잔·빈 기름병", 14.4f, -13.4f, 0.3f, SpotLayer.Surface, "N3"),
@@ -80,7 +80,7 @@ namespace MurderMystery.EditorTools
             S("15", "허 의원 약상자", 9.6f, -28.0f, 0.4f, SpotLayer.Surface, "C6"),
             S("16", "허 의원 봇짐", 10.3f, -28.9f, 0.4f, SpotLayer.Deep, "H6"),
             S("17", "변 행수 짐 보따리", 12.6f, -28.6f, 0.4f, SpotLayer.Deep, "H5a", "H5b"),
-            S("18", "손님방 툇마루 진신", 11.2f, -26.2f, 0.1f, SpotLayer.Surface, "C8"),
+            S("18", "별당 툇마루 진신", 11.2f, -26.2f, 0.1f, SpotLayer.Surface, "C8"),
         };
 
         // Extra stepping stones (centre x, z, width along x, depth along z, top height) where the scan has a
@@ -93,8 +93,9 @@ namespace MurderMystery.EditorTools
         private const float StepStoneTop = 0.43f;
 
         private static readonly Vector2 Discussion = new Vector2(8f, -18.5f);
-        private static readonly Vector2 NpcDaecheong = new Vector2(12.3f, -11.4f);
-        private static readonly Vector2 NpcStairs = new Vector2(10.7f, -13.6f);
+        // 도 검률 keeps to the 툇마루 in front of the 대청 so he is seen from the yard (the hall doors are shut).
+        private static readonly Vector2 NpcDaecheong = new Vector2(12.6f, -13.3f);
+        private static readonly Vector2 NpcStairs = new Vector2(12.6f, -14.6f);
 
         [MenuItem("Tools/Manor/Build KHS Manor Scene")]
         public static void BuildScene()
@@ -186,19 +187,27 @@ namespace MurderMystery.EditorTools
             go.transform.SetParent(p, false);
             go.transform.localScale = new Vector3(140f, 0.2f, 150f);
             go.transform.position = new Vector3(0f, -0.1f, -6f);
-            var mat = AssetDatabase.LoadAssetAtPath<Material>(GroundMatPath);
-            if (mat != null)
+            var source = AssetDatabase.LoadAssetAtPath<Material>(GroundMatPath);
+            if (source == null) return;
+            // Kept (not recreated) so its GUID, and the scene that references it, stay stable between builds.
+            const string path = "Assets/_Project/Art/Materials/KhsYardGround.mat";
+            var tiled = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (tiled == null)
             {
-                var tiled = new Material(mat) { name = "Yard ground (tiled)" };
-                tiled.mainTextureScale = new Vector2(35f, 37f);
-                tiled.SetFloat("_Smoothness", 0.08f);
-                tiled.SetFloat("_Metallic", 0f);
-                const string path = "Assets/_Project/Art/Materials/KhsYardGround.mat";
                 ManorBlockoutBuilder.EnsureFolder("Assets/_Project/Art/Materials");
-                AssetDatabase.DeleteAsset(path);
+                tiled = new Material(source);
                 AssetDatabase.CreateAsset(tiled, path);
-                go.GetComponent<MeshRenderer>().sharedMaterial = tiled;
             }
+            else
+            {
+                tiled.CopyPropertiesFromMaterial(source);
+            }
+            tiled.mainTextureScale = new Vector2(35f, 37f);
+            tiled.SetFloat("_Smoothness", 0.08f);
+            tiled.SetFloat("_Metallic", 0f);
+            EditorUtility.SetDirty(tiled);
+            go.GetComponent<MeshRenderer>().sharedMaterial = tiled;
+        }
         }
 
         private static void BuildStepStones(Transform p)
@@ -254,12 +263,24 @@ namespace MurderMystery.EditorTools
                     Discussion + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 3f, 0.4f);
             }
 
-            var npc = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            npc.name = "NPC_Placeholder (도 검률)";
-            npc.transform.SetParent(p, false);
-            Object.DestroyImmediate(npc.GetComponent<Collider>());
-            npc.transform.localScale = new Vector3(0.5f, 0.8f, 0.5f);
-            npc.transform.position = new Vector3(NpcDaecheong.x, FloorY(NpcDaecheong.x, NpcDaecheong.y) + 0.8f, NpcDaecheong.y);
+            // 도 검률 in 흑단령 (Tools/Murder Mystery/KHS/Build Character Outfits), facing the yard.
+            var floor = new Vector3(NpcDaecheong.x, FloorY(NpcDaecheong.x, NpcDaecheong.y), NpcDaecheong.y);
+            var outfit = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Resources/Characters/dogeomnyul.prefab");
+            GameObject npc;
+            if (outfit != null)
+            {
+                npc = (GameObject)PrefabUtility.InstantiatePrefab(outfit, p);
+                npc.transform.SetPositionAndRotation(floor, Quaternion.Euler(0f, 180f, 0f));
+            }
+            else
+            {
+                npc = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                npc.transform.SetParent(p, false);
+                Object.DestroyImmediate(npc.GetComponent<Collider>());
+                npc.transform.localScale = new Vector3(0.5f, 0.8f, 0.5f);
+                npc.transform.position = floor + Vector3.up * 0.8f;
+            }
+            npc.name = "NPC (도 검률)";
         }
 
         private static void Marker(Transform p, string id, MarkerType type, Vector2 xz, float radius)
