@@ -12,7 +12,7 @@
 - [x] T4 데이터 검증 도구 + EditMode 테스트
 - [x] T5 1인칭 이동 컨트롤러 + 조사 상호작용 + 최소 UI
 - [ ] T6 블록아웃 씬 배치 + 플레이 테스트 (MCP 필요)
-- [ ] T7 멀티플레이·음성 기술 결정 문서 → `docs/design/tech_decisions.md`
+- [x] T7 멀티플레이·음성 기술 결정 문서 → `docs/design/tech_decisions.md`
 - [ ] T8 KHS 에셋 적용 방식 + 한복 캐릭터 수급 방안 → `docs/design/asset_plan.md`
 - [ ] T9 밸런스 검토 (조사 점수·단서 수·시간·범인 난이도) → `docs/design/balance_review.md`
 - [ ] T10 전체 자체 검토 + 요약 보고
