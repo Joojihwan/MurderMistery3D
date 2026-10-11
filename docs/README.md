@@ -30,6 +30,7 @@
 | 9 | [design/balance_review.md](design/balance_review.md) | 시뮬레이션 기반 밸런스 검토, 범인 특정 경로 점검 | 마스터 |
 | 10 | [design/tech_decisions.md](design/tech_decisions.md) | 멀티플레이(NGO·Sessions)·음성(Vivox)·정보 보안 설계 | 개발 |
 | 11 | [design/asset_plan.md](design/asset_plan.md) | KHS 환경 에셋 적용 절차, 한복 캐릭터 수급 방안 | 개발 |
+| 12 | [playtest_guide.md](playtest_guide.md) | 지인 테스트 진행법, 테스터용 안내문(복사용), 피드백 체크리스트 | 개발·테스터 |
 | — | [progress.md](progress.md) | 작업 진행 상황 (이어서 작업용) | 개발 |
 | — | `Assets/_Project/Resources/Data/*.json` | 게임 데이터: 단서 카드, 인물·목표, Fact, 도 검률 응답 | 마스터 |
 
