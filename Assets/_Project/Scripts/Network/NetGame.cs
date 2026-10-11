@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MurderMystery.Core;
 using MurderMystery.Gameplay;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -25,6 +26,11 @@ namespace MurderMystery.Network
         private const float GiveDistance = 2.5f;
 
         public static NetGame Instance { get; private set; }
+
+        // Room key published by the host so every peer names the same voice channels.
+        private readonly NetworkVariable<FixedString64Bytes> room = new NetworkVariable<FixedString64Bytes>(
+            default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private string RoomKey => room.Value.ToString();
 
         // ---------------- server state
         private LocalSessionGateway gateway;
@@ -64,8 +70,21 @@ namespace MurderMystery.Network
                 gateway.Talks.Started += t => PushAll();
                 gateway.Talks.Ended += t => PushAll();
                 NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
+                PublishRoom();
             }
-            _ = VoiceService.StartAsync(SessionService.RoomKey);
+            room.OnValueChanged += (_, __) => StartVoice();
+            StartVoice();
+        }
+
+        private void PublishRoom()
+        {
+            var key = SessionService.RoomKey;
+            if (!string.IsNullOrEmpty(key) && RoomKey != key) room.Value = key;
+        }
+
+        private void StartVoice()
+        {
+            if (!string.IsNullOrEmpty(RoomKey)) _ = VoiceService.StartAsync(RoomKey);
         }
 
         public override void OnNetworkDespawn()
@@ -81,7 +100,9 @@ namespace MurderMystery.Network
             if (!IsServer || gateway == null) return;
             gateway.Tick(Time.deltaTime);
             pushTimer -= Time.deltaTime;
-            if (pushTimer <= 0f) PushAll();
+            if (pushTimer > 0f) return;
+            PublishRoom();
+            PushAll();
         }
 
         // =========================================================== server side
@@ -234,7 +255,7 @@ namespace MurderMystery.Network
             if (Snapshot.phase == lastVoicePhase && Snapshot.talkId == lastVoiceTalk) return;
             lastVoicePhase = Snapshot.phase;
             lastVoiceTalk = Snapshot.talkId;
-            VoiceService.Apply(Snapshot.Phase, Snapshot.talkId, SessionService.RoomKey);
+            VoiceService.Apply(Snapshot.Phase, Snapshot.talkId);
         }
 
         // =========================================================== IGameClient (local UI → host)

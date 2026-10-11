@@ -21,6 +21,8 @@ namespace MurderMystery.Network
         private static string talkChannel;
         private static string transmittingTo;
         private static bool busy;
+        private static string room;
+        private static (GamePhase phase, int talkId)? wanted;
 
         public static async Task StartAsync(string roomKey)
         {
@@ -31,46 +33,48 @@ namespace MurderMystery.Network
                 if (!SessionService.SignedIn) await SessionService.EnsureSignedInAsync();
                 await VivoxService.Instance.InitializeAsync();
                 if (!VivoxService.Instance.IsLoggedIn) await VivoxService.Instance.LoginAsync();
+                room = roomKey;
                 roomChannel = Channel($"mm{roomKey}all");
                 await VivoxService.Instance.JoinGroupChannelAsync(roomChannel, ChatCapability.AudioOnly);
                 await TransmitAsync(null);
                 Available = true;
-                Status = "음성 연결됨";
+                SetStatus("음성 연결됨");
             }
             catch (Exception e)
             {
                 Available = false;
-                Status = "음성 사용 불가 (텍스트로 진행)";
+                SetStatus("음성 사용 불가 (텍스트로 진행)");
                 Debug.LogWarning($"[Voice] Vivox unavailable: {e.Message}");
             }
             finally
             {
                 busy = false;
             }
+            _ = PumpAsync();
         }
 
-        /// <summary>Called whenever the local snapshot changes; only acts when the desired channel differs.</summary>
-        public static async void Apply(GamePhase phase, int talkId, string roomKey)
+        /// <summary>
+        /// Called whenever the local snapshot changes. Requests that arrive while Vivox is still starting or
+        /// switching are kept (latest wins) and applied once it is free, so no phase/talk change is lost.
+        /// </summary>
+        public static void Apply(GamePhase phase, int talkId)
+        {
+            wanted = (phase, talkId);
+            _ = PumpAsync();
+        }
+
+        private static async Task PumpAsync()
         {
             if (!Available || busy) return;
             busy = true;
             try
             {
-                var wantTalk = talkId > 0 ? Channel($"mm{roomKey}t{talkId}") : null;
-                if (talkChannel != null && talkChannel != wantTalk)
+                while (wanted.HasValue)
                 {
-                    await VivoxService.Instance.LeaveChannelAsync(talkChannel);
-                    talkChannel = null;
+                    var (phase, talkId) = wanted.Value;
+                    wanted = null;
+                    await SwitchAsync(phase, talkId);
                 }
-                if (wantTalk != null && talkChannel == null)
-                {
-                    await VivoxService.Instance.JoinGroupChannelAsync(wantTalk, ChatCapability.AudioOnly);
-                    talkChannel = wantTalk;
-                }
-
-                var target = talkChannel ?? (IsOpenFloor(phase) ? roomChannel : null);
-                await TransmitAsync(target);
-                Status = target == null ? "음성: 말할 수 없는 단계" : target == talkChannel ? "음성: 밀담" : "음성: 전체";
             }
             catch (Exception e)
             {
@@ -80,6 +84,32 @@ namespace MurderMystery.Network
             {
                 busy = false;
             }
+        }
+
+        private static async Task SwitchAsync(GamePhase phase, int talkId)
+        {
+            var wantTalk = talkId > 0 ? Channel($"mm{room}t{talkId}") : null;
+            if (talkChannel != null && talkChannel != wantTalk)
+            {
+                await VivoxService.Instance.LeaveChannelAsync(talkChannel);
+                talkChannel = null;
+            }
+            if (wantTalk != null && talkChannel == null)
+            {
+                await VivoxService.Instance.JoinGroupChannelAsync(wantTalk, ChatCapability.AudioOnly);
+                talkChannel = wantTalk;
+            }
+
+            var target = talkChannel ?? (IsOpenFloor(phase) ? roomChannel : null);
+            await TransmitAsync(target);
+            SetStatus(target == null ? "음성: 말할 수 없는 단계" : target == talkChannel ? "음성: 밀담" : "음성: 전체");
+        }
+
+        private static void SetStatus(string status)
+        {
+            if (Status == status) return;
+            Status = status;
+            Debug.Log($"[Voice] {status}");
         }
 
         public static async Task StopAsync()
@@ -96,7 +126,8 @@ namespace MurderMystery.Network
             }
             talkChannel = roomChannel = transmittingTo = null;
             Available = false;
-            Status = "음성 꺼짐";
+            wanted = null;
+            SetStatus("음성 꺼짐");
         }
 
         // Everyone can speak to the room only while gathered in the yard.

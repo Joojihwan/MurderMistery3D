@@ -40,9 +40,9 @@
 - [x] M4 좌석: 배역 선택·이름 표시, 진행 중 재접속 시 같은 인물·기존 단서 복구, 미배정 인물은 진행 중 선택 거부
 - [x] M5 의도 RPC: 단계 진행·공지 브로드캐스트, 클라이언트 조사 → 본인에게만 결과, 호스트 스냅샷에 남의 단서 없음(격리 확인), 밀담 요청→수락 양쪽 반영, 2인 투표→엔딩·점수 양쪽 수신. 밀담 요청 결과에 talk id가 문구로 찍히던 문제 수정(ActionResult.TalkId), 접속 끊긴 사람의 밀담 자동 종료
 - [x] M6 플레이어: 원격 플레이어가 다른 스폰 위치에 인물 체형 캡슐로 표시, 퇴장 시 제거
-- [~] M7 Vivox (VoiceService 코드 완료; UGS 미연결 시 경고만 남기고 게임은 계속됨 확인. M9 이후 음성 검증)
+- [x] M7 Vivox: 온라인 방에서 호스트·클라이언트가 같은 전체 채널(참가자 2) 접속, 조사 단계 송신 끔, 밀담 수락 시 2인 밀담 채널로 전환·종료 시 퇴장, 엔딩에서 전체 채널 복귀. 방 키를 호스트가 NetworkVariable로 배포(세션 await 전에 NetGame이 스폰돼 "lan" 채널로 섞이던 문제 수정), 시작 중 들어온 채널 전환 요청을 큐로 보존
 - [x] M8 다중 인스턴스: `Builds/Win64` 개발 빌드 + `CommandLineAutoPlay` 테스트 훅(-mmJoin/-mmSeat/-mmInvestigate/-mmAcceptTalk/-mmVote/-mmQuitAfter, -batchmode 가능). 빌드 설정의 옛 SampleScene 항목 제거
-- [ ] M9 **사용자 작업**: Unity Cloud 프로젝트 연결(Project Settings > Services), 대시보드에서 Vivox 활성화
+- [x] M9 사용자 작업 완료(2026-10-11): Unity Cloud 연결(MurderMistery3D), Vivox·Relay 활성화. 온라인 방 만들기(Relay)→코드 참가→배역→조사→밀담→투표→엔딩 2인 검증, 호스트 퇴장 시 클라이언트 세션 자동 정리. tokenKey는 비워 둠(UGS 인증 토큰 사용)
 
 ## 메모
 

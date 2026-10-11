@@ -9,13 +9,15 @@ namespace MurderMystery.Network
 {
     /// <summary>
     /// Test hook for multi-instance runs. With command-line arguments a built player joins a LAN host,
-    /// claims a seat and optionally investigates a spot, logging what it receives:
+    /// (or an online session by code) claims a seat and optionally investigates a spot, logging what it receives:
     ///   -mmJoin 127.0.0.1 -mmSeat buni [-mmName 분이] [-mmInvestigate 02] [-mmAcceptTalk] [-mmVote heo] [-mmQuitAfter 60]
-    /// Does nothing when no -mmJoin argument is given.
+    ///   -mmCode ABC123 ... joins an online session (Sessions + Relay) instead of -mmJoin.
+    /// Does nothing when neither -mmJoin nor -mmCode is given.
     /// </summary>
     public class CommandLineAutoPlay : MonoBehaviour
     {
         private string address;
+        private string code;
         private string seat;
         private string playerName;
         private string spot;
@@ -27,7 +29,7 @@ namespace MurderMystery.Network
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
-            if (Arg("-mmJoin") == null) return;
+            if (Arg("-mmJoin") == null && Arg("-mmCode") == null) return;
             DontDestroyOnLoad(new GameObject(nameof(CommandLineAutoPlay)).AddComponent<CommandLineAutoPlay>().gameObject);
         }
 
@@ -41,6 +43,7 @@ namespace MurderMystery.Network
         private void Awake()
         {
             address = Arg("-mmJoin");
+            code = Arg("-mmCode");
             seat = Arg("-mmSeat");
             playerName = Arg("-mmName") ?? seat;
             spot = Arg("-mmInvestigate");
@@ -53,9 +56,21 @@ namespace MurderMystery.Network
         {
             Application.runInBackground = true;
             yield return null;
-            Debug.Log($"[AutoPlay] joining {address} as {seat}: {SessionService.JoinLan(address)}");
+            if (!string.IsNullOrEmpty(code))
+            {
+                var join = SessionService.JoinOnlineAsync(code);
+                yield return new WaitUntil(() => join.IsCompleted);
+                Debug.Log(join.IsFaulted
+                    ? $"[AutoPlay] online join failed: {join.Exception?.GetBaseException()}"
+                    : $"[AutoPlay] joined online session {join.Result.Id} as {seat}");
+                if (join.IsFaulted) yield break;
+            }
+            else
+            {
+                Debug.Log($"[AutoPlay] joining {address} as {seat}: {SessionService.JoinLan(address)}");
+            }
 
-            yield return WaitFor(() => NetGame.Instance != null && NetGame.Instance.Seats.Length > 0, 20f);
+            yield return WaitFor(() => NetGame.Instance != null && NetGame.Instance.Seats.Length > 0, 30f);
             if (NetGame.Instance == null)
             {
                 Debug.LogError("[AutoPlay] NetGame never arrived");
@@ -90,7 +105,7 @@ namespace MurderMystery.Network
         private void OnChanged(NetGame net)
         {
             var snap = net.Snapshot;
-            var line = $"phase={snap?.phase} talk={snap?.talkPartner}#{snap?.talkId} vote={snap?.voteStage} end={snap?.endingKey} log={net.Log.LastOrDefault()}";
+            var line = $"voice={VoiceService.Status} phase={snap?.phase} talk={snap?.talkPartner}#{snap?.talkId} vote={snap?.voteStage} end={snap?.endingKey} log={net.Log.LastOrDefault()}";
             if (line != lastLine) Debug.Log($"[AutoPlay] {lastLine = line}");
             if (acceptTalk && snap != null && snap.incomingTalks.Length > 0 && string.IsNullOrEmpty(snap.talkPartner))
             {
