@@ -1,3 +1,4 @@
+using MurderMystery.Level;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -19,6 +20,7 @@ namespace MurderMystery.Gameplay
         private CharacterController controller;
         private float pitch;
         private float verticalVelocity;
+        private float assistStep;
 
         public bool InputEnabled { get; set; } = true;
 
@@ -27,6 +29,8 @@ namespace MurderMystery.Gameplay
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+            var profile = PlayerBodyProfile.Current;
+            assistStep = profile != null ? profile.assistStep : 0f;
             SetCursorLocked(true);
         }
 
@@ -58,6 +62,7 @@ namespace MurderMystery.Gameplay
             var speed = keyboard.leftShiftKey.isPressed ? runSpeed : walkSpeed;
             var horizontal = (transform.right * move.x + transform.forward * move.y).normalized * speed;
 
+            StepAssist.TryStepUp(controller, horizontal, assistStep);
             verticalVelocity = controller.isGrounded ? -1f : verticalVelocity + gravity * Time.deltaTime;
             controller.Move((horizontal + Vector3.up * verticalVelocity) * Time.deltaTime);
         }

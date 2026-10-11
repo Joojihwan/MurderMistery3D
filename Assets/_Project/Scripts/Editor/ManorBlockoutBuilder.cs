@@ -324,7 +324,7 @@ namespace MurderMystery.EditorTools
             go.AddComponent<GameplayMarker>().Configure(type, id, radius);
         }
 
-        private static void BuildLightAndCamera()
+        internal static void BuildLightAndCamera()
         {
             var lightGo = new GameObject("Directional Light (비 갠 아침)");
             var light = lightGo.AddComponent<Light>();
@@ -559,7 +559,7 @@ namespace MurderMystery.EditorTools
             return m;
         }
 
-        private static void EnsureFolder(string path)
+        internal static void EnsureFolder(string path)
         {
             if (AssetDatabase.IsValidFolder(path)) return;
             var parent = Path.GetDirectoryName(path)?.Replace('\\', '/');
@@ -567,7 +567,7 @@ namespace MurderMystery.EditorTools
             AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
         }
 
-        private static void AddSceneToBuildSettings(string path)
+        internal static void AddSceneToBuildSettings(string path)
         {
             var scenes = EditorBuildSettings.scenes.ToList();
             if (scenes.Any(s => s.path == path)) return;
