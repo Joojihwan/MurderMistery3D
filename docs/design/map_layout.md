@@ -104,3 +104,14 @@
 - KHS House of Gyedong은 실제 가옥 그대로라 위 배치와 다를 수 있다. 에셋을 열어 본 뒤 (a) 배치를 에셋에 맞추거나 (b) 건물 부분만 떼어 배치에 맞추는 것 중 정한다.
 - 국가유산청은 다른 양반 고택(예: 정읍 김명관 고택) 3D 자원도 무료로 공개하고 있어, 행랑채·사랑채·안채를 모두 갖춘 후보로 함께 검토한다.
 - 동선과 시야가 바뀌면 5절 표를 다시 검증한다.
+
+## 9. 블록아웃 생성
+
+- 씬: `Assets/_Project/Scenes/Manor_Blockout.unity` (Unity 6000.3.19f1 LTS, URP)
+- 생성기: `Assets/_Project/Scripts/Editor/ManorBlockoutBuilder.cs` — 메뉴 `Tools > Manor > Build Blockout Scene`. 다시 실행하면 씬을 처음부터 새로 만든다. **좌표는 씬이 아니라 이 스크립트에서 고친다.**
+- 조사 지점은 `InvestigationSpot`(단서 ID·층), 스폰/NPC/토론 위치는 `GameplayMarker` 컴포넌트로 들어간다.
+- 검증 캡처: `-executeMethod MurderMystery.EditorTools.ManorBlockoutBuilder.CaptureViews -captureOut docs/design/blockout`
+
+| 위에서 (지붕 숨김) | 남동쪽 조감 |
+|---|---|
+| ![top](blockout/blockout_top.png) | ![persp](blockout/blockout_persp.png) |
