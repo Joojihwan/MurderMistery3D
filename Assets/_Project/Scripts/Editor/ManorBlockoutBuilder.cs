@@ -193,8 +193,13 @@ namespace MurderMystery.EditorTools
             Room(p, "Bueok (부엌)", -10, -4, 39, 46, 0f,
                 new[] { new Door(Side.E, 42f, 1.4f) });
             Platform(p, "Gidan_Chanbang", -10, -4, 35, 39, b);
+            // Door sits in the 1 m gap between the storehouse (Z ≤ 38) and the kitchen (Z ≥ 39).
             Room(p, "Chanbang_Buni (찬방·분이 방)", -10, -4, 35, 39, b,
-                new[] { new Door(Side.E, 37f, 1.0f) }, Side.N);
+                new[] { new Door(Side.E, 38.5f, 0.9f) }, Side.N);
+            Box(p, "Seomdol_Chanbang (섬돌)", -3.9f, -3.3f, 0, 0.25f, 38.1f, 38.9f, mats["Stone"]);
+            Box(p, "Seomdol_Anbang (섬돌)", -1.0f, 0.0f, 0, 0.25f, 42.2f, 42.9f, mats["Stone"]);
+            Box(p, "Seomdol_Andaecheong (섬돌)", 5.5f, 6.5f, 0, 0.25f, 42.2f, 42.9f, mats["Stone"]);
+            Box(p, "Seomdol_Geonneonbang (섬돌)", 12.0f, 13.0f, 0, 0.25f, 42.2f, 42.9f, mats["Stone"]);
             Roof(roofs, "Roof_Anchae_West", -11, -3, 34.5f, 47, RoomH + 0.6f);
 
             // Storehouse in the SW corner of the anmadang, door facing the kitchen side.

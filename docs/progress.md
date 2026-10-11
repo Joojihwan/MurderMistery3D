@@ -10,7 +10,7 @@
 - [x] T2 단서 카드 문구 + Fact 분해 + 도 검률 응답 데이터 → `Assets/_Project/Data/*.json`
 - [x] T3 런타임 데이터 모델·로더, 게임 상태(조사 점수·소지품·공개 게시판·수첩), NPC 응답 선택기, 점수 판정
 - [x] T4 데이터 검증 도구 + EditMode 테스트
-- [ ] T5 1인칭 이동 컨트롤러 + 조사 상호작용 + 최소 UI
+- [x] T5 1인칭 이동 컨트롤러 + 조사 상호작용 + 최소 UI
 - [ ] T6 블록아웃 씬 배치 + 플레이 테스트 (MCP 필요)
 - [ ] T7 멀티플레이·음성 기술 결정 문서 → `docs/design/tech_decisions.md`
 - [ ] T8 KHS 에셋 적용 방식 + 한복 캐릭터 수급 방안 → `docs/design/asset_plan.md`
@@ -20,3 +20,5 @@
 ## 메모
 
 - Unity MCP: 서버(8080)는 healthy인데 Unity 세션 미연결 상태였음 (2026-10-11 13:3x). Unity 창 `Window > MCP for Unity > Start Session` 필요. 미연결 시 Editor.log로 컴파일 오류 확인.
+- T5 메모: 플레이어는 씬에 배치하지 않고 `PrototypeBootstrap`이 Play 시 자동 생성. 블록아웃 생성기에 안채 섬돌·찬방 문 위치 수정이 들어갔으므로 **씬 재생성 필요**(Tools > Manor > Build Blockout Scene).
+- 오프라인 컴파일 확인: scratchpad의 Editor.csproj 방식 (Unity DLL 참조, dotnet build). 새 .cs 파일들의 .meta는 Unity가 열릴 때 생성 → 이후 커밋 필요.
