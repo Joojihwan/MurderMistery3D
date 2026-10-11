@@ -60,8 +60,8 @@ namespace MurderMystery.Core
 
             var talk = new SecretTalk { Id = nextId++, Initiator = from, Partner = to };
             talks.Add(talk);
-            var r = new ActionResult { Success = true };
-            r.Messages.Add($"{talk.Id}");
+            var r = new ActionResult { Success = true, TalkId = talk.Id };
+            r.Messages.Add($"{session.Data.CharacterById[to].name}에게 밀담을 청했습니다.");
             return r;
         }
 

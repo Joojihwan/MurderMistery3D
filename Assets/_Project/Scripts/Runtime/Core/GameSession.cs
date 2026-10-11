@@ -11,6 +11,8 @@ namespace MurderMystery.Core
         public readonly List<string> GainedItems = new List<string>();
         public readonly List<string> LearnedClues = new List<string>();
         public readonly List<string> Messages = new List<string>();
+        /// <summary>Id of the secret talk a successful request created.</summary>
+        public int TalkId;
 
         public static ActionResult Fail(string error) => new ActionResult { Success = false, Error = error };
     }

@@ -89,6 +89,7 @@ namespace MurderMystery.Network
         private void OnClientDisconnected(ulong clientId)
         {
             // The seat stays reserved for the same player key so a reconnect gets the same character back.
+            if (seatOfClient.TryGetValue(clientId, out var seat) && gateway.Talks.ActiveFor(seat) != null) gateway.EndTalk(seat);
             seatOfClient.Remove(clientId);
             PushAll();
         }

@@ -48,7 +48,7 @@ namespace MurderMystery.Tests
 
             var req = g.RequestTalk("jeong", "buni");
             Assert.IsTrue(req.Success, req.Error);
-            var id = int.Parse(req.Messages[0]);
+            var id = req.TalkId;
             Assert.IsTrue(g.RespondTalk("buni", id, true).Success);
             Assert.IsTrue(g.Talks.InTalkTogether("jeong", "buni"));
             Assert.IsFalse(g.RequestTalk("jeong", "heo").Success, "already in a talk");
@@ -56,7 +56,7 @@ namespace MurderMystery.Tests
             g.Tick(181f);
             Assert.IsFalse(g.Talks.InTalkTogether("jeong", "buni"), "3 minute limit");
 
-            var second = int.Parse(g.RequestTalk("jeong", "heo").Messages[0]);
+            var second = g.RequestTalk("jeong", "heo").TalkId;
             g.RespondTalk("heo", second, true);
             g.Talks.End(second);
             Assert.IsFalse(g.RequestTalk("jeong", "byeon").Success, "two initiated talks per round");
