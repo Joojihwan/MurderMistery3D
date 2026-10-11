@@ -76,3 +76,7 @@ crashlytics-build.properties
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Offline test harness build output
+/Tools/**/bin/
+/Tools/**/obj/
