@@ -6,7 +6,7 @@
 ## 작업 목록
 
 - [x] T0 Unity MCP 활용법 정리 (메모리 reference_unity_mcp_usage)
-- [ ] T1 다섯 통의 문서 본문 + 엔딩 대본 (A, B×4, C, 공통 에필로그) → `docs/design/endings.md`
+- [x] T1 다섯 통의 문서 본문 + 엔딩 대본 (A, B×4, C, 공통 에필로그) → `docs/design/endings.md`
 - [ ] T2 단서 카드 문구 + Fact 분해 + 도 검률 응답 데이터 → `Assets/_Project/Data/*.json`
 - [ ] T3 런타임 데이터 모델·로더, 게임 상태(조사 점수·소지품·공개 게시판·수첩), NPC 응답 선택기, 점수 판정
 - [ ] T4 데이터 검증 도구 + EditMode 테스트
