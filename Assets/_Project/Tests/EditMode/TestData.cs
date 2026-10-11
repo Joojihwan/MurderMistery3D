@@ -16,7 +16,8 @@ namespace MurderMystery.Tests
             T Read<T>(string name) => Newtonsoft.Json.JsonConvert.DeserializeObject<T>(
                 System.IO.File.ReadAllText(System.IO.Path.Combine(DataDir, name + ".json")));
             return new GameData(Read<CluesFile>("clues"), Read<CharactersFile>("characters"),
-                Read<FactsFile>("facts"), Read<DialogueFile>("npc_dialogue"));
+                Read<FactsFile>("facts"), Read<DialogueFile>("npc_dialogue"),
+                Read<FlowFile>("flow"), Read<EndingsFile>("endings"));
 #endif
         }
 

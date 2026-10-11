@@ -103,6 +103,22 @@ namespace MurderMystery.Core
             foreach (var g in secretGoals.Where(g => !exposedGoals.Contains(g)))
                 issues.Add($"{g}: no clue can expose this secret, so it can never fail");
 
+            // Flow: every phase needs a config; only Ending may have no duration.
+            var configured = new HashSet<string>(data.Flow.phases.Select(p => p.phase));
+            foreach (var phase in System.Enum.GetNames(typeof(GamePhase)).Where(n => !configured.Contains(n)))
+                issues.Add($"flow: no config for phase {phase}");
+            foreach (var p in data.Flow.phases.Where(p => p.phase != nameof(GamePhase.Ending) && p.durationSec <= 0))
+                issues.Add($"flow: phase {p.phase} has no duration");
+
+            // Endings: A, C and one B per innocent character; epilogue documents must be sealed items.
+            var endingKeys = new HashSet<string>(data.Endings.endings.Select(e => e.key));
+            var required = new List<string> { "A", "C" };
+            required.AddRange(data.Characters.characters.Where(c => !c.isCulprit).Select(c => $"B_{c.id}"));
+            foreach (var k in required.Where(k => !endingKeys.Contains(k))) issues.Add($"endings: missing '{k}'");
+            foreach (var id in data.Endings.epilogue.documentOrder)
+                if (!data.ClueById.TryGetValue(id, out var doc) || !doc.@sealed)
+                    issues.Add($"endings: epilogue document '{id}' is not a sealed clue");
+
             var deepSpots = data.Clues.clues.Where(c => c.IsDeep).SelectMany(c => c.SpotIds).Distinct();
             foreach (var s in deepSpots.Where(s => data.RetrievedTraceText(s) == null))
                 issues.Add($"spot {s}: deep spot without a retrieved-trace text");

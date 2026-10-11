@@ -29,7 +29,11 @@ namespace MurderMystery.Gameplay
             var myName = s.Data.CharacterById[host.LocalId].name;
 
             GUI.Box(new Rect(10, 10, 360, 92), GUIContent.none);
-            GUI.Label(new Rect(20, 16, 340, 22), $"{myName}  |  {GameSessionHost.PhaseLabel(s.Phase)}", wrap);
+            var flow = host.Gateway.Flow;
+            var timer = flow.Current != null && flow.Current.durationSec > 0
+                ? $"  {Mathf.Max(0, (int)flow.Remaining) / 60}:{Mathf.Max(0, (int)flow.Remaining) % 60:00}"
+                : "";
+            GUI.Label(new Rect(20, 16, 340, 22), $"{myName}  |  {GameSessionHost.PhaseLabel(s.Phase)}{timer}", wrap);
             GUI.Label(new Rect(20, 40, 340, 22), $"조사 점수 {me.InvestigationPoints}  ·  질문 {me.QuestionsLeft}  ·  소지품 {me.Inventory.Count}", wrap);
             GUI.Label(new Rect(20, 64, 340, 34), "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩  N 다음 단계  1~5 인물", wrap);
 

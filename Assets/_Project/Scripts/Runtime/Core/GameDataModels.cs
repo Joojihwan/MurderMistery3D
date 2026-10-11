@@ -126,4 +126,34 @@ namespace MurderMystery.Core
         public string[] closers = Array.Empty<string>();
         public TopicData[] topics = Array.Empty<TopicData>();
     }
+
+    [Serializable]
+    public class EndingData
+    {
+        public string key;
+        public string title;
+        public string[] lines = Array.Empty<string>();
+    }
+
+    [Serializable]
+    public class ReplayStopData
+    {
+        public string time;
+        public string text;
+    }
+
+    [Serializable]
+    public class EpilogueData
+    {
+        public ReplayStopData[] replayStops = Array.Empty<ReplayStopData>();
+        public string[] documentOrder = Array.Empty<string>();
+        public string finalLine;
+    }
+
+    [Serializable]
+    public class EndingsFile
+    {
+        public EndingData[] endings = Array.Empty<EndingData>();
+        public EpilogueData epilogue = new EpilogueData();
+    }
 }

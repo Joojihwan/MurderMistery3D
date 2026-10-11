@@ -14,8 +14,11 @@ namespace MurderMystery.Gameplay
         [SerializeField] private string localCharacterId = "jeong";
         [SerializeField] private int seed = 1;
 
+        [SerializeField] private bool runTimers = true;
+
         public static GameSessionHost Instance { get; private set; }
-        public GameSession Session { get; private set; }
+        public LocalSessionGateway Gateway { get; private set; }
+        public GameSession Session => Gateway.Session;
         public string LocalId => localCharacterId;
         public PlayerState Local => Session.Players[localCharacterId];
 
@@ -25,9 +28,10 @@ namespace MurderMystery.Gameplay
         private void Awake()
         {
             Instance = this;
-            Session = new GameSession(GameData.LoadFromResources(), seed);
+            Gateway = new LocalSessionGateway(GameData.LoadFromResources(), seed);
+            Gateway.Announcement += line => Push($"도 검률: {line}");
             // Prototype starts straight at the first investigation round.
-            Session.SetPhase(GamePhase.Investigation1);
+            Gateway.JumpTo(GamePhase.Investigation1);
             Push($"[{Session.Data.CharacterById[localCharacterId].name}] 으로 시작합니다. 1차 조사 단계.");
         }
 
@@ -38,9 +42,14 @@ namespace MurderMystery.Gameplay
             Push($"인물 변경: {Session.Data.CharacterById[characterId].name}");
         }
 
+        private void Update()
+        {
+            if (runTimers) Gateway.Tick(Time.deltaTime);
+        }
+
         public void AdvancePhase()
         {
-            Session.AdvancePhase();
+            Gateway.Flow.Advance();
             Push($"단계: {PhaseLabel(Session.Phase)}");
         }
 
