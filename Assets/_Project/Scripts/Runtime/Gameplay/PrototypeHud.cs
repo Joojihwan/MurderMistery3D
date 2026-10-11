@@ -28,14 +28,20 @@ namespace MurderMystery.Gameplay
             var me = host.Local;
             var myName = s.Data.CharacterById[host.LocalId].name;
 
-            GUI.Box(new Rect(10, 10, 360, 92), GUIContent.none);
+            if (s.Phase == GamePhase.Ending)
+            {
+                DrawEnding(host);
+                return;
+            }
+
+            GUI.Box(new Rect(10, 10, 440, 100), GUIContent.none);
             var flow = host.Gateway.Flow;
             var timer = flow.Current != null && flow.Current.durationSec > 0
                 ? $"  {Mathf.Max(0, (int)flow.Remaining) / 60}:{Mathf.Max(0, (int)flow.Remaining) % 60:00}"
                 : "";
             GUI.Label(new Rect(20, 16, 340, 22), $"{myName}  |  {GameSessionHost.PhaseLabel(s.Phase)}{timer}", wrap);
             GUI.Label(new Rect(20, 40, 340, 22), $"조사 점수 {me.InvestigationPoints}  ·  질문 {me.QuestionsLeft}  ·  소지품 {me.Inventory.Count}", wrap);
-            GUI.Label(new Rect(20, 64, 340, 34), "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩  N 다음 단계  1~5 인물", wrap);
+            GUI.Label(new Rect(20, 64, 420, 44), "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩\nN 다음 단계  1~5 인물 전환", wrap);
 
             // Crosshair and prompt.
             GUI.Label(new Rect(Screen.width / 2f - 5, Screen.height / 2f - 12, 20, 24), "+", wrap);
@@ -62,7 +68,6 @@ namespace MurderMystery.Gameplay
             }
 
             if (s.Phase == GamePhase.Vote) DrawVote(host);
-            if (s.Phase == GamePhase.Ending) DrawEnding(host);
             if (interactor.NotebookOpen) DrawNotebook(host, me);
             if (interactor.NpcMenuOpen) DrawNpcMenu(host);
         }
@@ -106,8 +111,9 @@ namespace MurderMystery.Gameplay
             var g = host.Gateway;
             var data = host.Session.Data;
             FirstPersonController.SetCursorLocked(false);
-            var rect = new Rect(Screen.width / 2f - 330, 60, 660, Screen.height - 120);
-            GUI.Box(rect, "엔딩");
+            var rect = new Rect(Screen.width / 2f - 330, 30, 660, Screen.height - 60);
+            // IMGUI boxes are translucent; stack them for an opaque reading panel.
+            for (var i = 0; i < 4; i++) GUI.Box(rect, i == 0 ? "엔딩" : string.Empty);
             GUILayout.BeginArea(new Rect(rect.x + 14, rect.y + 28, rect.width - 28, rect.height - 40));
             endingScroll = GUILayout.BeginScrollView(endingScroll);
             var key = g.Vote != null && g.Vote.Stage == VoteStage.Done ? g.Vote.EndingKey : "C";

@@ -11,7 +11,7 @@
 - [x] T3 런타임 데이터 모델·로더, 게임 상태(조사 점수·소지품·공개 게시판·수첩), NPC 응답 선택기, 점수 판정
 - [x] T4 데이터 검증 도구 + EditMode 테스트
 - [x] T5 1인칭 이동 컨트롤러 + 조사 상호작용 + 최소 UI
-- [ ] T6 블록아웃 씬 배치 + 플레이 테스트 (MCP 필요) — **보류: Unity 세션 미연결**
+- [x] T6 블록아웃 씬 배치 + 플레이 테스트 (2026-10-11 완료, 아래 절차는 재검증용)
   1. Unity 창을 한 번 클릭해 스크립트 임포트(컴파일) → `Window > MCP for Unity > Start Session`
   2. `Tools > Manor > Build Blockout Scene` (안채 섬돌·찬방 문 반영)
   3. `Tools > Murder Mystery > Validate Data` → 콘솔에 OK 확인
@@ -30,7 +30,7 @@
 - [x] T13 투표·재투표·엔딩 선택 (A / B×4 / C) + 엔딩 데이터 JSON
 - [x] T14 네트워크 준비: `ISessionGateway` 인터페이스 + 로컬 구현, 클라이언트 전송용 개인 상태 스냅샷(정보 보안)
 - [x] T14+ 프로토타입 HUD에 투표·결선·엔딩·점수 화면 (혼자서 한 판 끝까지 진행 가능)
-- [ ] T15 Unity MCP 재연결 후 T6 진행 — 사용자가 이 세션에서 /mcp 로 `UnityMCP` 재연결하거나, Unity를 켠 상태로 새 세션 시작 필요
+- [x] T15 Unity MCP 재연결 후 T6 진행 — Unity 테스트 24/24, 문 20곳 보행 점검, 조사·수첩·NPC·투표·엔딩 화면 확인
 
 ## 메모
 

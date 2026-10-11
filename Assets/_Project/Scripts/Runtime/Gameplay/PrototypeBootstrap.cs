@@ -19,6 +19,8 @@ namespace MurderMystery.Gameplay
             var spawn = markers.FirstOrDefault(m => m.Type == MarkerType.PlayerSpawn);
             if (spawn == null) return;
 
+            // Keep simulating when the editor window is not focused (MCP-driven playtests, second monitor).
+            Application.runInBackground = true;
             if (GameSessionHost.Instance == null) new GameObject("GameSessionHost").AddComponent<GameSessionHost>();
 
             var player = new GameObject("Player (prototype)");
@@ -27,7 +29,9 @@ namespace MurderMystery.Gameplay
             cc.height = 1.7f;
             cc.radius = 0.3f;
             cc.center = new Vector3(0f, 0.85f, 0f);
-            cc.stepOffset = 0.5f;    // stepping stones (0.25–0.3 m) then the 0.5–0.6 m gidan
+            // Every rise in the blockout is ≤ 0.3 m (stone → gidan). The controller lifts by stepOffset
+            // before moving sideways, so door lintels must clear height + stepOffset + skin.
+            cc.stepOffset = 0.35f;
 
             var pivot = new GameObject("CameraPivot").transform;
             pivot.SetParent(player.transform, false);

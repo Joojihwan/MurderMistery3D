@@ -22,7 +22,8 @@ namespace MurderMystery.EditorTools
 
         private const float WallT = 0.15f;      // interior wall thickness
         private const float RoomH = 2.4f;       // floor to ceiling
-        private const float DoorH = 2.0f;
+        // Must clear the controller height + step offset + skin (1.7 + 0.35 + 0.08), see PrototypeBootstrap.
+        private const float DoorH = 2.2f;
         private const float BoundaryT = 0.4f;   // compound wall thickness
 
         private enum Side { S, N, W, E }
@@ -61,6 +62,7 @@ namespace MurderMystery.EditorTools
             BuildAnchae(Group(root, "Anchae (안채)"), roofs);
             BuildByeoldang(Group(root, "Byeoldang (별당)"), roofs);
             BuildMisc(Group(root, "Misc"), roofs);
+            StripSmallPropColliders(root);
             BuildSpots(Group(root, "InvestigationSpots"));
             BuildMarkers(Group(root, "GameplayMarkers"));
             BuildLightAndCamera();
@@ -94,9 +96,9 @@ namespace MurderMystery.EditorTools
             Box(p, "Wall_Inner_W (내담)", -24, -2, 0, 2.0f, 12 - BoundaryT / 2, 12 + BoundaryT / 2, mats["Wall"]);
             Box(p, "Wall_Inner_E (내담)", 2, 24, 0, 2.0f, 12 - BoundaryT / 2, 12 + BoundaryT / 2, mats["Wall"]);
 
-            // Saitdam between the back yard and the anmadang, gap X -2..0 (사잇문).
-            Box(p, "Wall_Sait_W (사잇담)", -24, -2, 0, 1.6f, 34 - 0.15f, 34 + 0.15f, mats["Wall"]);
-            Box(p, "Wall_Sait_E (사잇담)", 0, 24, 0, 1.6f, 34 - 0.15f, 34 + 0.15f, mats["Wall"]);
+            // Saitdam between the back yard and the anmadang, gap X 1..3 (사잇문) just east of the storehouse.
+            Box(p, "Wall_Sait_W (사잇담)", -24, 1, 0, 1.6f, 34 - 0.15f, 34 + 0.15f, mats["Wall"]);
+            Box(p, "Wall_Sait_E (사잇담)", 3, 24, 0, 1.6f, 34 - 0.15f, 34 + 0.15f, mats["Wall"]);
 
             // Wall closing off the shrine yard from the kitchen wing side.
             Box(p, "Wall_Shrine_E", -10.6f, -10.3f, 0, 1.6f, 34, 50, mats["Wall"]);
@@ -164,7 +166,8 @@ namespace MurderMystery.EditorTools
             Box(p, "Prop_Sabangtakja_Drawer (사방탁자 서랍)", -16.3f, -15.7f, b, b + 1.2f, 30.3f, 30.75f, mats["WoodDark"]);
             Box(p, "Prop_Bookshelf (작은사랑 서가)", -0.6f, 0.6f, b, b + 1.5f, 30.4f, 30.8f, mats["WoodDark"]);
             Cylinder(p, "Prop_OilBottle (빈 기름병)", -4.5f, 25.2f, b, b + 0.25f, 0.12f, 0.12f, mats["Ceramic"]);
-            foreach (var x in new[] { -19.5f, -13.5f, -7.5f, -1.5f })
+            // Lamps stand beside the doors, not in front of them.
+            foreach (var x in new[] { -18.3f, -12.1f, -6.2f, -0.3f })
                 Cylinder(p, $"Prop_Deungjan (등잔) {x}", x, 24.3f, b, b + 0.5f, 0.1f, 0.1f, mats["Metal"]);
 
             // Victim placeholder lying at the desk.
@@ -251,6 +254,16 @@ namespace MurderMystery.EditorTools
         }
 
         // ---------------------------------------------------------------- gameplay data
+
+        private static readonly string[] NonBlockingPropPrefixes =
+            { "Prop_Deungjan", "Prop_Chotdae", "Prop_Tangyak_Bowl", "Prop_OilBottle", "Prop_Jinsin_Shoes", "Prop_Yaktanggwan", "Victim_Placeholder" };
+
+        private static void StripSmallPropColliders(Transform root)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (NonBlockingPropPrefixes.Any(t.name.StartsWith))
+                    Object.DestroyImmediate(t.GetComponent<Collider>());
+        }
 
         private static void BuildSpots(Transform p)
         {
