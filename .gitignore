@@ -81,3 +81,7 @@ Desktop.ini
 /Tools/**/bin/
 /Tools/**/obj/
 !/Tools/OfflineTests/OfflineTests.csproj
+
+# Third-party asset packs (re-import from Asset Store / FAB, see docs/design/asset_plan.md)
+/[Aa]ssets/ThirdParty/KHS/
+/[Aa]ssets/ThirdParty/KHS.meta
