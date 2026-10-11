@@ -117,6 +117,39 @@ namespace MurderMystery.Tests
         }
 
         [Test]
+        public void PartialTable_ReadyAndVoteOnlyWaitForOccupiedSeats()
+        {
+            var g = new LocalSessionGateway(data);
+            g.ActiveSeats = () => new[] { "jeong", "jaeha" };
+            g.SetReady("jeong", true);
+            g.SetReady("jaeha", true);
+            Assert.AreEqual(GamePhase.Reading, g.Session.Phase, "two humans ready is enough");
+
+            g.JumpTo(GamePhase.FinalStatements);
+            g.Flow.Advance();
+            g.CastVote("jeong", "jaeha", 1);
+            g.CastVote("jaeha", "jeong", -1);
+            // 1:1 tie → runoff between both; each can only vote for the other → tie → unresolved.
+            g.CastVote("jeong", "jaeha", 1);
+            g.CastVote("jaeha", "jeong", -1);
+            Assert.AreEqual(GamePhase.Ending, g.Session.Phase);
+            Assert.AreEqual("C", g.Vote.EndingKey);
+        }
+
+        [Test]
+        public void VoteTimeout_ForcesAResult()
+        {
+            var g = new LocalSessionGateway(data);
+            g.JumpTo(GamePhase.FinalStatements);
+            g.Flow.Advance();
+            g.CastVote("jeong", "byeon", 0);
+            g.Tick(1000f);   // vote timer expires
+            Assert.AreEqual(GamePhase.Ending, g.Session.Phase);
+            Assert.AreEqual("B_byeon", g.Vote.EndingKey);
+            Assert.AreEqual("B_byeon", g.GetSnapshot("heo").endingKey);
+        }
+
+        [Test]
         public void Snapshot_ContainsOnlyOwnPrivateData()
         {
             var g = new LocalSessionGateway(data);

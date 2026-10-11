@@ -21,9 +21,12 @@ namespace MurderMystery.Core
         public string Accused { get; private set; }
         public bool Resolved => Stage == VoteStage.Done && Accused != null;
 
-        public VoteFlow(GameSession session)
+        private readonly Func<IEnumerable<string>> voters;
+
+        public VoteFlow(GameSession session, Func<IEnumerable<string>> voters = null)
         {
             this.session = session;
+            this.voters = voters ?? (() => session.Players.Keys);
             Candidates = session.Players.Keys.ToList();
         }
 
@@ -38,7 +41,16 @@ namespace MurderMystery.Core
             return new ActionResult { Success = true };
         }
 
-        public bool AllVoted => session.Players.Keys.All(id => votes.ContainsKey(id) || !CanVote(id));
+        public bool HasVoted(string playerId) => votes.ContainsKey(playerId);
+
+        public bool AllVoted => voters().All(id => votes.ContainsKey(id) || !CanVote(id));
+
+        /// <summary>Time ran out: close what we have; an unfinished runoff ends unresolved.</summary>
+        public void ForceFinish()
+        {
+            if (Stage == VoteStage.Done) return;
+            if (!Close()) Close();
+        }
 
         // In a two-way runoff a candidate can only vote for the other one; a candidate in a runoff
         // where every other candidate is themselves cannot vote at all.

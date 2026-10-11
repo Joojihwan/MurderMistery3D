@@ -1,5 +1,4 @@
 using System.Linq;
-using MurderMystery.Core;
 using MurderMystery.Investigation;
 using MurderMystery.Level;
 using UnityEngine;
@@ -8,8 +7,9 @@ using UnityEngine.InputSystem;
 namespace MurderMystery.Gameplay
 {
     /// <summary>
-    /// Finds the investigation spot or NPC the player is looking at and handles the prototype keys:
-    /// E investigate / talk, R retrieve own hidden item, Tab notebook, N next phase, 1–5 switch character.
+    /// Finds the investigation spot or NPC the player is looking at and handles keys:
+    /// E investigate / talk, R retrieve own hidden item, Tab notebook.
+    /// Offline only (debug): N next phase, 1–5 switch character.
     /// </summary>
     public class PlayerInteractor : MonoBehaviour
     {
@@ -36,22 +36,29 @@ namespace MurderMystery.Gameplay
                 .FirstOrDefault(m => m.MarkerId == "NPC_DoGeomnyul_Daecheong")?.transform;
         }
 
+        public void SetNotebook(bool open)
+        {
+            NotebookOpen = open;
+            FirstPersonController.SetCursorLocked(!NotebookOpen && !NpcMenuOpen);
+        }
+
         private void Update()
         {
-            var host = GameSessionHost.Instance;
+            var client = GameClient.Current;
             var keyboard = Keyboard.current;
-            if (host == null || keyboard == null || view == null) return;
+            if (client == null || keyboard == null || view == null) return;
 
             UpdateFocus();
 
-            if (keyboard.tabKey.wasPressedThisFrame)
+            if (keyboard.tabKey.wasPressedThisFrame) SetNotebook(!NotebookOpen);
+
+            if (client.IsOffline && GameSessionHost.Instance != null)
             {
-                NotebookOpen = !NotebookOpen;
-                FirstPersonController.SetCursorLocked(!NotebookOpen && !NpcMenuOpen);
+                if (keyboard.nKey.wasPressedThisFrame) GameSessionHost.Instance.AdvancePhase();
+                for (var i = 0; i < CharacterOrder.Length; i++)
+                    if (keyboard[(Key)((int)Key.Digit1 + i)].wasPressedThisFrame)
+                        GameSessionHost.Instance.SetLocalCharacter(CharacterOrder[i]);
             }
-            if (keyboard.nKey.wasPressedThisFrame) host.AdvancePhase();
-            for (var i = 0; i < CharacterOrder.Length; i++)
-                if (keyboard[(Key)((int)Key.Digit1 + i)].wasPressedThisFrame) host.SetLocalCharacter(CharacterOrder[i]);
 
             if (NpcMenuOpen) return;
 
@@ -64,12 +71,11 @@ namespace MurderMystery.Gameplay
                 }
                 else if (Focused != null)
                 {
-                    host.Report(host.Session.Investigate(host.LocalId, Focused.SpotId));
+                    client.Investigate(Focused.SpotId);
                 }
             }
 
-            if (keyboard.rKey.wasPressedThisFrame && Focused != null)
-                host.Report(host.Session.RetrieveHidden(host.LocalId, Focused.SpotId));
+            if (keyboard.rKey.wasPressedThisFrame && Focused != null) client.Retrieve(Focused.SpotId);
         }
 
         private void UpdateFocus()
@@ -86,8 +92,7 @@ namespace MurderMystery.Gameplay
             foreach (var s in spots)
             {
                 var to = s.transform.position - origin;
-                var dist = to.magnitude;
-                if (dist > maxDistance) continue;
+                if (to.magnitude > maxDistance) continue;
                 var angle = Vector3.Angle(forward, to);
                 if (angle > 20f || angle > best) continue;
                 best = angle;

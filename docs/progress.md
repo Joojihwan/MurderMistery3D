@@ -32,6 +32,18 @@
 - [x] T14+ 프로토타입 HUD에 투표·결선·엔딩·점수 화면 (혼자서 한 판 끝까지 진행 가능)
 - [x] T15 Unity MCP 재연결 후 T6 진행 — Unity 테스트 24/24, 문 20곳 보행 점검, 조사·수첩·NPC·투표·엔딩 화면 확인
 
+## 3차 작업 — 멀티플레이 (NGO + Multiplayer Services Sessions + Vivox), 2026-10-11 결정
+
+- [x] M1 패키지 설치 (NGO 2.13.3, Multiplayer 2.4.0, Vivox 16.12.1): com.unity.netcode.gameobjects, com.unity.services.multiplayer, com.unity.services.vivox
+- [x] M2 API 확인(unity_reflect) → 네트워크 설계 메모 (tech_decisions 갱신)
+- [~] M3 접속 (코드 완료: SessionService, LobbyMenu, NetGameSpawner. **다음: Play→LAN 호스트로 NetGame 생성·좌석 클레임·RPC 흐름 검증** — execute_code로 HostLan 호출 시 응답 null, 원인 확인 필요): UGS 초기화·익명 로그인, 세션 생성(호스트)/코드로 참가, NetworkManager 부트스트랩
+- [~] M4 좌석 (코드 완료, 미검증): 접속자 ↔ 인물 배정(배역 선택), 재접속 시 같은 좌석
+- [~] M5 의도 RPC (코드 완료, 미검증) → 호스트 `LocalSessionGateway` → 대상별 결과/스냅샷 전송, 공용 안내 브로드캐스트
+- [~] M6 플레이어 이동 (NetPlayer 프리팹 생성·스폰 확인, 원격 표시 미검증) 동기화 (NetworkObject 플레이어 프리팹 + 소유자 권한 NetworkTransform), 근접 판정
+- [~] M7 Vivox (VoiceService 코드 완료, UGS 연결 후 검증): 로그인, 전체 채널(토론), 밀담 2인 채널, 단계별 음소거
+- [~] M8 로비 (IMGUI 완료, 다중 인스턴스 테스트 미실시)/배역/밀담 IMGUI, 로컬 다중 인스턴스 테스트(Multiplayer Play Mode)
+- [ ] M9 **사용자 작업**: Unity Cloud 프로젝트 연결(Project Settings > Services), 대시보드에서 Vivox 활성화
+
 ## 메모
 
 - MCP 원인: 이 세션의 `unityMCP` 도구는 데스크톱 확장으로 뜬 **stdio 서버 v9.7.3**이고, Unity는 **HTTP 서버 v10.3.0(8080)**에 연결됨. 세션의 HTTP 서버 항목 `UnityMCP`는 세션 시작 시 서버가 꺼져 있어 failed. → `reconnect_session_connector("UnityMCP")` 후 다음 턴부터 `mcp__UnityMCP__*` 도구 사용. 안 되면 사용자가 /mcp에서 재연결하거나 세션 재시작.

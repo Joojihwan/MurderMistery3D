@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MurderMystery.Core
 {
@@ -18,6 +19,7 @@ namespace MurderMystery.Core
         NpcAnswer AskNpc(string playerId, string topicId);
         ActionResult RequestTalk(string fromId, string toId);
         ActionResult RespondTalk(string responderId, int talkId, bool accept);
+        ActionResult EndTalk(string playerId);
         ActionResult SetReady(string playerId, bool ready);
         ActionResult CastVote(string voterId, string targetId, int bonusAnswer);
     }
@@ -35,6 +37,18 @@ namespace MurderMystery.Core
         public VoteFlow Vote { get; private set; }
 
         public Func<string, string, bool> AreNearby { get; set; } = (_, __) => false;
+
+        /// <summary>Seats taken by real players. Ready-skip and vote closing only wait for these.</summary>
+        public Func<IEnumerable<string>> ActiveSeats
+        {
+            get => activeSeats;
+            set
+            {
+                activeSeats = value;
+                Flow.RequiredSeats = value;
+            }
+        }
+        private Func<IEnumerable<string>> activeSeats;
 
         public event Action<string> Announcement;
 
@@ -62,11 +76,12 @@ namespace MurderMystery.Core
 
         private void OnPhaseStarted(GamePhase phase, PhaseConfig cfg)
         {
-            if (phase == GamePhase.Vote) Vote = new VoteFlow(Session);
+            if (phase == GamePhase.Vote) Vote = new VoteFlow(Session, activeSeats);
+            if (phase == GamePhase.Ending) Vote?.ForceFinish();
             if (!string.IsNullOrEmpty(cfg?.announcement)) Announcement?.Invoke(cfg.announcement);
         }
 
-        public PlayerSnapshot GetSnapshot(string playerId) => PlayerSnapshot.Build(Session, Flow, playerId);
+        public PlayerSnapshot GetSnapshot(string playerId) => PlayerSnapshot.Build(this, playerId);
         public ActionResult Investigate(string playerId, string spotId, string preferredItem = null) =>
             Session.Investigate(playerId, spotId, preferredItem);
         public ActionResult RetrieveHidden(string playerId, string spotId) => Session.RetrieveHidden(playerId, spotId);
@@ -89,6 +104,14 @@ namespace MurderMystery.Core
         public NpcAnswer AskNpc(string playerId, string topicId) => Session.AskNpc(playerId, topicId);
         public ActionResult RequestTalk(string fromId, string toId) => Talks.Request(fromId, toId);
         public ActionResult RespondTalk(string responderId, int talkId, bool accept) => Talks.Respond(responderId, talkId, accept);
+
+        public ActionResult EndTalk(string playerId)
+        {
+            var talk = Talks.ActiveFor(playerId);
+            if (talk == null) return ActionResult.Fail("밀담 중이 아닙니다.");
+            Talks.End(talk.Id);
+            return new ActionResult { Success = true };
+        }
 
         public ActionResult SetReady(string playerId, bool ready)
         {

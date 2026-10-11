@@ -66,6 +66,7 @@ namespace MurderMystery.EditorTools
             BuildSpots(Group(root, "InvestigationSpots"));
             BuildMarkers(Group(root, "GameplayMarkers"));
             BuildLightAndCamera();
+            NetworkSceneSetup.Apply();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddSceneToBuildSettings(ScenePath);

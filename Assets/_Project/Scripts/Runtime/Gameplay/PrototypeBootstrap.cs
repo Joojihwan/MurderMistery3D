@@ -5,56 +5,35 @@ using UnityEngine;
 namespace MurderMystery.Gameplay
 {
     /// <summary>
-    /// On Play, if the scene has gameplay markers but no player, spawns the walk-around prototype:
-    /// session host, first-person player at PlayerSpawn_0, interactor and HUD. Keeps the generated
-    /// blockout scene free of hand-placed gameplay objects.
+    /// On Play: if the scene has gameplay markers but no player, spawns the offline walk-around prototype —
+    /// unless the scene is set up for networking (a NetworkManager object exists), in which case the lobby
+    /// decides and calls <see cref="SpawnOffline"/> for solo testing.
     /// </summary>
     public static class PrototypeBootstrap
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Spawn()
-        {
-            if (Object.FindFirstObjectByType<FirstPersonController>() != null) return;
-            var markers = Object.FindObjectsByType<GameplayMarker>(FindObjectsSortMode.None);
-            var spawn = markers.FirstOrDefault(m => m.Type == MarkerType.PlayerSpawn);
-            if (spawn == null) return;
+        public const string NetworkManagerName = "NetworkManager";
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AutoSpawn()
+        {
             // Keep simulating when the editor window is not focused (MCP-driven playtests, second monitor).
             Application.runInBackground = true;
+            if (GameObject.Find(NetworkManagerName) != null) return;
+            SpawnOffline();
+        }
+
+        public static void SpawnOffline()
+        {
+            if (Object.FindFirstObjectByType<FirstPersonController>() != null) return;
+            var spawn = Object.FindObjectsByType<GameplayMarker>(FindObjectsSortMode.None)
+                .FirstOrDefault(m => m.Type == MarkerType.PlayerSpawn);
+            if (spawn == null) return;
+
             if (GameSessionHost.Instance == null) new GameObject("GameSessionHost").AddComponent<GameSessionHost>();
 
             var player = new GameObject("Player (prototype)");
-            player.transform.SetPositionAndRotation(spawn.transform.position + Vector3.up * 0.05f, Quaternion.Euler(0f, 0f, 0f));
-            var cc = player.AddComponent<CharacterController>();
-            cc.height = 1.7f;
-            cc.radius = 0.3f;
-            cc.center = new Vector3(0f, 0.85f, 0f);
-            // Every rise in the blockout is ≤ 0.3 m (stone → gidan). The controller lifts by stepOffset
-            // before moving sideways, so door lintels must clear height + stepOffset + skin.
-            cc.stepOffset = 0.35f;
-
-            var pivot = new GameObject("CameraPivot").transform;
-            pivot.SetParent(player.transform, false);
-            pivot.localPosition = new Vector3(0f, 1.55f, 0f);
-            var cam = pivot.gameObject.AddComponent<Camera>();
-            cam.nearClipPlane = 0.05f;
-            cam.tag = "MainCamera";
-            pivot.gameObject.AddComponent<AudioListener>();
-
-            // The generated scene's overview camera would fight for MainCamera / AudioListener.
-            foreach (var other in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Where(c => c != cam))
-            {
-                other.gameObject.SetActive(false);
-            }
-
-            var controller = player.AddComponent<FirstPersonController>();
-            controller.Init(pivot);
-            var interactor = player.AddComponent<PlayerInteractor>();
-            interactor.Init(cam);
-            player.AddComponent<PrototypeHud>().Init(interactor);
-
-            // Face the sarangchae from the discussion area.
-            player.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+            player.transform.SetPositionAndRotation(spawn.transform.position + Vector3.up * 0.05f, Quaternion.identity);
+            LocalPlayerRig.Attach(player);
         }
     }
 }

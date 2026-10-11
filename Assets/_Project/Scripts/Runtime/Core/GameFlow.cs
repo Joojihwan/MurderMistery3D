@@ -39,6 +39,9 @@ namespace MurderMystery.Core
         public PhaseConfig Current => configs.TryGetValue(session.Phase, out var c) ? c : null;
         public IReadOnlyCollection<string> Ready => ready;
 
+        /// <summary>Seats that must be ready to skip ahead (default: all characters; online: occupied seats).</summary>
+        public Func<IEnumerable<string>> RequiredSeats { get; set; }
+
         public event Action<GamePhase, PhaseConfig> PhaseStarted;
         public event Action<string> Warning;
 
@@ -69,7 +72,8 @@ namespace MurderMystery.Core
             if (isReady) ready.Add(playerId);
             else ready.Remove(playerId);
             var cfg = Current;
-            if (cfg != null && cfg.durationSec > 0f && session.Players.Keys.All(ready.Contains)) Advance();
+            var required = (RequiredSeats?.Invoke() ?? session.Players.Keys).ToList();
+            if (cfg != null && cfg.durationSec > 0f && required.Count > 0 && required.All(ready.Contains)) Advance();
         }
 
         public void Advance()
