@@ -38,10 +38,10 @@
 - [x] M2 API 확인(unity_reflect) → 네트워크 설계 메모 (tech_decisions 갱신)
 - [x] M3 접속: LAN 호스트(에디터) + 빌드 클라이언트 접속 확인. 온라인(Sessions/Relay)은 M9 이후 검증. (MCP execute_code는 CodeDom 컴파일러라 로컬 함수 불가 → 리플렉션 코드로 호출)
 - [x] M4 좌석: 배역 선택·이름 표시, 진행 중 재접속 시 같은 인물·기존 단서 복구, 미배정 인물은 진행 중 선택 거부
-- [x] M5 의도 RPC: 단계 진행·공지 브로드캐스트, 클라이언트 조사 → 본인에게만 결과, 호스트 스냅샷에 남의 단서 없음(격리 확인), 밀담 요청→수락 양쪽 반영. 밀담 요청 결과에 talk id가 문구로 찍히던 문제 수정(ActionResult.TalkId), 접속 끊긴 사람의 밀담 자동 종료
+- [x] M5 의도 RPC: 단계 진행·공지 브로드캐스트, 클라이언트 조사 → 본인에게만 결과, 호스트 스냅샷에 남의 단서 없음(격리 확인), 밀담 요청→수락 양쪽 반영, 2인 투표→엔딩·점수 양쪽 수신. 밀담 요청 결과에 talk id가 문구로 찍히던 문제 수정(ActionResult.TalkId), 접속 끊긴 사람의 밀담 자동 종료
 - [x] M6 플레이어: 원격 플레이어가 다른 스폰 위치에 인물 체형 캡슐로 표시, 퇴장 시 제거
 - [~] M7 Vivox (VoiceService 코드 완료; UGS 미연결 시 경고만 남기고 게임은 계속됨 확인. M9 이후 음성 검증)
-- [x] M8 다중 인스턴스: `Builds/Win64` 개발 빌드 + `CommandLineAutoPlay` 테스트 훅(-mmJoin/-mmSeat/-mmInvestigate/-mmAcceptTalk/-mmQuitAfter, -batchmode 가능). 빌드 설정의 옛 SampleScene 항목 제거
+- [x] M8 다중 인스턴스: `Builds/Win64` 개발 빌드 + `CommandLineAutoPlay` 테스트 훅(-mmJoin/-mmSeat/-mmInvestigate/-mmAcceptTalk/-mmVote/-mmQuitAfter, -batchmode 가능). 빌드 설정의 옛 SampleScene 항목 제거
 - [ ] M9 **사용자 작업**: Unity Cloud 프로젝트 연결(Project Settings > Services), 대시보드에서 Vivox 활성화
 
 ## 메모
