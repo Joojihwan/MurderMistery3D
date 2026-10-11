@@ -23,7 +23,17 @@
 - [x] T9 밸런스 검토 (조사 점수·단서 수·시간·범인 난이도) → `docs/design/balance_review.md`
 - [x] T10 전체 자체 검토 + 요약 보고 (2026-10-11)
 
+## 2차 작업 (2026-10-11 오후, Unity 연결 없이 가능한 것)
+
+- [ ] T11 진행 흐름: 단계 타이머·자동 진행·도 검률 안내 대사 데이터 (`GameFlow`, announcements)
+- [ ] T12 밀담 시스템: 요청/수락/3분 타이머/라운드당 2회 (`SecretTalkManager`)
+- [ ] T13 투표·재투표·엔딩 선택 (A / B×4 / C) + 엔딩 데이터 JSON
+- [ ] T14 네트워크 준비: `ISessionGateway` 인터페이스 + 로컬 구현, 클라이언트 전송용 개인 상태 스냅샷(정보 보안)
+- [ ] T15 Unity MCP 재연결 후 T6 진행
+
 ## 메모
+
+- MCP 원인: 이 세션의 `unityMCP` 도구는 데스크톱 확장으로 뜬 **stdio 서버 v9.7.3**이고, Unity는 **HTTP 서버 v10.3.0(8080)**에 연결됨. 세션의 HTTP 서버 항목 `UnityMCP`는 세션 시작 시 서버가 꺼져 있어 failed. → `reconnect_session_connector("UnityMCP")` 후 다음 턴부터 `mcp__UnityMCP__*` 도구 사용. 안 되면 사용자가 /mcp에서 재연결하거나 세션 재시작.
 
 - Unity MCP: 서버(8080)는 healthy인데 Unity 세션 미연결 상태였음 (2026-10-11 13:3x). Unity 창 `Window > MCP for Unity > Start Session` 필요. 미연결 시 Editor.log로 컴파일 오류 확인.
 - T5 메모: 플레이어는 씬에 배치하지 않고 `PrototypeBootstrap`이 Play 시 자동 생성. 블록아웃 생성기에 안채 섬돌·찬방 문 위치 수정이 들어갔으므로 **씬 재생성 필요**(Tools > Manor > Build Blockout Scene).
