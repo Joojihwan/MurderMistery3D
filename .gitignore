@@ -80,3 +80,4 @@ Desktop.ini
 # Offline test harness build output
 /Tools/**/bin/
 /Tools/**/obj/
+!/Tools/OfflineTests/OfflineTests.csproj

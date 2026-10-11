@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <NoWarn>CS0649;CS0414;NU1701</NoWarn>
+    <ProjRoot>$(MSBuildThisFileDirectory)../..</ProjRoot>
+    <UnityManaged>C:/Program Files/Unity/Hub/Editor/6000.3.19f1/Editor/Data/Managed</UnityManaged>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(ProjRoot)/Assets/_Project/Scripts/Runtime/Core/**/*.cs" />
+    <Compile Include="$(ProjRoot)/Assets/_Project/Tests/EditMode/**/*.cs" />
+    <Reference Include="$(UnityManaged)/UnityEngine/UnityEngine.CoreModule.dll" Private="true" />
+    <Reference Include="$(UnityManaged)/UnityEngine/UnityEngine.JSONSerializeModule.dll" Private="true" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>
