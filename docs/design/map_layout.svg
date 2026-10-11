@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 800" font-family="'Noto Sans KR', 'Malgun Gothic', sans-serif">
+  <style>
+    .bg { fill: #f6f1e7; }
+    .wall { fill: none; stroke: #5b4636; stroke-width: 4; }
+    .lowwall { stroke: #8a6f58; stroke-width: 3; }
+    .yard { fill: #e7dcc4; stroke: none; }
+    .bldg { fill: #c9b18f; stroke: #5b4636; stroke-width: 2; }
+    .room { fill: #d9c4a3; stroke: #5b4636; stroke-width: 1.5; }
+    .maru { fill: #b88e5f; stroke: #5b4636; stroke-width: 1; opacity: 0.85; }
+    .locked { fill: #bfb6a8; stroke: #5b4636; stroke-width: 2; stroke-dasharray: 6 4; }
+    .outer { fill: #d6cfc2; stroke: #5b4636; stroke-width: 2; }
+    .label { font-size: 12px; fill: #2e2219; text-anchor: middle; }
+    .zone { font-size: 13px; fill: #6b5444; text-anchor: middle; font-weight: 600; }
+    .spot { fill: #b3261e; stroke: #fff; stroke-width: 1.5; }
+    .spotnum { font-size: 10px; fill: #fff; text-anchor: middle; font-weight: 700; }
+    .npc { fill: #1f5fa8; stroke: #fff; stroke-width: 1.5; }
+    .meet { fill: none; stroke: #1f5fa8; stroke-width: 2; stroke-dasharray: 4 3; }
+    .r-byeon { fill: none; stroke: #7a3fa0; stroke-width: 2.5; stroke-dasharray: 8 5; }
+    .r-buni { fill: none; stroke: #2f8a4a; stroke-width: 2.5; stroke-dasharray: 3 4; }
+    .legend { font-size: 12px; fill: #2e2219; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="960" height="800"/>
+
+  <!-- 바깥 영역 (중문 밖, 이동 불가) -->
+  <rect class="yard" x="40" y="572" width="672" height="168"/>
+  <rect class="outer" x="40" y="684" width="308" height="56"/>
+  <rect class="outer" x="404" y="684" width="308" height="56"/>
+  <text class="label" x="194" y="716">행랑채 (도 검률 묵은 방)</text>
+  <text class="label" x="558" y="716">행랑채 (문간방·문지기)</text>
+  <text class="zone" x="376" y="640">바깥마당 · 중문 밖 (이동 불가)</text>
+  <rect x="348" y="728" width="56" height="12" fill="#5b4636"/>
+  <text class="label" x="376" y="758">대문</text>
+
+  <!-- 안쪽 마당들 -->
+  <rect class="yard" x="68" y="404" width="308" height="154"/>
+  <text class="zone" x="222" y="540">사랑마당</text>
+  <rect class="yard" x="320" y="138" width="280" height="112"/>
+  <text class="zone" x="480" y="196">안마당</text>
+  <rect class="yard" x="68" y="264" width="364" height="42"/>
+  <text class="label" x="200" y="290">뒤뜰</text>
+  <rect class="yard" x="432" y="306" width="252" height="252"/>
+  <ellipse cx="572" cy="509" rx="56" ry="35" fill="#a9c4c9" stroke="#5b4636" stroke-width="1"/>
+  <text class="label" x="572" y="513">연못</text>
+
+  <!-- 사랑채 -->
+  <rect class="bldg" x="68" y="306" width="336" height="98"/>
+  <rect class="room" x="68" y="306" width="70" height="77"/>
+  <rect class="room" x="138" y="306" width="98" height="77"/>
+  <rect class="maru" x="236" y="306" width="70" height="77"/>
+  <rect class="room" x="306" y="306" width="98" height="77"/>
+  <rect class="maru" x="68" y="383" width="336" height="21"/>
+  <text class="label" x="103" y="372">서재</text>
+  <text class="label" x="198" y="372">사랑방</text>
+  <text class="label" x="271" y="372">대청</text>
+  <text class="label" x="355" y="372">작은사랑</text>
+  <text class="label" x="160" y="398" font-size="10">툇마루 (지붕 아래)</text>
+
+  <!-- 안채 -->
+  <rect class="room" x="320" y="68" width="98" height="70"/>
+  <rect class="maru" x="418" y="68" width="84" height="70"/>
+  <rect class="room" x="502" y="68" width="98" height="70"/>
+  <text class="label" x="369" y="92">안방 (빈방)</text>
+  <text class="label" x="460" y="92">안대청</text>
+  <text class="label" x="551" y="122">건넌방 (정씨)</text>
+  <rect class="room" x="236" y="96" width="84" height="98"/>
+  <text class="label" x="278" y="114">부엌</text>
+  <rect class="room" x="236" y="194" width="84" height="56"/>
+  <text class="label" x="278" y="218">찬방</text>
+  <text class="label" x="278" y="234">분이 방</text>
+  <rect class="bldg" x="320" y="208" width="56" height="42"/>
+  <text class="label" x="348" y="214" font-size="11">곳간</text>
+  <rect class="room" x="600" y="68" width="84" height="70" fill="#cfc3ad"/>
+  <text class="label" x="642" y="108">장독대</text>
+  <circle cx="642" cy="208" r="10" fill="#a9c4c9" stroke="#5b4636"/>
+  <text class="label" x="642" y="236">우물</text>
+
+  <!-- 사당 (잠김) -->
+  <rect class="locked" x="68" y="82" width="140" height="140"/>
+  <text class="label" x="138" y="150">사당</text>
+  <text class="label" x="138" y="166" font-size="10">(잠김)</text>
+
+  <!-- 별당 -->
+  <rect class="room" x="516" y="348" width="70" height="84"/>
+  <rect class="room" x="586" y="348" width="70" height="84"/>
+  <rect class="maru" x="516" y="432" width="140" height="14"/>
+  <text class="label" x="551" y="392">허 의원 방</text>
+  <text class="label" x="621" y="392">변 행수 방</text>
+  <text class="zone" x="586" y="336">별당</text>
+  <rect class="bldg" x="446" y="516" width="42" height="42"/>
+  <text class="label" x="467" y="541">뒷간</text>
+
+  <!-- 담장 -->
+  <rect class="wall" x="40" y="40" width="672" height="700"/>
+  <line class="wall" x1="40" y1="572" x2="348" y2="572"/>
+  <line class="wall" x1="404" y1="572" x2="712" y2="572"/>
+  <text class="label" x="376" y="566" font-weight="700">중문 (빗장)</text>
+  <line class="lowwall" x1="236" y1="264" x2="348" y2="264"/>
+  <line class="lowwall" x1="376" y1="264" x2="712" y2="264"/>
+  <text class="label" x="362" y="280" font-size="10">사잇문</text>
+  <line class="lowwall" x1="432" y1="306" x2="432" y2="474"/>
+  <line class="lowwall" x1="432" y1="502" x2="432" y2="572"/>
+  <text class="label" x="452" y="492" font-size="10">협문</text>
+
+  <!-- 간밤 동선 -->
+  <polyline class="r-byeon" points="586,432 432,488 271,411 103,390"/>
+  <polyline class="r-buni" points="320,152 362,264 411,285 411,418 271,411"/>
+
+  <!-- 조사 지점 -->
+  <g>
+    <circle class="spot" cx="103" cy="348" r="9"/><text class="spotnum" x="103" y="352">1</text>
+    <circle class="spot" cx="82" cy="320" r="9"/><text class="spotnum" x="82" y="324">2</text>
+    <circle class="spot" cx="103" cy="392" r="9"/><text class="spotnum" x="103" y="396">3</text>
+    <circle class="spot" cx="160" cy="350" r="9"/><text class="spotnum" x="160" y="354">4</text>
+    <circle class="spot" cx="212" cy="335" r="9"/><text class="spotnum" x="212" y="339">5</text>
+    <circle class="spot" cx="152" cy="320" r="9"/><text class="spotnum" x="152" y="324">6</text>
+    <circle class="spot" cx="260" cy="392" r="9"/><text class="spotnum" x="260" y="396">7</text>
+    <circle class="spot" cx="290" cy="418" r="9"/><text class="spotnum" x="290" y="422">8</text>
+    <circle class="spot" cx="380" cy="392" r="9"/><text class="spotnum" x="380" y="396">9</text>
+    <circle class="spot" cx="376" cy="320" r="9"/><text class="spotnum" x="376" y="324">10</text>
+    <circle class="spot" cx="348" cy="226" r="9"/><text class="spotnum" x="348" y="230">11</text>
+    <circle class="spot" cx="278" cy="140" r="9"/><text class="spotnum" x="278" y="144">12</text>
+    <circle class="spot" cx="257" cy="174" r="9"/><text class="spotnum" x="257" y="178">13</text>
+    <circle class="spot" cx="572" cy="96" r="9"/><text class="spotnum" x="572" y="100">14</text>
+    <circle class="spot" cx="540" cy="372" r="9"/><text class="spotnum" x="540" y="376">15</text>
+    <circle class="spot" cx="568" cy="410" r="9"/><text class="spotnum" x="568" y="414">16</text>
+    <circle class="spot" cx="635" cy="372" r="9"/><text class="spotnum" x="635" y="376">17</text>
+    <circle class="spot" cx="621" cy="452" r="9"/><text class="spotnum" x="621" y="456">18</text>
+  </g>
+
+  <!-- NPC / 모임 -->
+  <circle class="npc" cx="271" cy="340" r="9"/><text class="spotnum" x="271" y="344">검</text>
+  <circle class="meet" cx="222" cy="488" r="34"/>
+  <text class="label" x="222" y="492" fill="#1f5fa8">토론 장소</text>
+
+  <!-- 범례 -->
+  <g transform="translate(730,40)">
+    <text class="legend" x="0" y="0" font-weight="700" font-size="14">윤 대감 댁 배치도</text>
+    <text class="legend" x="0" y="18" font-size="10">북쪽이 위 · 1칸 = 1m 축척 기준</text>
+    <circle class="spot" cx="8" cy="42" r="8"/><text class="legend" x="22" y="46">조사 지점</text>
+    <circle class="npc" cx="8" cy="64" r="8"/><text class="legend" x="22" y="68">도 검률 (대청)</text>
+    <line class="r-byeon" x1="0" y1="86" x2="18" y2="86"/><text class="legend" x="22" y="90">변 행수 01:30</text>
+    <line class="r-buni" x1="0" y1="106" x2="18" y2="106"/><text class="legend" x="22" y="110">분이 22:45</text>
+    <rect class="maru" x="0" y="120" width="16" height="10"/><text class="legend" x="22" y="130">마루 (진흙 안 묻음)</text>
+    <rect class="yard" x="0" y="140" width="16" height="10"/><text class="legend" x="22" y="150">마당 (비 → 진흙)</text>
+
+    <text class="legend" x="0" y="182" font-weight="700">조사 지점</text>
+    <text class="legend" x="0" y="200">1 서재 서안 · N1</text>
+    <text class="legend" x="0" y="216">2 서재 문갑 · C4 D1 D2</text>
+    <text class="legend" x="0" y="232">3 서재 문지방 · C3b</text>
+    <text class="legend" x="0" y="248">4 사랑방 화로 · C1</text>
+    <text class="legend" x="0" y="264">5 사랑방 소반 · E1</text>
+    <text class="legend" x="0" y="280">6 사랑방 서랍 · C5</text>
+    <text class="legend" x="0" y="296">7 대청·툇마루 · C3a</text>
+    <text class="legend" x="0" y="312">8 섬돌 · C3c</text>
+    <text class="legend" x="0" y="328">9 등잔·기름병 · N3</text>
+    <text class="legend" x="0" y="344">10 작은사랑 서책 · H4 C7</text>
+    <text class="legend" x="0" y="360">11 곳간 쥐약 단지 · C2</text>
+    <text class="legend" x="0" y="376">12 부엌 약탕관 · N2</text>
+    <text class="legend" x="0" y="392">13 부엌 쌀독 · H1</text>
+    <text class="legend" x="0" y="408">14 건넌방 반닫이 · H3</text>
+    <text class="legend" x="0" y="424">15 허 의원 약상자 · C6</text>
+    <text class="legend" x="0" y="440">16 허 의원 봇짐 · H6</text>
+    <text class="legend" x="0" y="456">17 변 행수 짐 · H5a H5b</text>
+    <text class="legend" x="0" y="472">18 별당 툇마루 진신 · C8</text>
+  </g>
+</svg>
