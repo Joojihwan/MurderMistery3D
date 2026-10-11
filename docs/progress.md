@@ -21,7 +21,7 @@
 - [x] T7 멀티플레이·음성 기술 결정 문서 → `docs/design/tech_decisions.md`
 - [x] T8 KHS 에셋 적용 방식 + 한복 캐릭터 수급 방안 → `docs/design/asset_plan.md`
 - [x] T9 밸런스 검토 (조사 점수·단서 수·시간·범인 난이도) → `docs/design/balance_review.md`
-- [ ] T10 전체 자체 검토 + 요약 보고
+- [x] T10 전체 자체 검토 + 요약 보고 (2026-10-11)
 
 ## 메모
 
