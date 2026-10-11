@@ -61,8 +61,79 @@ namespace MurderMystery.Gameplay
                 y += 24;
             }
 
+            if (s.Phase == GamePhase.Vote) DrawVote(host);
+            if (s.Phase == GamePhase.Ending) DrawEnding(host);
             if (interactor.NotebookOpen) DrawNotebook(host, me);
             if (interactor.NpcMenuOpen) DrawNpcMenu(host);
+        }
+
+        private int bonusChoice = -1;
+        private Vector2 endingScroll;
+
+        // Solo prototype: the local seat votes; the idle seats vote at random so the flow can finish.
+        private void DrawVote(GameSessionHost host)
+        {
+            var g = host.Gateway;
+            if (g.Vote == null) return;
+            FirstPersonController.SetCursorLocked(false);
+            var rect = new Rect(Screen.width / 2f - 260, 120, 520, 360);
+            GUI.Box(rect, g.Vote.Stage == VoteStage.Runoff ? "결선 투표 — 검시 보고서에 올릴 이름" : "투표 — 검시 보고서에 올릴 이름");
+            GUILayout.BeginArea(new Rect(rect.x + 12, rect.y + 28, rect.width - 24, rect.height - 40));
+            var me = host.LocalId;
+            if (g.Vote.Stage == VoteStage.Main && !host.Session.Data.CharacterById[me].isCulprit)
+            {
+                var q = host.Session.Data.Characters.bonusQuestion;
+                GUILayout.Label($"보너스: {q.text}", wrap);
+                bonusChoice = GUILayout.SelectionGrid(bonusChoice, q.choices, 1);
+            }
+            foreach (var c in g.Vote.Candidates.Where(c => c != me))
+            {
+                if (!GUILayout.Button(host.Session.Data.CharacterById[c].name)) continue;
+                host.Report(g.CastVote(me, c, bonusChoice));
+                var rng = new System.Random();
+                foreach (var seat in host.Session.Players.Keys.Where(k => k != me).ToList())
+                {
+                    if (g.Vote == null || g.Vote.Stage == VoteStage.Done) break;
+                    var options = g.Vote.Candidates.Where(x => x != seat).ToList();
+                    if (options.Count > 0) g.CastVote(seat, options[rng.Next(options.Count)], rng.Next(4));
+                }
+            }
+            GUILayout.EndArea();
+        }
+
+        private void DrawEnding(GameSessionHost host)
+        {
+            var g = host.Gateway;
+            var data = host.Session.Data;
+            FirstPersonController.SetCursorLocked(false);
+            var rect = new Rect(Screen.width / 2f - 330, 60, 660, Screen.height - 120);
+            GUI.Box(rect, "엔딩");
+            GUILayout.BeginArea(new Rect(rect.x + 14, rect.y + 28, rect.width - 28, rect.height - 40));
+            endingScroll = GUILayout.BeginScrollView(endingScroll);
+            var key = g.Vote != null && g.Vote.Stage == VoteStage.Done ? g.Vote.EndingKey : "C";
+            var ending = data.Endings.endings.FirstOrDefault(e => e.key == key);
+            if (ending != null)
+            {
+                GUILayout.Label($"【{ending.title}】", wrap);
+                foreach (var line in ending.lines) GUILayout.Label(line, wrap);
+            }
+            GUILayout.Space(10);
+            GUILayout.Label("— 간밤의 진실 —", wrap);
+            foreach (var stop in data.Endings.epilogue.replayStops) GUILayout.Label($"{stop.time}  {stop.text}", wrap);
+            GUILayout.Space(10);
+            GUILayout.Label("— 다섯 통의 문서 —", wrap);
+            foreach (var id in data.Endings.epilogue.documentOrder)
+                GUILayout.Label($"{data.ClueById[id].title}\n{data.ClueById[id].sealedText}", wrap);
+            GUILayout.Label($"\"{data.Endings.epilogue.finalLine}\"", wrap);
+            GUILayout.Space(10);
+            GUILayout.Label("— 점수 —", wrap);
+            foreach (var sheet in host.Session.Score(g.Vote?.Accused).Values.OrderByDescending(x => x.Total))
+            {
+                var goals = string.Join(", ", sheet.Goals.Select(x => $"{(x.Achieved ? "○" : "×")}{x.Type}"));
+                GUILayout.Label($"{data.CharacterById[sheet.CharacterId].name}: {sheet.Total}점  ({goals})", wrap);
+            }
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
         }
 
         private void DrawNotebook(GameSessionHost host, PlayerState me)
