@@ -11,7 +11,13 @@
 - [x] T3 런타임 데이터 모델·로더, 게임 상태(조사 점수·소지품·공개 게시판·수첩), NPC 응답 선택기, 점수 판정
 - [x] T4 데이터 검증 도구 + EditMode 테스트
 - [x] T5 1인칭 이동 컨트롤러 + 조사 상호작용 + 최소 UI
-- [ ] T6 블록아웃 씬 배치 + 플레이 테스트 (MCP 필요)
+- [ ] T6 블록아웃 씬 배치 + 플레이 테스트 (MCP 필요) — **보류: Unity 세션 미연결**
+  1. Unity 창을 한 번 클릭해 스크립트 임포트(컴파일) → `Window > MCP for Unity > Start Session`
+  2. `Tools > Manor > Build Blockout Scene` (안채 섬돌·찬방 문 반영)
+  3. `Tools > Murder Mystery > Validate Data` → 콘솔에 OK 확인
+  4. `Window > General > Test Runner` > EditMode > Run All (16개, BalanceSimulation은 Explicit)
+  5. `Manor_Blockout` 열고 Play: WASD/마우스, E 살펴보기, R 회수, Tab 수첩, N 단계, 1~5 인물 전환
+  6. 생성된 `.meta` 파일과 재생성된 씬 커밋
 - [x] T7 멀티플레이·음성 기술 결정 문서 → `docs/design/tech_decisions.md`
 - [x] T8 KHS 에셋 적용 방식 + 한복 캐릭터 수급 방안 → `docs/design/asset_plan.md`
 - [x] T9 밸런스 검토 (조사 점수·단서 수·시간·범인 난이도) → `docs/design/balance_review.md`

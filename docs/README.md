@@ -26,6 +26,12 @@
 | 5 | [design/clues.md](design/clues.md) | 단서 최종 목록과 배치, 추리 경로 검증 | 마스터 |
 | 6 | [design/npc_rules.md](design/npc_rules.md) | 도 검률 응답 규칙 (AI 없이 문장 풀에서 선택) | 마스터 |
 | 7 | [design/map_layout.md](design/map_layout.md) | 고택 배치, 좌표, 동선·시야 검증, 블록아웃 | 마스터 |
+| 8 | [design/endings.md](design/endings.md) | 다섯 통의 문서 본문, 엔딩 A·B·C 대본, 공통 에필로그 | 마스터 |
+| 9 | [design/balance_review.md](design/balance_review.md) | 시뮬레이션 기반 밸런스 검토, 범인 특정 경로 점검 | 마스터 |
+| 10 | [design/tech_decisions.md](design/tech_decisions.md) | 멀티플레이(NGO·Sessions)·음성(Vivox)·정보 보안 설계 | 개발 |
+| 11 | [design/asset_plan.md](design/asset_plan.md) | KHS 환경 에셋 적용 절차, 한복 캐릭터 수급 방안 | 개발 |
+| — | [progress.md](progress.md) | 작업 진행 상황 (이어서 작업용) | 개발 |
+| — | `Assets/_Project/Resources/Data/*.json` | 게임 데이터: 단서 카드, 인물·목표, Fact, 도 검률 응답 | 마스터 |
 
 ## 진상 한 단락
 
@@ -70,10 +76,13 @@
 
 ## 남은 일
 
-- [ ] 플레이어 이동 컨트롤러 (1인칭 걷기로 동선·시야 검증)
-- [ ] 조사 상호작용 프로토타입 (지점 살피기, 조사 점수, 단서 획득)
-- [ ] 단서·Fact 데이터화, 도 검률 응답 데이터 작성
-- [ ] 멀티플레이 구조 결정 (네트워크 프레임워크, 음성)
-- [ ] KHS 에셋 검토 → 블록아웃에 적용 방식 결정
-- [ ] 한복 캐릭터 모델 수급 방안
-- [ ] 플레이테스트 후 수치 조정 (조사 점수, 시간, 점수 배분)
+- [x] 1인칭 이동 컨트롤러 (프로토타입, Play 시 자동 생성)
+- [x] 조사 상호작용 프로토타입 (지점 살피기, 조사 점수, 회수, 봉투, 공개, 도 검률 질문)
+- [x] 단서·Fact 데이터화, 도 검률 응답 데이터 작성 + 검증 도구 + 테스트 16개
+- [x] 멀티플레이 구조 결정안 (사용자 확인 필요)
+- [x] KHS 에셋 적용 절차, 한복 캐릭터 방안 (에셋 다운로드·구매는 사용자 작업)
+- [x] 플레이테스트 전 밸런스 검토 (시뮬레이션) 및 수정 2건
+- [ ] Unity 에디터에서 씬 재생성·플레이 확인·.meta 커밋 (MCP 연결 필요) → [progress.md](progress.md) T6
+- [ ] 멀티플레이 구현 (tech_decisions 6절 순서)
+- [ ] 에셋 임포트 후 블록아웃 교체
+- [ ] 실제 플레이테스트 후 수치 조정 (balance_review 5·6절)
