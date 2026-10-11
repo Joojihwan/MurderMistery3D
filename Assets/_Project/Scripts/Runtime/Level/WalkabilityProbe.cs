@@ -51,6 +51,8 @@ namespace MurderMystery.Level
 
             Destroy(body);
             NavMesh.RemoveNavMeshData(navData);
+            // Callers may speed the walk up with Time.timeScale; never leave it changed.
+            Time.timeScale = 1f;
             Report = sb.ToString();
             Done = true;
             Debug.Log($"[WalkabilityProbe]\n{Report}");

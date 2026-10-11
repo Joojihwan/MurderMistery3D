@@ -208,7 +208,6 @@ namespace MurderMystery.EditorTools
             EditorUtility.SetDirty(tiled);
             go.GetComponent<MeshRenderer>().sharedMaterial = tiled;
         }
-        }
 
         private static void BuildStepStones(Transform p)
         {
