@@ -20,7 +20,8 @@ namespace MurderMystery.EditorTools
         public const string MixamoDir = KhsAssetTools.Root + "/Mixamo";
         private const string OutfitDir = "Assets/_Project/Resources/Characters";
         private const string ControllerPath = "Assets/_Project/Art/Characters/Locomotion.controller";
-        private const float WalkSpeed = 1.3f;   // m/s at which the walk clip plays at its authored pace
+        private const float WalkSpeed = 1.3f;
+        private const float SkirtFlare = 1.15f;   // m/s at which the walk clip plays at its authored pace
 
         [MenuItem("Tools/Murder Mystery/Characters/Build Rigged Characters (Mixamo)")]
         public static void BuildAll() => Debug.Log("[Rig] " + BuildAllReport());
@@ -30,10 +31,15 @@ namespace MurderMystery.EditorTools
             if (!AssetDatabase.IsValidFolder(MixamoDir)) return $"{MixamoDir} not found";
             var report = new List<string>();
 
+            // Start from freshly built static outfits: they are the source of heights, materials and the
+            // pieces put on bones, and re-running on already-rigged prefabs would compound those.
+            CharacterOutfitBuilder.BuildAll();
+
             var idle = PrepareClip("Idle", report);
             var walk = PrepareClip("Walking", report);
             if (idle == null || walk == null) return string.Join("\n", report) + "\nneed Idle.fbx and Walking.fbx";
             var controller = BuildController(idle, walk);
+            walkClip = walk;
 
             foreach (var id in MixamoExport.Ids)
             {
@@ -71,8 +77,10 @@ namespace MurderMystery.EditorTools
                 c.lockRootHeightY = true;
                 c.lockRootPositionXZ = true;
                 c.keepOriginalOrientation = true;
-                c.keepOriginalPositionY = true;
                 c.keepOriginalPositionXZ = true;
+                // Height based on the feet, so the walk keeps them on the ground instead of bobbing the body up.
+                c.keepOriginalPositionY = false;
+                c.heightFromFeet = true;
             }
             importer.clipAnimations = clips;
             importer.SaveAndReimport();
@@ -91,6 +99,7 @@ namespace MurderMystery.EditorTools
             tree.blendType = BlendTreeType.Simple1D;
             tree.blendParameter = "Speed";
             tree.useAutomaticThresholds = false;
+            controller.layers[0].stateMachine.defaultState.iKOnFeet = true;
             tree.AddChild(idle, 0f);
             tree.AddChild(walk, WalkSpeed);
             // Faster than authored walking (running) just plays the walk faster.
@@ -102,6 +111,8 @@ namespace MurderMystery.EditorTools
         }
 
         // ---------------------------------------------------------------- characters
+
+        private static AnimationClip walkClip;
 
         private static string BuildCharacter(string id, string fbx, AnimatorController controller)
         {
@@ -129,6 +140,7 @@ namespace MurderMystery.EditorTools
                 remapped++;
             }
             importer.SaveAndReimport();
+            remapped = Mathf.Max(remapped, importer.GetExternalObjectMap().Count(kv => kv.Key.type == typeof(Material)));
 
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
             var avatar = AssetDatabase.LoadAllAssetsAtPath(fbx).OfType<Avatar>().FirstOrDefault();
@@ -149,12 +161,18 @@ namespace MurderMystery.EditorTools
             var minY = Bounds(root).min.y;
             body.transform.localPosition -= new Vector3(0f, minY, 0f);
 
+            // The rig's ankles sit high inside the shoes, so feet placed at 0 in the bind pose float once the
+            // clips play: lower the body by the lowest point the walk's planted foot actually reaches.
+            var lift = AnimatedFloorLift(body, walkClip);
+            body.transform.localPosition -= new Vector3(0f, lift, 0f);
+
             var attached = AttachToBones(staticOutfit, animator);
+            var hidden = attached > 0 ? HideLegsUnderSkirt(body) : 0;
 
             root.AddComponent<CharacterAnimator>();
             PrefabUtility.SaveAsPrefabAsset(root, outfitPath);
             Object.DestroyImmediate(root);
-            return $"rigged, {remapped} materials restored, height {targetHeight:F2} m" + (attached > 0 ? $", {attached} pieces on bones" : "");
+            return $"rigged, {remapped} materials restored, height {targetHeight:F2} m, lowered {lift * 100f:F0} cm" + (attached > 0 ? $", {attached} pieces on bones" : "") + (hidden > 0 ? $", {hidden} leg slots hidden under the skirt" : "");
         }
 
         /// <summary>
@@ -179,6 +197,8 @@ namespace MurderMystery.EditorTools
                     var copy = Object.Instantiate(mf.gameObject, mf.transform.position, mf.transform.rotation);
                     copy.name = mf.name;
                     copy.transform.localScale = mf.transform.lossyScale;
+                    // A walking stride reaches past a skirt made for standing legs; widen it a little.
+                    if (bone == HumanBodyBones.Hips) copy.transform.localScale = Vector3.Scale(copy.transform.localScale, new Vector3(SkirtFlare, 1f, SkirtFlare));
                     copy.transform.SetParent(target, true);
                     count++;
                 }
@@ -188,6 +208,81 @@ namespace MurderMystery.EditorTools
                 Object.DestroyImmediate(source);
             }
             return count;
+        }
+
+        // Legs and shoes of the skirt wearers: the walk's stride carries them through a skirt that only rides
+        // the hips, and the floor-length skirt hides them anyway.
+        private static readonly HashSet<string> UnderSkirt = new HashSet<string> { "MI_Underpants", "MI_Beoseon02a", "MI_Danghye", "MI_Clog" };
+        private const string InvisiblePath = "Assets/_Project/Art/Materials/Invisible.mat";
+
+        private static int HideLegsUnderSkirt(GameObject body)
+        {
+            var renderers = body.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            if (!renderers.Any(r => r.sharedMaterials.Any(m => m != null && m.name == "MI_Underpants"))) return 0;
+            var invisible = InvisibleMaterial();
+            var count = 0;
+            foreach (var r in renderers)
+            {
+                var mats = r.sharedMaterials;
+                for (var i = 0; i < mats.Length; i++)
+                {
+                    if (mats[i] == null || !UnderSkirt.Contains(CleanName(mats[i].name))) continue;
+                    mats[i] = invisible;
+                    count++;
+                }
+                r.sharedMaterials = mats;
+            }
+            return count;
+        }
+
+        private static Material InvisibleMaterial()
+        {
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(InvisiblePath);
+            if (mat != null) return mat;
+            mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Invisible" };
+            mat.SetFloat("_Surface", 1f);   // transparent
+            mat.SetColor("_BaseColor", new Color(0f, 0f, 0f, 0f));
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            mat.SetInt("_ZWrite", 0);
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.SetShaderPassEnabled("ShadowCaster", false);
+            mat.SetShaderPassEnabled("DepthOnly", false);
+            AssetDatabase.CreateAsset(mat, InvisiblePath);
+            return mat;
+        }
+
+        /// <summary>Lowest skinned vertex over a walk cycle, relative to the ground (positive = floating).</summary>
+        private static float AnimatedFloorLift(GameObject body, AnimationClip clip)
+        {
+            if (clip == null) return 0f;
+            var renderers = body.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            var lowest = float.MaxValue;
+            var baked = new Mesh();
+            AnimationMode.StartAnimationMode();
+            try
+            {
+                for (var i = 0; i < 12; i++)
+                {
+                    AnimationMode.BeginSampling();
+                    AnimationMode.SampleAnimationClip(body, clip, clip.length * i / 12f);
+                    AnimationMode.EndSampling();
+                    foreach (var smr in renderers)
+                    {
+                        smr.BakeMesh(baked, true);
+                        var m = smr.transform.localToWorldMatrix;
+                        foreach (var v in baked.vertices) lowest = Mathf.Min(lowest, m.MultiplyPoint3x4(v).y);
+                    }
+                }
+            }
+            finally
+            {
+                AnimationMode.StopAnimationMode();
+                Object.DestroyImmediate(baked);
+            }
+            return lowest == float.MaxValue ? 0f : lowest - body.transform.parent.position.y;
         }
 
         private static string CleanName(string name)

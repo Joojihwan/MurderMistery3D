@@ -53,7 +53,11 @@
   2. **[사용자 작업, Adobe 로그인]** mixamo.com에 6벌을 하나씩 올려 자동 리깅 → 애니메이션 없이 "FBX for Unity, With Skin"으로 받아 `<id>.fbx`로 저장. 아무 인물에서 걷기(In Place 체크)·서 있기를 "Without Skin"으로 받아 `Walking.fbx`, `Idle.fbx`로 저장.
   3. 모두 `Assets/ThirdParty/KHS/Mixamo/`에 넣는다 (KHS 의복에서 나온 메시라 git 제외).
   4. `Tools > Murder Mystery > Characters > Build Rigged Characters (Mixamo)`: Humanoid 설정, 의복 재질 복원, 키 맞춤, 서기·걷기 블렌드(Speed 0 → 1.3 m/s), `Resources/Characters/<id>`를 덮어씀. 움직임 속도는 `CharacterAnimator`가 실제 이동량으로 계산 (네트워크 몸·NPC 공통).
-  - 주의: `Build Character Outfits`를 다시 돌리면 정지 의상으로 돌아가므로 그 뒤에 4를 다시 실행한다.
+  - 4는 정지 의상을 먼저 새로 만든 뒤 리깅본을 덮어쓴다 (다시 실행해도 누적되지 않음).
+  - **적용 완료 (2026-10-12):** 6명 모두 리깅·재질 복원. 리깅본의 발목이 신발 속 높이 있어 걷기 동작에서 뜨는 문제 → 걷기 한 주기를 샘플링해 디딘 발 최저점만큼 몸을 내림, 발 IK 켬, 동작 높이 기준을 발로.
+  - 치마(정씨·분이): 리깅 후 골반 뼈에 붙이고 폭 1.15배. 걸음에 다리가 치마를 뚫어서 속바지·버선·신은 보이지 않게 처리.
+  - 남자: 갓 아래 뒤통수가 살색으로 보여 검은 상투 머리를 머리 뼈에 붙임.
+  - 남은 점: 여자 인물의 고개가 서기 동작에서 약간 들려 보임.
 - 이전 후보 표(A~D)는 위 적용으로 보류.
 
 ## 4. 사용자 결정이 필요한 것

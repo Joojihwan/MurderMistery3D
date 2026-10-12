@@ -61,6 +61,6 @@
 - [x] K5 인물 6명 한복 조합(CharacterOutfitBuilder), 원격 플레이어·도 검률 적용, LAN 2인 테스트로 확인
 - [x] K6 KHS UnhyeongungCollect 추출·URP 변환, 조사 지점 소품 20점 배치, 사랑채 한지 칸막이 3개(스캔에 없는 벽), 주행 21/21
 - [~] K7 방 문 열림(근접 시 열림, 127짝)·메시 압축(빌드 557MB) 완료. LOD·라이트 굽기 남음
-- [~] K8 Mixamo 걷기 결정. 의상 FBX 내보내기·리깅 후처리 도구 완료 → **사용자: Mixamo에서 리깅·애니메이션 받기** (asset_plan.md 3절) → Build Rigged Characters 실행·검증
+- [x] K8 Mixamo 리깅 + 서기·걷기 적용 (6명, 원격 플레이어·도 검률). 치마·머리 뼈 부착, 발 높이 보정 (asset_plan.md 3절)
 - [x] 콘솔 오류 정리: URP 패키지 셰이더 캐시가 깨져 "Host type is not matching" 반복 → 해당 파일 강제 재임포트로 해결 (2026-10-12)
 
