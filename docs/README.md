@@ -31,6 +31,7 @@
 | 10 | [design/tech_decisions.md](design/tech_decisions.md) | 멀티플레이(NGO·Sessions)·음성(Vivox)·정보 보안 설계 | 개발 |
 | 11 | [design/asset_plan.md](design/asset_plan.md) | KHS 환경 에셋 적용 절차, 한복 캐릭터 수급 방안 | 개발 |
 | 13 | [design/character_staging.md](design/character_staging.md) | 인물 움직임·배치 기준 (모든 시나리오 공통 체크리스트) | 개발 |
+| 14 | [design/scenario_platform_proposal.md](design/scenario_platform_proposal.md) | **제안**: 시나리오 재활용·재플레이·계속 공급 구조 | 개발 |
 | 12 | [playtest_guide.md](playtest_guide.md) | 지인 테스트 진행법, 테스터용 안내문(복사용), 피드백 체크리스트 | 개발·테스터 |
 | — | [progress.md](progress.md) | 작업 진행 상황 (이어서 작업용) | 개발 |
 | — | `Assets/_Project/Resources/Data/*.json` | 게임 데이터: 단서 카드, 인물·목표, Fact, 도 검률 응답 | 마스터 |

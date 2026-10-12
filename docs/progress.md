@@ -72,5 +72,5 @@
 - [ ] P3 Mixamo 추가 동작(사용자): 바닥에 앉기 → `Sitting.fbx`, 점프 → `Jump.fbx` (Without Skin, In Place). 넣고 Build Rigged Characters 재실행 (없어도 동작은 함)
 - [x] P4 HUD·안내서 키 갱신, 주행 21/21, 콘솔 오류 0. 남음: 소품 충돌체 없음(통과됨)
 - [x] P5 `docs/design/character_staging.md`
-- [ ] P6 `docs/design/scenario_platform_proposal.md` — 시나리오 재활용·재플레이·사용자 제작 시나리오 제안
+- [x] P6 `docs/design/scenario_platform_proposal.md` (8절 결정 사항은 사용자 답변 대기)
 - [ ] P7 게임 진입 화면 · 시나리오 선택 · 방 만들기 화면 (게임 요소 강화)
