@@ -60,7 +60,7 @@ namespace MurderMystery.EditorTools
                 if (mf.name == "SM_Underpants" && mr != null) underwear = mr.sharedMaterial;
                 if (CharacterOutfitBuilder.Skirts.Contains(mf.name)) skirtLeftOut = true;
                 if (mf.sharedMesh == null || mr == null || CharacterOutfitBuilder.Skirts.Contains(mf.name) ||
-                    mf.name == CharacterOutfitBuilder.HairCap) continue;
+                    mf.name == CharacterOutfitBuilder.HairCap || mf.name.StartsWith(CharacterOutfitBuilder.AttachHead)) continue;
                 for (var sub = 0; sub < mf.sharedMesh.subMeshCount; sub++)
                 {
                     var mat = mr.sharedMaterials[Mathf.Min(sub, mr.sharedMaterials.Length - 1)];

@@ -21,6 +21,7 @@ namespace MurderMystery.EditorTools
         private const string SkinMatPath = "Assets/_Project/Art/Materials/Skin.mat";
         private const string EyeMatPath = "Assets/_Project/Art/Materials/Eye.mat";
         private const string HairMatPath = "Assets/_Project/Art/Materials/Hair.mat";
+        private const string LipMatPath = "Assets/_Project/Art/Materials/Lip.mat";
 
         // Top of the head in the garments' own space (망건/쪽머리 tops), used to scale to each height.
         private const float MaleHeadTop = 1.86f;
@@ -106,6 +107,9 @@ namespace MurderMystery.EditorTools
         /// <summary>Name of the men's hair piece; left out of the Mixamo export and put on the head bone after rigging.</summary>
         public const string HairCap = "HairCap";
 
+        /// <summary>Prefix of face pieces that are put on the head bone after rigging.</summary>
+        public const string AttachHead = "Face ";
+
         private static GameObject Build(Outfit outfit, Dictionary<string, Transform> pieces, Material skin, Material eye, Material hair)
         {
             var root = new GameObject(outfit.Id);
@@ -137,6 +141,14 @@ namespace MurderMystery.EditorTools
             var head = Part(model, "Head", PrimitiveType.Sphere, new Vector3(0f, headY, 0f), new Vector3(0.155f, 0.22f, 0.18f), skin);
             Part(head.transform, "Eye L", PrimitiveType.Sphere, new Vector3(-0.2f, 0.05f, 0.47f), new Vector3(0.13f, 0.06f, 0.1f), eye);
             Part(head.transform, "Eye R", PrimitiveType.Sphere, new Vector3(0.2f, 0.05f, 0.47f), new Vector3(0.13f, 0.06f, 0.1f), eye);
+            // Brows, nose and mouth: added after the Mixamo export, so they ride the head bone (no re-rig needed).
+            var lip = EnsureMaterial(LipMatPath, new Color(0.55f, 0.28f, 0.25f), 0.3f);
+            var brow = Part(head.transform, AttachHead + "Brow L", PrimitiveType.Sphere, new Vector3(-0.21f, 0.17f, 0.45f), new Vector3(0.19f, 0.035f, 0.06f), hair);
+            brow.transform.localRotation = Quaternion.Euler(0f, 0f, outfit.Female ? -6f : -10f);
+            brow = Part(head.transform, AttachHead + "Brow R", PrimitiveType.Sphere, new Vector3(0.21f, 0.17f, 0.45f), new Vector3(0.19f, 0.035f, 0.06f), hair);
+            brow.transform.localRotation = Quaternion.Euler(0f, 0f, outfit.Female ? 6f : 10f);
+            Part(head.transform, AttachHead + "Nose", PrimitiveType.Sphere, new Vector3(0f, -0.08f, 0.48f), new Vector3(0.09f, 0.15f, 0.12f), skin);
+            Part(head.transform, AttachHead + "Mouth", PrimitiveType.Sphere, new Vector3(0f, -0.27f, 0.42f), new Vector3(outfit.Female ? 0.2f : 0.24f, 0.04f, 0.08f), lip);
             Part(model, "Neck", PrimitiveType.Cylinder, new Vector3(0f, headY - 0.13f, 0.0f), new Vector3(0.09f, 0.05f, 0.09f), skin);
             // Men's hair (상투 under the hat): otherwise the bare back of the head shows below the 갓 brim.
             if (!outfit.Female)

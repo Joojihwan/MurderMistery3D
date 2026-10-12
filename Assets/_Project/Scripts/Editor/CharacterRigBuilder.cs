@@ -237,7 +237,7 @@ namespace MurderMystery.EditorTools
             var soleHeight = Mathf.Min(animator.GetBoneTransform(HumanBodyBones.LeftFoot).position.y,
                 animator.GetBoneTransform(HumanBodyBones.RightFoot).position.y) - root.transform.position.y;
 
-            var attached = AttachToBones(staticOutfit, animator);
+            var attached = AttachToBones(staticOutfit, animator) + AddHands(animator, targetHeight);
             var hidden = attached > 0 ? HideLegsUnderSkirt(body) : 0;
 
             root.AddComponent<CharacterAnimator>().SetSoleHeight(soleHeight);
@@ -261,7 +261,7 @@ namespace MurderMystery.EditorTools
                 {
                     HumanBodyBones bone;
                     if (CharacterOutfitBuilder.Skirts.Contains(mf.name)) bone = HumanBodyBones.Hips;
-                    else if (mf.name == CharacterOutfitBuilder.HairCap) bone = HumanBodyBones.Head;
+                    else if (mf.name == CharacterOutfitBuilder.HairCap || mf.name.StartsWith(CharacterOutfitBuilder.AttachHead)) bone = HumanBodyBones.Head;
                     else continue;
                     var target = animator.GetBoneTransform(bone);
                     if (target == null) continue;
@@ -279,6 +279,46 @@ namespace MurderMystery.EditorTools
                 Object.DestroyImmediate(source);
             }
             return count;
+        }
+
+        /// <summary>
+        /// The garments have no body, so the sleeves end in nothing: a simple mitten hand on each hand bone,
+        /// pointing along the forearm, palm facing the body in the arms-down pose.
+        /// </summary>
+        private static int AddHands(Animator animator, float height)
+        {
+            var skin = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Art/Materials/Skin.mat");
+            var s = height / 1.7f;
+            var count = 0;
+            foreach (var (handBone, armBone, side) in new[] { (HumanBodyBones.LeftHand, HumanBodyBones.LeftLowerArm, -1f), (HumanBodyBones.RightHand, HumanBodyBones.RightLowerArm, 1f) })
+            {
+                var hand = animator.GetBoneTransform(handBone);
+                var arm = animator.GetBoneTransform(armBone);
+                if (hand == null || arm == null) continue;
+                var dir = (hand.position - arm.position).normalized;
+                var forward = animator.transform.forward;
+                var holder = new GameObject(side < 0f ? "Hand L" : "Hand R").transform;
+                holder.SetPositionAndRotation(hand.position, Quaternion.LookRotation(dir, forward));
+                HandPart(holder, "Palm", new Vector3(0f, 0f, 0.055f) * s, new Vector3(0.035f, 0.075f, 0.1f) * s, skin);
+                HandPart(holder, "Fingers", new Vector3(0f, 0f, 0.115f) * s, new Vector3(0.028f, 0.068f, 0.07f) * s, skin);
+                var thumb = HandPart(holder, "Thumb", new Vector3(-side * 0.018f, 0.03f, 0.05f) * s, new Vector3(0.022f, 0.022f, 0.06f) * s, skin);
+                thumb.localRotation = Quaternion.Euler(-25f, 0f, 0f);
+                holder.SetParent(hand, true);
+                count++;
+            }
+            return count;
+        }
+
+        private static Transform HandPart(Transform holder, string name, Vector3 pos, Vector3 size, Material mat)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            go.name = name;
+            Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.transform.SetParent(holder, false);
+            go.transform.localPosition = pos;
+            go.transform.localScale = size;
+            if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+            return go.transform;
         }
 
         // Legs and shoes of the skirt wearers: the walk's stride carries them through a skirt that only rides
