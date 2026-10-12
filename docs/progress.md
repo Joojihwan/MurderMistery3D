@@ -73,4 +73,7 @@
 - [x] P4 HUD·안내서 키 갱신, 주행 21/21, 콘솔 오류 0. 남음: 소품 충돌체 없음(통과됨)
 - [x] P5 `docs/design/character_staging.md`
 - [x] P6 `docs/design/scenario_platform_proposal.md` (8절 결정 사항은 사용자 답변 대기)
-- [ ] P7 게임 진입 화면 · 시나리오 선택 · 방 만들기 화면 (게임 요소 강화)
+- [x] P7 시작 화면(Title 씬): 애니메이션 타이틀 → 메인 메뉴 → 사건첩(시나리오 카드·봉인 카드·해 봄 도장) → 방 열기/코드 참가/설정 창 → 로딩 → 고택 안 대기실(인물 카드·초대 코드·준비·시작) → 나가기. 온라인·LAN 2인 검증
+  - 생성기: `Tools > Murder Mystery > Front End > Build Title Scene` / `Render Pictures` (배경·표지·초상은 고택에서 렌더)
+  - 시나리오 목록: `Resources/Scenarios/<id>/scenario.json` (공개 정보만). 새 시나리오는 폴더 하나 추가
+- [ ] P8 제안서 8절 결정 사항 (사용자) → 진행자·관전자 모드, 시나리오 패키지 이전
