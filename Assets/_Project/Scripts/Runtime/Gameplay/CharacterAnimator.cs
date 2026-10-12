@@ -18,6 +18,8 @@ namespace MurderMystery.Gameplay
 
         private Transform neck;
         private Transform head;
+        private Quaternion neckApplied;
+        private Quaternion headApplied;
 
         public void SetPitchFix(float neckDegrees, float headDegrees)
         {
@@ -54,8 +56,19 @@ namespace MurderMystery.Gameplay
         private void LateUpdate()
         {
             var right = transform.right;
-            if (neck != null && neckPitchFix != 0f) neck.rotation = Quaternion.AngleAxis(neckPitchFix, right) * neck.rotation;
-            if (head != null && headPitchFix != 0f) head.rotation = Quaternion.AngleAxis(headPitchFix, right) * head.rotation;
+            Fix(neck, neckPitchFix, right, ref neckApplied);
+            Fix(head, headPitchFix, right, ref headApplied);
+        }
+
+        /// <summary>
+        /// Adds the correction on top of this frame's pose. When the Animator skipped the frame (culled while
+        /// off-screen) the bone still holds last frame's corrected rotation, so nothing is added again.
+        /// </summary>
+        private static void Fix(Transform bone, float degrees, Vector3 axis, ref Quaternion applied)
+        {
+            if (bone == null || degrees == 0f || bone.localRotation == applied) return;
+            bone.rotation = Quaternion.AngleAxis(degrees, axis) * bone.rotation;
+            applied = bone.localRotation;
         }
     }
 }

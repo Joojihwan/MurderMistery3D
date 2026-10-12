@@ -10,7 +10,7 @@ namespace MurderMystery.Network
     /// <summary>
     /// Test hook for multi-instance runs. With command-line arguments a built player joins a LAN host,
     /// (or an online session by code) claims a seat and optionally investigates a spot, logging what it receives:
-    ///   -mmJoin 127.0.0.1 -mmSeat buni [-mmName 분이] [-mmInvestigate 02] [-mmAcceptTalk] [-mmVote heo] [-mmQuitAfter 60]
+    ///   -mmJoin 127.0.0.1 -mmSeat buni [-mmName 분이] [-mmInvestigate 02] [-mmAcceptTalk] [-mmVote heo] [-mmWalk 30] [-mmQuitAfter 60]
     ///   -mmCode ABC123 ... joins an online session (Sessions + Relay) instead of -mmJoin.
     /// Does nothing when neither -mmJoin nor -mmCode is given.
     /// </summary>
@@ -22,6 +22,7 @@ namespace MurderMystery.Network
         private string playerName;
         private string spot;
         private float quitAfter;
+        private float walkFor;
         private bool acceptTalk;
         private string lastLine;
         private string voteFor;
@@ -50,11 +51,15 @@ namespace MurderMystery.Network
             quitAfter = float.TryParse(Arg("-mmQuitAfter"), out var q) ? q : 0f;
             acceptTalk = Array.IndexOf(Environment.GetCommandLineArgs(), "-mmAcceptTalk") >= 0;
             voteFor = Arg("-mmVote");
+            walkFor = float.TryParse(Arg("-mmWalk"), out var w) ? w : 0f;
         }
 
         private IEnumerator Start()
         {
             Application.runInBackground = true;
+            // Headless players otherwise run thousands of frames a second, and per-frame moves fall under
+            // CharacterController.minMoveDistance and are dropped.
+            Application.targetFrameRate = 60;
             yield return null;
             if (!string.IsNullOrEmpty(code))
             {
@@ -93,6 +98,8 @@ namespace MurderMystery.Network
                 Debug.Log($"[AutoPlay] investigate {spot} sent");
             }
 
+            if (walkFor > 0f) yield return Walk(walkFor);
+
             if (quitAfter > 0f)
             {
                 yield return new WaitForSecondsRealtime(quitAfter);
@@ -119,6 +126,32 @@ namespace MurderMystery.Network
                 Debug.Log($"[AutoPlay] voting {voteFor} in {snap.voteStage}");
                 net.Vote(voteFor, 0);
                 voteFor = null;
+            }
+        }
+
+        /// <summary>Walks the owned body back and forth (2 s each way, pausing 1 s) so others see it walk and idle.</summary>
+        private static IEnumerator Walk(float seconds)
+        {
+            var me = FindObjectsByType<NetPlayer>(FindObjectsSortMode.None).FirstOrDefault(p => p.IsOwner);
+            var cc = me != null ? me.GetComponent<CharacterController>() : null;
+            if (cc == null)
+            {
+                Debug.LogWarning("[AutoPlay] no owned body to walk");
+                yield break;
+            }
+            Debug.Log($"[AutoPlay] walking for {seconds}s from {cc.transform.position}");
+            var end = Time.realtimeSinceStartup + seconds;
+            var dir = 1f;
+            while (Time.realtimeSinceStartup < end)
+            {
+                cc.transform.rotation = Quaternion.LookRotation(Vector3.right * dir);
+                for (var t = 0f; t < 2f; t += Time.deltaTime)
+                {
+                    cc.Move((Vector3.right * dir * 1.3f + Vector3.down) * Time.deltaTime);
+                    yield return null;
+                }
+                yield return new WaitForSecondsRealtime(1f);
+                dir = -dir;
             }
         }
 
