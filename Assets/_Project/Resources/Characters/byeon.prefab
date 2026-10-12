@@ -31,7 +31,7 @@ Transform:
   m_LocalScale: {x: 0.21005854, y: 0.19585879, z: 0.21642394}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8593106748160060536}
+  m_Father: {fileID: 7842081493076152897}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1360250003318006325
 MeshFilter:
@@ -99,7 +99,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2514699277492329831}
-  - component: {fileID: 3801362000240725305}
+  - component: {fileID: 4603665146731180950}
   m_Layer: 0
   m_Name: byeon
   m_TagString: Untagged
@@ -120,10 +120,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2390369031725170427}
+  - {fileID: 4231194962537808066}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3801362000240725305
+--- !u!114 &4603665146731180950
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -136,7 +136,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MurderMystery.Runtime::MurderMystery.Gameplay.CharacterAnimator
   smoothing: 8
---- !u!1001 &2785180073772177680
+  neckPitchFix: 0
+  headPitchFix: 0
+--- !u!1001 &4409727842691082025
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -232,13 +234,13 @@ PrefabInstance:
       addedObject: {fileID: 3123678270689760342}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7983b9992956ae645af93d1a2d4e9dbb, type: 3}
---- !u!4 &2390369031725170427 stripped
+--- !u!4 &4231194962537808066 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7983b9992956ae645af93d1a2d4e9dbb, type: 3}
-  m_PrefabInstance: {fileID: 2785180073772177680}
+  m_PrefabInstance: {fileID: 4409727842691082025}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &8593106748160060536 stripped
+--- !u!4 &7842081493076152897 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3321919801592875672, guid: 7983b9992956ae645af93d1a2d4e9dbb, type: 3}
-  m_PrefabInstance: {fileID: 2785180073772177680}
+  m_PrefabInstance: {fileID: 4409727842691082025}
   m_PrefabAsset: {fileID: 0}

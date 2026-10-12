@@ -51,8 +51,74 @@ namespace MurderMystery.EditorTools
                 }
                 report.Add($"{id}: {BuildCharacter(id, fbx, controller)}");
             }
+            report.Add(LevelHeads(idle));
             AssetDatabase.SaveAssets();
             return string.Join("\n", report);
+        }
+
+        /// <summary>
+        /// Some rigs come back with the neck/head bones tilted (a long braid drags them back), so the head
+        /// looks up in every pose. Compare each character's neck/head pitch in the idle pose with the cast's
+        /// median and store a correction on its CharacterAnimator when it is off by more than a few degrees.
+        /// </summary>
+        private static string LevelHeads(AnimationClip idle)
+        {
+            var pitches = new Dictionary<string, (float neck, float head)>();
+            foreach (var id in MixamoExport.Ids)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{OutfitDir}/{id}.prefab");
+                if (prefab == null || prefab.GetComponent<CharacterAnimator>() == null) continue;
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                try
+                {
+                    var animator = instance.GetComponentInChildren<Animator>();
+                    AnimationMode.StartAnimationMode();
+                    AnimationMode.BeginSampling();
+                    AnimationMode.SampleAnimationClip(animator.gameObject, idle, 0f);
+                    AnimationMode.EndSampling();
+                    pitches[id] = (Pitch(animator, HumanBodyBones.Neck, instance.transform), Pitch(animator, HumanBodyBones.Head, instance.transform));
+                }
+                finally
+                {
+                    AnimationMode.StopAnimationMode();
+                    Object.DestroyImmediate(instance);
+                }
+            }
+            if (pitches.Count < 3) return "heads: too few rigs to compare";
+
+            float Median(IEnumerable<float> values)
+            {
+                var sorted = values.OrderBy(v => v).ToList();
+                return sorted[sorted.Count / 2];
+            }
+            var neckMedian = Median(pitches.Values.Select(p => p.neck));
+            var headMedian = Median(pitches.Values.Select(p => p.head));
+
+            var fixedList = new List<string>();
+            foreach (var pair in pitches)
+            {
+                var neckFix = neckMedian - pair.Value.neck;
+                if (Mathf.Abs(neckFix) < 8f) neckFix = 0f;
+                // Turning the neck turns the head with it; the head only needs what is left over.
+                var headFix = headMedian - (pair.Value.head + neckFix);
+                if (Mathf.Abs(headFix) < 4f) headFix = 0f;
+                var path = $"{OutfitDir}/{pair.Key}.prefab";
+                var contents = PrefabUtility.LoadPrefabContents(path);
+                contents.GetComponent<CharacterAnimator>().SetPitchFix(neckFix, headFix);
+                PrefabUtility.SaveAsPrefabAsset(contents, path);
+                PrefabUtility.UnloadPrefabContents(contents);
+                if (neckFix != 0f || headFix != 0f) fixedList.Add($"{pair.Key} neck {neckFix:+0;-0}° head {headFix:+0;-0}°");
+            }
+            return "heads: " + (fixedList.Count > 0 ? string.Join(", ", fixedList) : "all level");
+        }
+
+        /// <summary>Bone 'up' pitch around the character's right axis (+ = leaning forward).</summary>
+        private static float Pitch(Animator animator, HumanBodyBones bone, Transform character)
+        {
+            var t = animator.GetBoneTransform(bone);
+            if (t == null) return 0f;
+            var right = character.right;
+            return Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(t.up, right), right);
         }
 
         // ---------------------------------------------------------------- animation

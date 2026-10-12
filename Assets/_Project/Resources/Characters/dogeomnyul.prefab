@@ -31,7 +31,7 @@ Transform:
   m_LocalScale: {x: 0.16585848, y: 0.19146726, z: 0.17088452}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4915765225554397296}
+  m_Father: {fileID: 4390452630613056112}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &950086502482862634
 MeshFilter:
@@ -99,7 +99,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4605625040955630208}
-  - component: {fileID: 1521547689496877452}
+  - component: {fileID: 5449281612288998603}
   m_Layer: 0
   m_Name: dogeomnyul
   m_TagString: Untagged
@@ -120,10 +120,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1320923147249539827}
+  - {fileID: 7674863363915761907}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1521547689496877452
+--- !u!114 &5449281612288998603
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -136,7 +136,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MurderMystery.Runtime::MurderMystery.Gameplay.CharacterAnimator
   smoothing: 8
---- !u!1001 &1575808966361562392
+  neckPitchFix: 0
+  headPitchFix: 0
+--- !u!1001 &7856581147661610776
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -224,13 +226,13 @@ PrefabInstance:
       addedObject: {fileID: 6061256975683580848}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c227613554f69014b9ecf4e8e7db9a45, type: 3}
---- !u!4 &1320923147249539827 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c227613554f69014b9ecf4e8e7db9a45, type: 3}
-  m_PrefabInstance: {fileID: 1575808966361562392}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &4915765225554397296 stripped
+--- !u!4 &4390452630613056112 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3321919801592875672, guid: c227613554f69014b9ecf4e8e7db9a45, type: 3}
-  m_PrefabInstance: {fileID: 1575808966361562392}
+  m_PrefabInstance: {fileID: 7856581147661610776}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7674863363915761907 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c227613554f69014b9ecf4e8e7db9a45, type: 3}
+  m_PrefabInstance: {fileID: 7856581147661610776}
   m_PrefabAsset: {fileID: 0}
