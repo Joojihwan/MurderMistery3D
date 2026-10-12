@@ -9,6 +9,24 @@ namespace MurderMystery.Gameplay
     public class CharacterAnimator : MonoBehaviour
     {
         public static readonly int SpeedParam = Animator.StringToHash("Speed");
+        public static readonly int SittingParam = Animator.StringToHash("Sitting");
+        public static readonly int AirborneParam = Animator.StringToHash("Airborne");
+
+        // Above the ground by more than a CharacterController skin plus a little: jumping or falling.
+        private const float AirborneClearance = 0.15f;
+
+        /// <summary>Plays the sit pose (synced by NetPlayer). Needs a Sitting clip in the controller.</summary>
+        public bool Sitting
+        {
+            get => sitting;
+            set
+            {
+                sitting = value;
+                if (animator != null && HasParam(SittingParam)) animator.SetBool(SittingParam, value);
+            }
+        }
+
+        private bool sitting;
 
         [SerializeField] private float smoothing = 8f;
         // Pitch corrections (degrees, + = forward) for rigs whose neck/head bones came out tilted
@@ -83,6 +101,13 @@ namespace MurderMystery.Gameplay
             animator.SetFloat(SpeedParam, speed);
         }
 
+        private bool HasParam(int hash)
+        {
+            foreach (var p in animator.parameters)
+                if (p.nameHash == hash) return true;
+            return false;
+        }
+
         private void LateUpdate()
         {
             Ground();
@@ -99,9 +124,13 @@ namespace MurderMystery.Gameplay
             {
                 // Foot height as if no offset were applied, relative to this character's ground.
                 var ground = GroundY();
+                var airborne = transform.position.y - ground > AirborneClearance;
+                if (HasParam(AirborneParam)) animator.SetBool(AirborneParam, airborne);
+                // In the air the feet hang from the body as the clip has them, at a standing height.
+                if (airborne) ground = transform.position.y - 0.08f;
                 var lowest = Mathf.Min(leftFoot.position.y, rightFoot.position.y) - groundOffset - ground;
                 target = soleHeight + soleBias - lowest;
-                if (Time.time >= nextCalibrate)
+                if (!airborne && Time.time >= nextCalibrate)
                 {
                     nextCalibrate = Time.time + CalibrateInterval;
                     soleBias -= LowestVertex() - ground;

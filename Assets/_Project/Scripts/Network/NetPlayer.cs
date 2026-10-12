@@ -18,7 +18,12 @@ namespace MurderMystery.Network
         private readonly NetworkVariable<FixedString32Bytes> seat = new NetworkVariable<FixedString32Bytes>(
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        // Owner-written so the sit pose shows on everyone's screen (jumps show through the moving transform).
+        private readonly NetworkVariable<bool> sitting = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
         private Transform body;
+        private FirstPersonController localController;
         private string bodySeat;
 
         public string SeatId => seat.Value.ToString();
@@ -31,6 +36,7 @@ namespace MurderMystery.Network
         public override void OnNetworkSpawn()
         {
             seat.OnValueChanged += (_, __) => RefreshBody();
+            sitting.OnValueChanged += (_, now) => ApplySitting(now);
             if (IsOwner)
             {
                 var spawns = FindObjectsByType<GameplayMarker>(FindObjectsSortMode.None)
@@ -45,6 +51,7 @@ namespace MurderMystery.Network
                     if (cc != null) cc.enabled = true;
                 }
                 LocalPlayerRig.Attach(gameObject);
+                localController = GetComponent<FirstPersonController>();
             }
             else
             {
@@ -53,6 +60,17 @@ namespace MurderMystery.Network
                 if (cc != null) cc.enabled = false;
                 RefreshBody();
             }
+        }
+
+        private void Update()
+        {
+            if (IsOwner && localController != null && sitting.Value != localController.IsSitting)
+                sitting.Value = localController.IsSitting;
+        }
+
+        private void ApplySitting(bool now)
+        {
+            if (body != null && body.TryGetComponent<CharacterAnimator>(out var animator)) animator.Sitting = now;
         }
 
         private void RefreshBody()
@@ -67,6 +85,7 @@ namespace MurderMystery.Network
             {
                 body = Instantiate(outfit, transform, false).transform;
                 body.name = "Body";
+                ApplySitting(sitting.Value);
                 return;
             }
 

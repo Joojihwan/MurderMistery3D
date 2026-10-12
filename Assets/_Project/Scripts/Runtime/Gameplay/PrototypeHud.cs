@@ -41,7 +41,7 @@ namespace MurderMystery.Gameplay
             var timer = snap.timed ? $"  {Mathf.Max(0, (int)snap.remainingSec) / 60}:{Mathf.Max(0, (int)snap.remainingSec) % 60:00}" : "";
             GUI.Label(new Rect(20, 16, 420, 22), $"{Name(c, snap.characterId)}  |  {GameSessionHost.PhaseLabel(phase)}{timer}", wrap);
             GUI.Label(new Rect(20, 40, 420, 22), $"조사 점수 {snap.investigationPoints}  ·  질문 {snap.questionsLeft}  ·  밀담 {snap.secretTalksLeft}  ·  소지품 {snap.inventory.Length}", wrap);
-            var help = c.IsOffline ? "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩\nN 다음 단계  1~5 인물 전환" : "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩·밀담·준비";
+            var help = c.IsOffline ? "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩\nSpace 점프  C 앉기  N 다음 단계  1~5 인물 전환" : "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩·밀담·준비\nSpace 점프  C 앉기/일어서기";
             GUI.Label(new Rect(20, 64, 420, 44), help, wrap);
 
             if (!string.IsNullOrEmpty(snap.talkPartner))

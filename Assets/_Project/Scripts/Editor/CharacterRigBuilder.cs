@@ -38,7 +38,10 @@ namespace MurderMystery.EditorTools
             var idle = PrepareClip("Idle", report);
             var walk = PrepareClip("Walking", report);
             if (idle == null || walk == null) return string.Join("\n", report) + "\nneed Idle.fbx and Walking.fbx";
-            var controller = BuildController(idle, walk);
+            // Optional: a floor-sitting pose and a jump (Sitting.fbx / Jump.fbx, Without Skin).
+            var sit = File.Exists($"{MixamoDir}/Sitting.fbx") ? PrepareClip("Sitting", report) : null;
+            var jump = File.Exists($"{MixamoDir}/Jump.fbx") ? PrepareClip("Jump", report, loop: false) : null;
+            var controller = BuildController(idle, walk, sit, jump);
             walkClip = walk;
             idleClip = idle;
 
@@ -124,7 +127,7 @@ namespace MurderMystery.EditorTools
 
         // ---------------------------------------------------------------- animation
 
-        private static AnimationClip PrepareClip(string name, List<string> report)
+        private static AnimationClip PrepareClip(string name, List<string> report, bool loop = true)
         {
             var path = $"{MixamoDir}/{name}.fbx";
             if (!(AssetImporter.GetAtPath(path) is ModelImporter importer))
@@ -138,7 +141,7 @@ namespace MurderMystery.EditorTools
             var clips = importer.defaultClipAnimations;
             foreach (var c in clips)
             {
-                c.loopTime = true;
+                c.loopTime = loop;
                 // In-place locomotion: the body is moved by the character controller / network, not the clip.
                 c.lockRootRotation = true;
                 c.lockRootHeightY = true;
@@ -156,7 +159,7 @@ namespace MurderMystery.EditorTools
             return clip;
         }
 
-        private static AnimatorController BuildController(AnimationClip idle, AnimationClip walk)
+        private static AnimatorController BuildController(AnimationClip idle, AnimationClip walk, AnimationClip sit, AnimationClip jump)
         {
             ManorBlockoutBuilder.EnsureFolder(Path.GetDirectoryName(ControllerPath)!.Replace('\\', '/'));
             AssetDatabase.DeleteAsset(ControllerPath);
@@ -174,6 +177,38 @@ namespace MurderMystery.EditorTools
             var children = tree.children;
             children[2].timeScale = 2.2f;
             tree.children = children;
+
+            var machine = controller.layers[0].stateMachine;
+            var locomotion = machine.defaultState;
+            if (sit != null)
+            {
+                controller.AddParameter("Sitting", AnimatorControllerParameterType.Bool);
+                var sitState = machine.AddState("Sit");
+                sitState.motion = sit;
+                sitState.iKOnFeet = true;
+                var down = locomotion.AddTransition(sitState);
+                down.hasExitTime = false;
+                down.duration = 0.35f;
+                down.AddCondition(AnimatorConditionMode.If, 0f, "Sitting");
+                var up = sitState.AddTransition(locomotion);
+                up.hasExitTime = false;
+                up.duration = 0.35f;
+                up.AddCondition(AnimatorConditionMode.IfNot, 0f, "Sitting");
+            }
+            if (jump != null)
+            {
+                controller.AddParameter("Airborne", AnimatorControllerParameterType.Bool);
+                var air = machine.AddState("Jump");
+                air.motion = jump;
+                var off = locomotion.AddTransition(air);
+                off.hasExitTime = false;
+                off.duration = 0.1f;
+                off.AddCondition(AnimatorConditionMode.If, 0f, "Airborne");
+                var land = air.AddTransition(locomotion);
+                land.hasExitTime = false;
+                land.duration = 0.15f;
+                land.AddCondition(AnimatorConditionMode.IfNot, 0f, "Airborne");
+            }
             return controller;
         }
 
