@@ -59,7 +59,7 @@
 - [x] K3 `Manor_KHS` 씬 생성기: 실제 건물에 장소 배정(map_layout.md 8절), 충돌체 복구, 섬돌·차단벽, 시야·동선 재검증
 - [x] K4 플레이어 몸 프로필 + 계단 보조(StepAssist), NavMesh 검증 + 실제 주행 테스트 21/21
 - [x] K5 인물 6명 한복 조합(CharacterOutfitBuilder), 원격 플레이어·도 검률 적용, LAN 2인 테스트로 확인
-- [ ] K6 **사용자 작업**: KHS Unhyeongung Collect 받기 → 조사 지점 소품 배치
+- [x] K6 KHS UnhyeongungCollect 추출·URP 변환, 조사 지점 소품 20점 배치, 사랑채 한지 칸막이 3개(스캔에 없는 벽), 주행 21/21
 - [~] K7 방 문 열림(근접 시 열림, 127짝)·메시 압축(빌드 557MB) 완료. LOD·라이트 굽기 남음
 - [ ] K8 인물 애니메이션 방식 결정 (asset_plan.md 3·4절)
 

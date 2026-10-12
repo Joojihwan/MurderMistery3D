@@ -20,12 +20,13 @@ namespace MurderMystery.EditorTools
 
         /// <summary>
         /// Caps texture import sizes to keep the player build small: garments are seen at a few metres
-        /// (1024), the house up close (2048). The KHS sources are up to 4096.
+        /// and props (1024), the house up close (2048). The KHS sources are up to 4096.
         /// </summary>
         [MenuItem("Tools/Murder Mystery/KHS/Cap Texture Sizes")]
         public static void CapTextureSizes()
         {
-            var changed = CapTextureSizes(Root + "/Joseon_Royal_Wear", 1024) + CapTextureSizes(Root + "/KimMyeonggwanHouse", 2048);
+            var changed = CapTextureSizes(Root + "/Joseon_Royal_Wear", 1024) + CapTextureSizes(Root + "/UnhyeongungCollect", 1024) +
+                          CapTextureSizes(Root + "/KimMyeonggwanHouse", 2048);
             Debug.Log($"[KHS] capped {changed} textures");
         }
 
@@ -60,7 +61,8 @@ namespace MurderMystery.EditorTools
         public static void CompressMeshes()
         {
             var changed = CompressMeshes(Root + "/KimMyeonggwanHouse", ModelImporterMeshCompression.Medium) +
-                          CompressMeshes(Root + "/Joseon_Royal_Wear", ModelImporterMeshCompression.Low);
+                          CompressMeshes(Root + "/Joseon_Royal_Wear", ModelImporterMeshCompression.Low) +
+                          CompressMeshes(Root + "/UnhyeongungCollect", ModelImporterMeshCompression.Low);
             Debug.Log($"[KHS] compressed {changed} models");
         }
 
@@ -90,7 +92,13 @@ namespace MurderMystery.EditorTools
         public static int ConvertMaterialsCount()
         {
             if (!AssetDatabase.IsValidFolder(Root)) return 0;
-            var upgraders = new MaterialUpgrader[] { new StandardUpgrader("Standard"), new StandardUpgrader("Standard (Specular setup)") };
+            var upgraders = new MaterialUpgrader[]
+            {
+                new StandardUpgrader("Standard"), new StandardUpgrader("Standard (Specular setup)"),
+                // URP's AutodeskInteractiveUpgrader throws here (its shader graph fails to import in this
+                // URP version), so the one such material is mapped like a Standard one.
+                new StandardUpgrader("Autodesk Interactive")
+            };
             var count = 0;
             foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { Root }))
             {

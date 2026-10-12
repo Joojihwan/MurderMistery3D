@@ -118,9 +118,11 @@ namespace MurderMystery.EditorTools
             BuildGround(Group(root, "Ground"));
             BuildStepStones(Group(root, "StepStones"));
             BuildBlockers(Group(root, "Blockers"));
+            BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
             BuildSpots(Group(root, "InvestigationSpots"));
             BuildMarkers(Group(root, "GameplayMarkers"));
+            BuildProps(Group(root, "Props"));
 
             var profile = new GameObject("PlayerBodyProfile").AddComponent<PlayerBodyProfile>();
             profile.height = BodyHeight;
@@ -238,6 +240,66 @@ namespace MurderMystery.EditorTools
             }
         }
 
+        // ---------------------------------------------------------------- partitions
+
+        private struct Partition
+        {
+            public string Name;
+            public Vector2 From, To;
+            public float DoorAt, DoorWidth;   // distance along the wall to the door centre; 0 width = no door
+        }
+
+        // The scan leaves the 사랑채 interior mostly open: the room behind the hall (서재) has no north wall and
+        // 사랑방 / 대청 / the east end run into one long floor. The scenario needs closed rooms (sounds through
+        // paper walls, a door gap to peek through), so paper partitions are added on the scan's floor lines.
+        private static readonly Partition[] Partitions =
+        {
+            new Partition { Name = "서재 북벽 (스캔에 없음)", From = new Vector2(9.45f, -8.47f), To = new Vector2(12.16f, -8.47f) },
+            new Partition { Name = "사랑방 | 대청", From = new Vector2(9.43f, -10.17f), To = new Vector2(9.43f, -12.62f), DoorAt = 1.25f, DoorWidth = 0.9f },
+            new Partition { Name = "대청 | 작은사랑", From = new Vector2(14.86f, -10.17f), To = new Vector2(14.86f, -12.62f), DoorAt = 1.25f, DoorWidth = 0.9f },
+        };
+
+        private const float PartitionHeight = 2.3f;
+        private const float PartitionDoorHeight = 1.75f;
+        private const float PartitionThickness = 0.1f;
+
+        private static void BuildPartitions(Transform p)
+        {
+            var paper = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_WhiteWall01A.mat");
+            var wood = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_Wood01A.mat");
+            foreach (var w in Partitions)
+            {
+                var holder = new GameObject(w.Name).transform;
+                holder.SetParent(p, false);
+                var mid = (w.From + w.To) / 2f;
+                var floor = FloorY(mid.x, mid.y);
+                var length = Vector2.Distance(w.From, w.To);
+                var dir = (w.To - w.From).normalized;
+                holder.SetPositionAndRotation(new Vector3(w.From.x, floor, w.From.y),
+                    Quaternion.LookRotation(new Vector3(dir.x, 0f, dir.y)));
+
+                // Pieces along the local z axis: wall | door gap | wall, a lintel over the gap, a wood sill.
+                var d0 = w.DoorWidth > 0f ? w.DoorAt - w.DoorWidth / 2f : length;
+                var d1 = w.DoorWidth > 0f ? w.DoorAt + w.DoorWidth / 2f : length;
+                Slab(holder, "Wall", 0f, d0, 0f, PartitionHeight, paper);
+                if (d1 < length) Slab(holder, "Wall", d1, length, 0f, PartitionHeight, paper);
+                if (w.DoorWidth > 0f) Slab(holder, "Lintel", d0, d1, PartitionDoorHeight, PartitionHeight, wood);
+                Slab(holder, "Base", 0f, d0, 0f, 0.25f, wood, 0.02f);
+                if (d1 < length) Slab(holder, "Base", d1, length, 0f, 0.25f, wood, 0.02f);
+            }
+        }
+
+        private static void Slab(Transform holder, string name, float a, float b, float y0, float y1, Material mat, float extra = 0f)
+        {
+            if (b - a < 0.01f) return;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = name;
+            go.transform.SetParent(holder, false);
+            go.transform.localPosition = new Vector3(0f, (y0 + y1) / 2f, (a + b) / 2f);
+            go.transform.localScale = new Vector3(PartitionThickness + extra, y1 - y0, b - a);
+            if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+        }
+
         private static void BuildBlockers(Transform p)
         {
             foreach (var b in Blockers)
@@ -262,6 +324,81 @@ namespace MurderMystery.EditorTools
                 var col = go.AddComponent<SphereCollider>();
                 col.isTrigger = true;
                 col.radius = 1.2f;
+            }
+        }
+
+        // ---------------------------------------------------------------- props (KHS UnhyeongungCollect)
+
+        private const string PropDir = KhsAssetTools.Root + "/UnhyeongungCollect/Prefabs/";
+
+        private struct PropDef
+        {
+            public string Label;
+            public float X, Z, Yaw, Above;   // Above: stand on top of another prop of this height
+            public string[] Parts;           // multi-part furniture shares one origin
+        }
+
+        private static PropDef Prop(string label, float x, float z, float yaw, params string[] parts) =>
+            new PropDef { Label = label, X = x, Z = z, Yaw = yaw, Parts = parts };
+
+        private static PropDef PropOn(string label, float x, float z, float above, params string[] parts) =>
+            new PropDef { Label = label, X = x, Z = z, Above = above, Parts = parts };
+
+        // Household relics of Unhyeongung at the investigation spots (the clue holders) plus a little dressing.
+        // Yaw 180 turns a piece's front to -z (south), for furniture backed against a north wall.
+        private static readonly PropDef[] Props =
+        {
+            Prop("01 서재 서안", 11.2f, -8.9f, 180f, "SM_Table252"),
+            PropOn("01 서안 위 촛대", 11.0f, -8.9f, 0.64f, "SM_Candlestick122"),
+            Prop("02 서재 문갑", 9.9f, -8.82f, 180f, "SM_Secretaries_body", "SM_Secretaries_doorLB", "SM_Secretaries_doorRB",
+                "SM_Secretaries_drawerLB", "SM_Secretaries_drawerLM", "SM_Secretaries_drawerLT", "SM_Secretaries_drawerRB",
+                "SM_Secretaries_drawerRM", "SM_Secretaries_drawerRT"),
+            Prop("04 사랑방 화로", 7.2f, -10.6f, 0f, "SM_Brazier"),
+            Prop("05 사랑방 소반", 6.2f, -10.0f, 0f, "SM_TongyeongTable"),
+            PropOn("05 소반 위 탕약 그릇", 6.2f, -10.0f, 0.27f, "SM_WhitePorcelainBowl"),
+            Prop("06 사랑방 사방탁자", 5.0f, -8.85f, 180f, "SM_Shelves241"),
+            Prop("사랑방 보료", 5.7f, -11.4f, 0f, "SM_FloorCusion"),
+            Prop("사랑방 안석", 5.7f, -11.75f, 0f, "SM_BackrestCushion"),
+            Prop("09 툇마루 등경", 14.4f, -13.2f, 0f, "SM_FloorLamp"),
+            Prop("09 빈 기름병", 14.7f, -13.5f, 0f, "SM_DarkBrownBottle"),
+            Prop("10 작은사랑 서가", 16.3f, -10.3f, 180f, "SM_Board229_body", "SM_Board229_doorL", "SM_Board229_doorR",
+                "SM_Board229_drawerB01", "SM_Board229_drawerB02", "SM_Board229_drawerB03", "SM_Board229_drawerB04",
+                "SM_Board229_drawerS01", "SM_Board229_drawerS02", "SM_Board229_drawerS03"),
+            Prop("11 곳간 쥐약 단지", -11.9f, -1.3f, 0f, "SM_BlackGlazedJar"),
+            Prop("12 부엌 약탕관", -17.5f, 6.2f, 90f, "SM_PotForMedicines"),
+            Prop("13 부엌 뒤주(쌀독)", -17.9f, 3.0f, 90f, "SM_GrainChest_body", "SM_GrainChest_cover01", "SM_GrainChest_cover02"),
+            Prop("14 건넌방 반닫이", -1.5f, 9.8f, 270f, "SM_Box286"),
+            Prop("15 허 의원 약상자", 9.6f, -28.0f, 0f, "SM_Chest_body", "SM_Chest_door", "SM_Chest_lock"),
+            Prop("별당 방석 (허 의원)", 10.4f, -28.3f, 0f, "SM_FloorCusion"),
+            Prop("별당 방석 (변 행수)", 12.4f, -28.3f, 0f, "SM_FloorCusion"),
+        };
+
+        private static void BuildProps(Transform p)
+        {
+            if (!AssetDatabase.IsValidFolder(PropDir.TrimEnd('/'))) return;
+            foreach (var def in Props)
+            {
+                var holder = new GameObject(def.Label).transform;
+                holder.SetParent(p, false);
+                foreach (var part in def.Parts)
+                {
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PropDir + part + ".prefab");
+                    if (prefab == null)
+                    {
+                        Debug.LogWarning($"[KhsManorBuilder] missing prop {part}");
+                        continue;
+                    }
+                    PrefabUtility.InstantiatePrefab(prefab, holder);
+                }
+                holder.rotation = Quaternion.Euler(0f, def.Yaw, 0f);
+
+                // Sit the lowest point of the piece on the floor (or on the prop it stands on).
+                var renderers = holder.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0) continue;
+                var bounds = renderers[0].bounds;
+                foreach (var rr in renderers) bounds.Encapsulate(rr.bounds);
+                var floor = FloorY(def.X, def.Z) + def.Above;
+                holder.position = new Vector3(def.X, floor - bounds.min.y, def.Z);
             }
         }
 
