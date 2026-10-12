@@ -1,0 +1,19 @@
+{
+    "name": "MurderMystery.FrontEnd",
+    "rootNamespace": "MurderMystery.FrontEnd",
+    "references": [
+        "MurderMystery.Runtime",
+        "MurderMystery.Network",
+        "Unity.Netcode.Runtime",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

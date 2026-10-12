@@ -4,14 +4,14 @@ using Unity.Netcode;
 using Unity.Netcode.Components;
 using Unity.Netcode.Transports.UTP;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace MurderMystery.EditorTools
 {
     /// <summary>
-    /// Creates the networked player prefab and adds NetworkManager, the in-scene NetGame and the lobby to the
-    /// open scene. ManorBlockoutBuilder calls this after generating the level.
+    /// Network objects. The NetworkManager lives in the Title scene and persists into the map the host loads
+    /// (<see cref="AddNetworkManager"/>); map scenes only need the prefabs (<see cref="Apply"/>, called by the
+    /// map builders), and opened on their own they run the offline prototype.
     /// </summary>
     public static class NetworkSceneSetup
     {
@@ -19,23 +19,23 @@ namespace MurderMystery.EditorTools
         private const string PlayerPrefabPath = PrefabDir + "/NetPlayer.prefab";
         private const string GamePrefabPath = PrefabDir + "/NetGame.prefab";
 
-        [MenuItem("Tools/Murder Mystery/Setup Network In Scene")]
-        public static void SetupMenu()
-        {
-            Apply();
-            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        }
-
+        /// <summary>For map scenes: make sure the prefabs exist and no NetworkManager or old lobby is left.</summary>
         public static void Apply()
         {
-            var playerPrefab = EnsurePlayerPrefab();
-            var gamePrefab = EnsureGamePrefab();
-
+            EnsurePlayerPrefab();
+            EnsureGamePrefab();
             foreach (var name in new[] { PrototypeBootstrap.NetworkManagerName, "NetGame", "Lobby" })
             {
                 var old = GameObject.Find(name);
                 if (old != null) Object.DestroyImmediate(old);
             }
+        }
+
+        /// <summary>For the Title scene: the persistent NetworkManager with transport and spawner.</summary>
+        public static GameObject AddNetworkManager()
+        {
+            var playerPrefab = EnsurePlayerPrefab();
+            var gamePrefab = EnsureGamePrefab();
 
             var nmGo = new GameObject(PrototypeBootstrap.NetworkManagerName);
             var transport = nmGo.AddComponent<UnityTransport>();
@@ -43,15 +43,14 @@ namespace MurderMystery.EditorTools
             nm.NetworkConfig = new NetworkConfig
             {
                 NetworkTransport = transport,
-                PlayerPrefab = playerPrefab,
+                // Spawned by NetGameSpawner once the map has loaded, not on connection.
+                PlayerPrefab = null,
                 EnableSceneManagement = true,
                 TickRate = 30,
                 ConnectionApproval = false
             };
-
-            nmGo.AddComponent<NetGameSpawner>().Init(gamePrefab);
-
-            new GameObject("Lobby").AddComponent<LobbyMenu>();
+            nmGo.AddComponent<NetGameSpawner>().Init(gamePrefab, playerPrefab);
+            return nmGo;
         }
 
         private static GameObject EnsureGamePrefab()

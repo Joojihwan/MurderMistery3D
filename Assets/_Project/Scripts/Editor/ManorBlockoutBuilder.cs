@@ -571,7 +571,8 @@ namespace MurderMystery.EditorTools
         {
             var scenes = EditorBuildSettings.scenes.ToList();
             if (scenes.Any(s => s.path == path)) return;
-            scenes.Insert(0, new EditorBuildSettingsScene(path, true));
+            // Appended: the Title scene stays first (FrontEndBuilder.SetBuildScenes).
+            scenes.Add(new EditorBuildSettingsScene(path, true));
             EditorBuildSettings.scenes = scenes.ToArray();
         }
     }

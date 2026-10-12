@@ -55,9 +55,10 @@ namespace MurderMystery.Core
             AllFactIds.UnionWith(ClueById.Keys);
         }
 
-        public static GameData LoadFromResources()
+        /// <param name="folder">Resources folder of the scenario's rule data (ScenarioManifest.dataPath).</param>
+        public static GameData LoadFromResources(string folder = "Data")
         {
-            string Load(string name) => Resources.Load<TextAsset>($"Data/{name}").text;
+            string Load(string name) => Resources.Load<TextAsset>($"{folder}/{name}").text;
             return new GameData(Load("clues"), Load("characters"), Load("facts"), Load("npc_dialogue"),
                 Load("flow"), Load("endings"));
         }

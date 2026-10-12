@@ -2,6 +2,7 @@ using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MurderMystery.Core;
+using MurderMystery.Gameplay;
 using Unity.Services.Vivox;
 using UnityEngine;
 
@@ -27,6 +28,11 @@ namespace MurderMystery.Network
         public static async Task StartAsync(string roomKey)
         {
             if (Available || busy) return;
+            if (!GameSettings.VoiceEnabled)
+            {
+                SetStatus("음성 꺼짐 (설정)");
+                return;
+            }
             busy = true;
             try
             {

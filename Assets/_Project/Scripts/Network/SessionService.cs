@@ -47,11 +47,18 @@ namespace MurderMystery.Network
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
         }
 
-        public static async Task<ISession> HostOnlineAsync()
+        public const string ScenarioProperty = "scenario";
+
+        public static async Task<ISession> HostOnlineAsync(string scenarioId = null)
         {
             online = true;
             await EnsureSignedInAsync();
             var options = new SessionOptions { MaxPlayers = MaxPlayers, IsPrivate = true }.WithRelayNetwork();
+            if (!string.IsNullOrEmpty(scenarioId))
+                options.SessionProperties = new System.Collections.Generic.Dictionary<string, SessionProperty>
+                {
+                    [ScenarioProperty] = new SessionProperty(scenarioId, VisibilityPropertyOptions.Member, PropertyIndex.None)
+                };
             Current = await MultiplayerService.Instance.CreateSessionAsync(options);
             WatchNetworkStop();
             return Current;

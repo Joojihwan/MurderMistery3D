@@ -1,0 +1,440 @@
+/* Front end: title, menus, scenario files, room. Palette: ink, hanji, dancheong red, gold, indigo. */
+
+.root {
+    flex-grow: 1;
+    color: rgb(239, 230, 210);
+    font-size: 22px;
+}
+
+/* ---------------------------------------------------------------- backdrop */
+.backdrop {
+    position: absolute;
+    left: -6%; right: -6%; top: -6%; bottom: -6%;
+    -unity-background-scale-mode: scale-and-crop;
+    transition-property: opacity;
+    transition-duration: 2.4s;
+}
+.backdrop--hidden { opacity: 0; }
+.tint {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(12, 10, 9, 0.45);
+}
+.mist {
+    position: absolute; left: -50%; width: 200%; top: 0; bottom: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+    opacity: 0.35;
+}
+.vignette {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+.ember {
+    position: absolute;
+    width: 6px; height: 6px;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+/* ---------------------------------------------------------------- screens */
+.screen {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    transition-property: opacity, translate;
+    transition-duration: 0.6s;
+    transition-timing-function: ease-out-cubic;
+}
+.screen--hidden {
+    opacity: 0;
+    translate: 0 30px;
+}
+.off { display: none; }
+
+/* ---------------------------------------------------------------- title */
+.title-screen {
+    align-items: center;
+    justify-content: center;
+}
+.title-seal {
+    width: 92px; height: 92px;
+    background-color: rgb(158, 43, 37);
+    border-radius: 6px;
+    rotate: -6deg;
+    align-items: center; justify-content: center;
+    margin-bottom: 26px;
+    border-width: 3px; border-color: rgb(196, 76, 62);
+}
+.title-seal__text {
+    font-size: 40px;
+    color: rgb(247, 232, 214);
+    -unity-font-style: bold;
+}
+.title-main {
+    font-size: 104px;
+    letter-spacing: 18px;
+    color: rgb(244, 236, 220);
+    -unity-text-align: middle-center;
+    text-shadow: 0 0 22px rgba(255, 190, 110, 0.35);
+}
+.title-sub {
+    font-size: 26px;
+    letter-spacing: 6px;
+    color: rgb(214, 196, 160);
+    margin-top: 12px;
+    -unity-text-align: middle-center;
+}
+.title-working {
+    font-size: 18px;
+    color: rgb(170, 150, 120);
+    margin-top: 4px;
+}
+.title-prompt {
+    font-size: 22px;
+    margin-top: 80px;
+    letter-spacing: 4px;
+    color: rgb(232, 214, 176);
+    transition-property: opacity;
+    transition-duration: 1.2s;
+}
+.title-prompt--dim { opacity: 0.15; }
+
+/* ---------------------------------------------------------------- main menu */
+.menu-screen {
+    flex-direction: row;
+}
+.menu-left {
+    width: 520px;
+    padding: 90px 0 60px 110px;
+    background-color: rgba(12, 10, 9, 0.55);
+    justify-content: space-between;
+}
+.menu-logo {
+    font-size: 58px;
+    letter-spacing: 10px;
+    color: rgb(244, 236, 220);
+}
+.menu-logo-sub {
+    font-size: 18px;
+    color: rgb(190, 170, 135);
+    margin-top: 6px;
+    margin-bottom: 70px;
+}
+.menu-item {
+    flex-direction: row;
+    align-items: center;
+    height: 66px;
+    margin-bottom: 6px;
+}
+.menu-item__mark {
+    width: 0; height: 32px;
+    background-color: rgb(158, 43, 37);
+    margin-right: 0;
+    transition-property: width, margin-right;
+    transition-duration: 0.22s;
+}
+.menu-item:hover .menu-item__mark { width: 10px; margin-right: 18px; }
+.menu-item__label {
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: rgb(222, 208, 182);
+    transition-property: color, translate;
+    transition-duration: 0.22s;
+}
+.menu-item:hover .menu-item__label { color: rgb(255, 246, 226); translate: 6px 0; }
+.menu-item__hint {
+    font-size: 16px;
+    color: rgb(150, 132, 104);
+    margin-left: 18px;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.22s;
+}
+.menu-item:hover .menu-item__hint { opacity: 1; }
+.menu-footer {
+    font-size: 15px;
+    color: rgb(150, 132, 104);
+}
+.menu-right {
+    flex-grow: 1;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding: 60px 80px;
+}
+.name-plate {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(20, 17, 15, 0.7);
+    border-width: 1px; border-color: rgba(200, 163, 90, 0.5);
+    border-radius: 4px;
+    padding: 10px 20px;
+}
+.name-plate__label { font-size: 18px; color: rgb(190, 170, 135); margin-right: 12px; }
+.name-plate__name { font-size: 24px; color: rgb(244, 236, 220); }
+
+/* ---------------------------------------------------------------- scenario files */
+.scenarios-screen {
+    padding: 60px 80px;
+}
+.screen-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 30px;
+}
+.screen-title {
+    font-size: 48px;
+    letter-spacing: 8px;
+    color: rgb(244, 236, 220);
+    margin-left: 24px;
+}
+.screen-title-sub { font-size: 18px; color: rgb(180, 160, 128); margin-left: 20px; margin-top: 14px; }
+.back-button {
+    font-size: 22px;
+    background-color: rgba(20, 17, 15, 0.6);
+    border-width: 1px; border-color: rgba(200, 163, 90, 0.5);
+    color: rgb(222, 208, 182);
+    padding: 6px 18px;
+    border-radius: 4px;
+}
+.back-button:hover { background-color: rgba(158, 43, 37, 0.8); color: rgb(255, 246, 226); }
+.scenarios-body {
+    flex-direction: row;
+    flex-grow: 1;
+}
+.card-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    width: 960px;
+    padding-top: 16px;
+}
+.case-card {
+    width: 290px; height: 450px;
+    margin: 0 24px 24px 0;
+    background-color: rgb(233, 222, 198);
+    border-radius: 4px;
+    border-width: 2px; border-color: rgb(120, 96, 62);
+    color: rgb(40, 32, 26);
+    overflow: hidden;
+    transition-property: translate, scale, border-color;
+    transition-duration: 0.25s;
+}
+.case-card:hover { translate: 0 -10px; border-color: rgb(200, 163, 90); }
+.case-card--selected { translate: 0 -14px; border-color: rgb(158, 43, 37); border-width: 4px; }
+.case-card__cover {
+    height: 190px;
+    -unity-background-scale-mode: scale-and-crop;
+    background-color: rgb(60, 50, 40);
+}
+.case-card__ribbon {
+    position: absolute; left: 0; top: 18px;
+    background-color: rgb(158, 43, 37);
+    color: rgb(250, 238, 222);
+    font-size: 16px;
+    padding: 4px 14px;
+}
+.case-card__body { padding: 14px 18px; flex-grow: 1; }
+.case-card__subtitle { font-size: 16px; color: rgb(120, 96, 62); }
+.case-card__title { font-size: 28px; color: rgb(30, 24, 20); margin-top: 4px; white-space: normal; }
+.case-card__tagline { font-size: 16px; color: rgb(80, 64, 50); margin-top: 8px; white-space: normal; }
+.case-card__meta { font-size: 16px; color: rgb(100, 80, 60); margin-top: 10px; }
+.chip-row { flex-direction: row; flex-wrap: wrap; margin-top: 10px; }
+.chip {
+    font-size: 14px;
+    background-color: rgba(47, 75, 90, 0.15);
+    color: rgb(47, 75, 90);
+    border-radius: 10px;
+    padding: 2px 10px;
+    margin: 0 6px 6px 0;
+}
+.played-stamp {
+    position: absolute; right: 14px; bottom: 14px;
+    width: 74px; height: 74px;
+    border-radius: 37px;
+    border-width: 3px; border-color: rgb(158, 43, 37);
+    color: rgb(158, 43, 37);
+    font-size: 18px;
+    -unity-text-align: middle-center;
+    rotate: -14deg;
+    opacity: 0.85;
+}
+.case-card--sealed {
+    background-color: rgb(46, 40, 36);
+    border-color: rgb(80, 66, 52);
+    color: rgb(170, 150, 120);
+}
+.case-card--sealed:hover { translate: 0 -4px; }
+.sealed-mark {
+    width: 120px; height: 120px;
+    align-self: center;
+    margin-top: 70px;
+    background-color: rgba(158, 43, 37, 0.85);
+    rotate: 8deg;
+    align-items: center; justify-content: center;
+    border-radius: 6px;
+}
+.sealed-mark__text { font-size: 54px; color: rgb(236, 210, 190); }
+.sealed-caption { -unity-text-align: middle-center; font-size: 20px; margin-top: 30px; color: rgb(190, 170, 140); }
+
+.detail {
+    flex-grow: 1;
+    background-color: rgba(18, 15, 13, 0.82);
+    border-width: 1px; border-color: rgba(200, 163, 90, 0.45);
+    border-radius: 4px;
+    padding: 28px 34px;
+    transition-property: opacity, translate;
+    transition-duration: 0.4s;
+}
+.detail--hidden { opacity: 0; translate: 40px 0; }
+.detail__cover { height: 220px; -unity-background-scale-mode: scale-and-crop; border-radius: 3px; }
+.detail__title { font-size: 40px; margin-top: 18px; color: rgb(244, 236, 220); }
+.detail__meta { font-size: 18px; color: rgb(200, 180, 140); margin-top: 6px; }
+.detail__synopsis {
+    font-size: 20px; color: rgb(226, 214, 192);
+    white-space: normal; margin-top: 16px;
+    -unity-paragraph-spacing: 6px;
+}
+.detail__cast-title { font-size: 20px; color: rgb(200, 163, 90); margin-top: 18px; margin-bottom: 6px; }
+.cast-line { flex-direction: row; align-items: center; margin-bottom: 6px; }
+.cast-line__portrait { width: 46px; height: 46px; border-radius: 23px; -unity-background-scale-mode: scale-and-crop; background-color: rgb(80, 66, 52); margin-right: 12px; }
+.cast-line__name { font-size: 19px; color: rgb(240, 230, 210); width: 190px; flex-shrink: 0; }
+.cast-line__blurb { font-size: 16px; color: rgb(180, 164, 136); flex-shrink: 1; white-space: normal; }
+.detail__buttons { flex-direction: row; margin-top: 20px; }
+.detail__credit { font-size: 14px; color: rgb(140, 124, 98); margin-top: 12px; }
+
+/* ---------------------------------------------------------------- buttons */
+.btn {
+    font-size: 24px;
+    padding: 10px 28px;
+    margin-right: 14px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgb(200, 163, 90);
+    background-color: rgba(40, 33, 28, 0.9);
+    color: rgb(240, 228, 204);
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+.btn:hover { background-color: rgb(70, 56, 44); scale: 1.03 1.03; }
+.btn:active { scale: 0.97 0.97; }
+.btn--primary { background-color: rgb(158, 43, 37); border-color: rgb(214, 120, 96); }
+.btn--primary:hover { background-color: rgb(186, 56, 46); }
+.btn:disabled { opacity: 0.35; }
+
+/* ---------------------------------------------------------------- modal */
+.modal-layer {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(8, 7, 6, 0.72);
+    align-items: center; justify-content: center;
+}
+.modal {
+    width: 720px;
+    background-color: rgb(233, 222, 198);
+    color: rgb(40, 32, 26);
+    border-radius: 4px;
+    border-width: 2px; border-color: rgb(120, 96, 62);
+    padding: 30px 40px;
+}
+.modal__title { font-size: 34px; color: rgb(30, 24, 20); margin-bottom: 18px; }
+.modal__text { font-size: 19px; color: rgb(70, 56, 44); white-space: normal; margin-bottom: 12px; }
+.modal__row { flex-direction: row; align-items: center; margin-top: 10px; margin-bottom: 10px; }
+.modal__label { font-size: 20px; width: 170px; color: rgb(60, 48, 38); }
+.modal__buttons { flex-direction: row; justify-content: flex-end; margin-top: 24px; }
+.segment { flex-direction: row; }
+.segment__item {
+    font-size: 19px;
+    padding: 8px 18px;
+    margin-right: 8px;
+    border-radius: 4px;
+    border-width: 1px; border-color: rgb(120, 96, 62);
+    background-color: rgba(255, 255, 255, 0.4);
+    color: rgb(60, 48, 38);
+}
+.segment__item--on { background-color: rgb(47, 75, 90); color: rgb(240, 232, 214); border-color: rgb(47, 75, 90); }
+.code-field { font-size: 44px; letter-spacing: 14px; width: 420px; }
+.code-field > .unity-text-field__input { -unity-text-align: middle-center; background-color: rgb(250, 244, 230); }
+.field { width: 420px; font-size: 20px; }
+.field > .unity-base-field__input { background-color: rgb(250, 244, 230); color: rgb(30, 24, 20); }
+.slider { width: 420px; }
+.small-note { font-size: 15px; color: rgb(110, 90, 70); white-space: normal; }
+
+/* ---------------------------------------------------------------- loading / fade / toast */
+.fade {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgb(8, 7, 6);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.5s;
+    align-items: center; justify-content: center;
+}
+.fade--on { opacity: 1; }
+.loading-title { font-size: 40px; letter-spacing: 8px; color: rgb(232, 214, 176); }
+.loading-tip { font-size: 20px; color: rgb(170, 150, 120); margin-top: 22px; white-space: normal; -unity-text-align: middle-center; width: 900px; }
+.toast {
+    position: absolute; bottom: 60px; left: 30%; right: 30%;
+    background-color: rgba(20, 17, 15, 0.92);
+    border-width: 1px; border-color: rgb(200, 163, 90);
+    border-radius: 4px;
+    padding: 14px 20px;
+    font-size: 20px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    transition-property: opacity, translate;
+    transition-duration: 0.35s;
+}
+.toast--hidden { opacity: 0; translate: 0 20px; }
+
+/* ---------------------------------------------------------------- room (in the map) */
+.room {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(10, 8, 7, 0.55);
+    align-items: center;
+    padding-top: 40px;
+}
+.room--compact {
+    background-color: rgba(0, 0, 0, 0);
+    bottom: auto;
+    left: auto;
+    right: 20px;
+    top: 64px;
+    padding-top: 0;
+    align-items: flex-end;
+}
+.room--compact .room-buttons { margin-top: 10px; }
+.room-banner {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(18, 15, 13, 0.88);
+    border-width: 1px; border-color: rgba(200, 163, 90, 0.6);
+    border-radius: 4px;
+    padding: 12px 26px;
+}
+.room-banner__scenario { font-size: 24px; color: rgb(244, 236, 220); margin-right: 30px; }
+.room-banner__code-label { font-size: 18px; color: rgb(190, 170, 135); margin-right: 10px; }
+.room-banner__code { font-size: 38px; letter-spacing: 8px; color: rgb(232, 196, 120); margin-right: 14px; }
+.room-hint { font-size: 19px; color: rgb(220, 206, 180); margin-top: 18px; }
+.seat-row { flex-direction: row; margin-top: 22px; }
+.seat-card {
+    width: 230px; height: 440px;
+    margin: 0 10px;
+    background-color: rgb(233, 222, 198);
+    border-radius: 4px;
+    border-width: 2px; border-color: rgb(120, 96, 62);
+    color: rgb(40, 32, 26);
+    overflow: hidden;
+    transition-property: translate, border-color;
+    transition-duration: 0.2s;
+}
+.seat-card:hover { translate: 0 -8px; border-color: rgb(200, 163, 90); }
+.seat-card--mine { border-color: rgb(158, 43, 37); border-width: 4px; translate: 0 -12px; }
+.seat-card--taken { opacity: 0.6; }
+.seat-card__portrait { height: 200px; flex-shrink: 0; -unity-background-scale-mode: scale-and-crop; background-color: rgb(80, 66, 52); }
+.seat-card__body { padding: 10px 14px; flex-grow: 1; }
+.seat-card__name { font-size: 24px; color: rgb(30, 24, 20); }
+.seat-card__status { font-size: 15px; color: rgb(120, 96, 62); margin-top: 2px; }
+.seat-card__blurb { font-size: 15px; color: rgb(80, 64, 50); white-space: normal; margin-top: 6px; flex-grow: 1; flex-shrink: 1; overflow: hidden; }
+.seat-card__taker { font-size: 16px; color: rgb(158, 43, 37); margin-top: 6px; }
+.seat-card__button { font-size: 18px; margin: 0; margin-top: 6px; padding: 6px; flex-shrink: 0; }
+.seat-card__taker { flex-shrink: 0; }
+.room-buttons { flex-direction: row; margin-top: 26px; align-items: center; }
+.room-voice { font-size: 17px; color: rgb(200, 186, 160); margin-right: 22px; }
+.leave-corner {
+    position: absolute; right: 24px; top: 20px;
+    font-size: 18px;
+}

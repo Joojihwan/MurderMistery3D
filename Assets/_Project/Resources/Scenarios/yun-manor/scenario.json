@@ -1,0 +1,25 @@
+{
+  "id": "yun-manor",
+  "title": "윤 대감 댁의 마지막 밤",
+  "subtitle": "제1화",
+  "tagline": "빗장 걸린 고택, 다섯 사람, 그리고 식은 한약 한 사발.",
+  "synopsis": "조선 헌종 때, 경기 남쪽의 오래된 고택. 청렴하기로 이름난 윤 대감이 환갑날 밤 서재에서 숨진 채 발견된다. 중문은 안쪽에서 빗장이 걸린 그대로였고, 그 안에는 다섯 사람이 남아 있었다. 고을 원님이 도착하기 전, 첫 검시 보고서에 올릴 이름을 정해야 한다.",
+  "players": 5,
+  "durationMin": 100,
+  "difficulty": 2,
+  "tags": ["정통 추리", "조선 후기", "가족 비극"],
+  "mapScene": "Manor_KHS",
+  "dataPath": "Data",
+  "cover": "Scenarios/yun-manor/cover",
+  "version": "1",
+  "credit": "고택·의복·생활유물 3D 자원: 국가유산청",
+  "locked": false,
+  "status": "",
+  "cast": [
+    { "id": "jeong", "name": "큰며느리 정씨", "age": 28, "status": "양반 집안 여성", "blurb": "3년 전 남편을 잃고 집안 살림을 맡아 왔다." },
+    { "id": "jaeha", "name": "윤재하", "age": 24, "status": "서자", "blurb": "공부는 뛰어나지만 서자라서 과거를 볼 수 없다. 작은사랑에서 지낸다." },
+    { "id": "buni", "name": "분이", "age": 19, "status": "노비", "blurb": "집안일을 하는 여종. 대감의 한약을 달인다." },
+    { "id": "heo", "name": "허 의원", "age": 42, "status": "중인 의원", "blurb": "몇 년째 대감을 돌봐 온 주치의. 별당에 묵었다." },
+    { "id": "byeon", "name": "변 행수", "age": 45, "status": "상인", "blurb": "마을 객주의 대표. 대감 집에 물건을 대 왔다. 별당에 묵었다." }
+  ]
+}

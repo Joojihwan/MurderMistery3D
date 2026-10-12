@@ -43,6 +43,7 @@ namespace MurderMystery.Gameplay
             controller = GetComponent<CharacterController>();
             var profile = PlayerBodyProfile.Current;
             assistStep = profile != null ? profile.assistStep : 0f;
+            lookSensitivity = GameSettings.MouseSensitivity;
             SetCursorLocked(true);
         }
 

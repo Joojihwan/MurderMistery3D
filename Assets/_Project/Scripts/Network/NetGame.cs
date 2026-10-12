@@ -32,6 +32,13 @@ namespace MurderMystery.Network
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private string RoomKey => room.Value.ToString();
 
+        // The host's scenario, so every peer loads the same rule data and shows the same cards.
+        private readonly NetworkVariable<FixedString64Bytes> scenarioId = new NetworkVariable<FixedString64Bytes>(
+            default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public ScenarioManifest Scenario => ScenarioCatalog.Find(scenarioId.Value.ToString()) ?? ScenarioCatalog.Default;
+        private bool endingRecorded;
+
         // ---------------- server state
         private LocalSessionGateway gateway;
         private readonly Dictionary<ulong, string> seatOfClient = new Dictionary<ulong, string>();
@@ -46,7 +53,7 @@ namespace MurderMystery.Network
         private string lastVoicePhase;
 
         public string LocalId => Snapshot?.characterId;
-        public GameData Data => data ??= GameData.LoadFromResources();
+        public GameData Data => data ??= GameData.LoadFromResources(Scenario?.dataPath ?? "Data");
         public PlayerSnapshot Snapshot { get; private set; }
         public IReadOnlyList<string> Log => log;
         public bool IsOffline => false;
@@ -61,6 +68,8 @@ namespace MurderMystery.Network
         {
             Instance = this;
             GameClient.Current = this;
+            if (IsServer) scenarioId.Value = (GameLauncher.Scenario ?? ScenarioCatalog.Default)?.id ?? string.Empty;
+            if (!IsServer && GameLauncher.Scenario == null) GameLauncher.Scenario = Scenario;
             if (IsServer)
             {
                 gateway = new LocalSessionGateway(Data, Environment.TickCount);
@@ -220,6 +229,11 @@ namespace MurderMystery.Network
         private void SnapshotRpc(string json, RpcParams p)
         {
             Snapshot = JsonUtility.FromJson<PlayerSnapshot>(json);
+            if (!endingRecorded && Snapshot.Phase == GamePhase.Ending)
+            {
+                endingRecorded = true;
+                ScenarioCatalog.MarkPlayed(Scenario?.id);
+            }
             UpdateVoice();
             Changed?.Invoke();
         }

@@ -32,7 +32,12 @@ namespace MurderMystery.Gameplay
             if (GameSessionHost.Instance == null) new GameObject("GameSessionHost").AddComponent<GameSessionHost>();
 
             var player = new GameObject("Player (prototype)");
-            player.transform.SetPositionAndRotation(spawn.transform.position + Vector3.up * 0.05f, Quaternion.identity);
+            var center = Object.FindObjectsByType<GameplayMarker>(FindObjectsSortMode.None)
+                .FirstOrDefault(m => m.Type == MarkerType.DiscussionArea)?.transform.position ?? spawn.transform.position + Vector3.forward;
+            var look = center - spawn.transform.position;
+            look.y = 0f;
+            player.transform.SetPositionAndRotation(spawn.transform.position + Vector3.up * 0.05f,
+                look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.identity);
             LocalPlayerRig.Attach(player);
         }
     }

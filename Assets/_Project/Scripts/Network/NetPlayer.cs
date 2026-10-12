@@ -45,9 +45,14 @@ namespace MurderMystery.Network
                 {
                     var cc = GetComponent<CharacterController>();
                     if (cc != null) cc.enabled = false;
-                    transform.SetPositionAndRotation(
-                        spawns[(int)(OwnerClientId % (ulong)spawns.Count)].transform.position + Vector3.up * 0.05f,
-                        Quaternion.identity);
+                    // Face the gathering point so everyone sees each other (and the NPC) on arrival.
+                    var spawn = spawns[(int)(OwnerClientId % (ulong)spawns.Count)].transform.position;
+                    var center = FindObjectsByType<GameplayMarker>(FindObjectsSortMode.None)
+                        .FirstOrDefault(m => m.Type == MarkerType.DiscussionArea)?.transform.position ?? spawn + Vector3.forward;
+                    var look = center - spawn;
+                    look.y = 0f;
+                    transform.SetPositionAndRotation(spawn + Vector3.up * 0.05f,
+                        look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.identity);
                     if (cc != null) cc.enabled = true;
                 }
                 LocalPlayerRig.Attach(gameObject);
