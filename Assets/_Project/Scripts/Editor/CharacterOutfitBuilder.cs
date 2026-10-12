@@ -47,12 +47,18 @@ namespace MurderMystery.EditorTools
             new Outfit { Id = "byeon", Height = 1.70f, Girth = 1.3f,
                 Pieces = new[] { "SM_Pants", "SM_Durumagi01a", "SM_Jeonbok01a", "SM_Leg_Wraps", "SM_Beoseon01a", "SM_Taesa_Hye", "SM_Gat" } },
             new Outfit { Id = "jeong", Female = true, Height = 1.58f, Girth = 1f,
-                Pieces = new[] { "SM_skirt", "SM_Jeoksam", "SM_Beoseon02a", "SM_Danghye", "SM_Jjokmeori" } },
+                Pieces = new[] { "SM_Underpants", "SM_skirt", "SM_Jeoksam", "SM_Beoseon02a", "SM_Danghye", "SM_Jjokmeori" } },
             new Outfit { Id = "buni", Female = true, Height = 1.52f, Girth = 1f,
-                Pieces = new[] { "SM_Daesum_Chima", "SM_Inner_jeogori", "SM_Beoseon02a", "SM_Pigtails01b" } },
+                Pieces = new[] { "SM_Underpants", "SM_Daesum_Chima", "SM_Inner_jeogori", "SM_Beoseon02a", "SM_Pigtails01b" } },
             new Outfit { Id = "dogeomnyul", Height = 1.68f, Girth = 1.05f,
                 Pieces = new[] { "SM_Pants", "SM_Black_Danryeong01a", "SM_Rank_Belt", "SM_Black_Shoes", "SM_Samogwandae" } },
         };
+
+        /// <summary>
+        /// Floor-length skirts. Mixamo cannot find the legs inside one, so they are left out of the rigging
+        /// export (the 속바지 underneath gives it legs) and rejoined to the hips bone afterwards.
+        /// </summary>
+        public static readonly HashSet<string> Skirts = new HashSet<string> { "SM_skirt", "SM_Daesum_Chima", "SM_Suran_Skirt", "SM_Daeran_Chima" };
 
         [MenuItem("Tools/Murder Mystery/KHS/Build Character Outfits")]
         public static void BuildAll()
