@@ -48,7 +48,12 @@
 | 도 검률 (관리) | 흑단령 · 사모 · 품대 · 흑화 | 1.68m | 사랑채 툇마루에서 마당을 향해 섬 |
 
 - 한계: 의복은 **리깅 없는 정지 메시(A자 자세)**이고 몸이 없다. 그래서 단순한 얼굴(달걀형 머리·눈)과 목만 붙였다. 걷기 동작은 없다 (위치·방향만 동기화).
-- 다음 단계 후보: (1) 리깅된 기본 인체 + 의복을 본에 붙이기(스키닝 재작업 필요), (2) 기존 안대로 AI 생성 + Mixamo 리깅. 플레이테스트에서 정지 인형이 거슬리는지 먼저 확인한다.
+- **결정 (2026-10-12): Mixamo 자동 리깅 + 걷기 애니메이션.**
+  1. `Tools > Murder Mystery > Characters > Export Outfits for Mixamo` → `Exports/Mixamo/<id>.fbx` (의상 6벌을 각각 한 메시로, A자 자세, 2만~3만 삼각형).
+  2. **[사용자 작업, Adobe 로그인]** mixamo.com에 6벌을 하나씩 올려 자동 리깅 → 애니메이션 없이 "FBX for Unity, With Skin"으로 받아 `<id>.fbx`로 저장. 아무 인물에서 걷기(In Place 체크)·서 있기를 "Without Skin"으로 받아 `Walking.fbx`, `Idle.fbx`로 저장.
+  3. 모두 `Assets/ThirdParty/KHS/Mixamo/`에 넣는다 (KHS 의복에서 나온 메시라 git 제외).
+  4. `Tools > Murder Mystery > Characters > Build Rigged Characters (Mixamo)`: Humanoid 설정, 의복 재질 복원, 키 맞춤, 서기·걷기 블렌드(Speed 0 → 1.3 m/s), `Resources/Characters/<id>`를 덮어씀. 움직임 속도는 `CharacterAnimator`가 실제 이동량으로 계산 (네트워크 몸·NPC 공통).
+  - 주의: `Build Character Outfits`를 다시 돌리면 정지 의상으로 돌아가므로 그 뒤에 4를 다시 실행한다.
 - 이전 후보 표(A~D)는 위 적용으로 보류.
 
 ## 4. 사용자 결정이 필요한 것
