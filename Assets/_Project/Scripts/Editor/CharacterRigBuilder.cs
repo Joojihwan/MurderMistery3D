@@ -149,33 +149,37 @@ namespace MurderMystery.EditorTools
             var minY = Bounds(root).min.y;
             body.transform.localPosition -= new Vector3(0f, minY, 0f);
 
-            var skirts = AttachSkirts(staticOutfit, root, animator);
+            var attached = AttachToBones(staticOutfit, animator);
 
             root.AddComponent<CharacterAnimator>();
             PrefabUtility.SaveAsPrefabAsset(root, outfitPath);
             Object.DestroyImmediate(root);
-            return $"rigged, {remapped} materials restored, height {targetHeight:F2} m" + (skirts > 0 ? $", {skirts} skirt on the hips" : "");
+            return $"rigged, {remapped} materials restored, height {targetHeight:F2} m" + (attached > 0 ? $", {attached} pieces on bones" : "");
         }
 
         /// <summary>
-        /// Skirts were left out of the Mixamo export; copy them from the static outfit (same coordinates: both
-        /// are fitted to the same height with feet at 0) and let them ride on the hips bone.
+        /// Pieces left out of the Mixamo export are copied from the static outfit (same coordinates: both are
+        /// fitted to the same height with feet at 0) onto a bone: skirts ride the hips, men's hair the head.
         /// </summary>
-        private static int AttachSkirts(GameObject staticOutfit, GameObject root, Animator animator)
+        private static int AttachToBones(GameObject staticOutfit, Animator animator)
         {
             if (staticOutfit == null) return 0;
-            var hips = animator.GetBoneTransform(HumanBodyBones.Hips);
-            if (hips == null) return 0;
             var source = (GameObject)PrefabUtility.InstantiatePrefab(staticOutfit);
             var count = 0;
             try
             {
-                foreach (var mf in source.GetComponentsInChildren<MeshFilter>(true).Where(m => CharacterOutfitBuilder.Skirts.Contains(m.name)).ToList())
+                foreach (var mf in source.GetComponentsInChildren<MeshFilter>(true).ToList())
                 {
+                    HumanBodyBones bone;
+                    if (CharacterOutfitBuilder.Skirts.Contains(mf.name)) bone = HumanBodyBones.Hips;
+                    else if (mf.name == CharacterOutfitBuilder.HairCap) bone = HumanBodyBones.Head;
+                    else continue;
+                    var target = animator.GetBoneTransform(bone);
+                    if (target == null) continue;
                     var copy = Object.Instantiate(mf.gameObject, mf.transform.position, mf.transform.rotation);
                     copy.name = mf.name;
                     copy.transform.localScale = mf.transform.lossyScale;
-                    copy.transform.SetParent(hips, true);
+                    copy.transform.SetParent(target, true);
                     count++;
                 }
             }

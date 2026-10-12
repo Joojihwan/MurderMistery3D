@@ -20,6 +20,7 @@ namespace MurderMystery.EditorTools
         private const string OutDir = "Assets/_Project/Resources/Characters";
         private const string SkinMatPath = "Assets/_Project/Art/Materials/Skin.mat";
         private const string EyeMatPath = "Assets/_Project/Art/Materials/Eye.mat";
+        private const string HairMatPath = "Assets/_Project/Art/Materials/Hair.mat";
 
         // Top of the head in the garments' own space (망건/쪽머리 tops), used to scale to each height.
         private const float MaleHeadTop = 1.86f;
@@ -73,13 +74,14 @@ namespace MurderMystery.EditorTools
             ManorBlockoutBuilder.EnsureFolder(OutDir);
             var skin = EnsureMaterial(SkinMatPath, new Color(0.80f, 0.64f, 0.52f), 0.25f);
             var eye = EnsureMaterial(EyeMatPath, new Color(0.08f, 0.06f, 0.05f), 0.5f);
+            var hair = EnsureMaterial(HairMatPath, new Color(0.05f, 0.045f, 0.04f), 0.35f);
 
             var previous = SceneManager.GetActiveScene().path;
             var demo = EditorSceneManager.OpenScene(DemoPath, OpenSceneMode.Additive);
             try
             {
                 var pieces = Pieces(demo);
-                foreach (var outfit in Cast) Save(Build(outfit, pieces, skin, eye), outfit.Id);
+                foreach (var outfit in Cast) Save(Build(outfit, pieces, skin, eye, hair), outfit.Id);
             }
             finally
             {
@@ -101,7 +103,10 @@ namespace MurderMystery.EditorTools
             return map;
         }
 
-        private static GameObject Build(Outfit outfit, Dictionary<string, Transform> pieces, Material skin, Material eye)
+        /// <summary>Name of the men's hair piece; left out of the Mixamo export and put on the head bone after rigging.</summary>
+        public const string HairCap = "HairCap";
+
+        private static GameObject Build(Outfit outfit, Dictionary<string, Transform> pieces, Material skin, Material eye, Material hair)
         {
             var root = new GameObject(outfit.Id);
             var model = new GameObject("Model").transform;
@@ -133,6 +138,9 @@ namespace MurderMystery.EditorTools
             Part(head.transform, "Eye L", PrimitiveType.Sphere, new Vector3(-0.2f, 0.05f, 0.47f), new Vector3(0.13f, 0.06f, 0.1f), eye);
             Part(head.transform, "Eye R", PrimitiveType.Sphere, new Vector3(0.2f, 0.05f, 0.47f), new Vector3(0.13f, 0.06f, 0.1f), eye);
             Part(model, "Neck", PrimitiveType.Cylinder, new Vector3(0f, headY - 0.13f, 0.0f), new Vector3(0.09f, 0.05f, 0.09f), skin);
+            // Men's hair (상투 under the hat): otherwise the bare back of the head shows below the 갓 brim.
+            if (!outfit.Female)
+                Part(model, HairCap, PrimitiveType.Sphere, new Vector3(0f, headY + 0.02f, -0.03f), new Vector3(0.165f, 0.2f, 0.17f), hair);
 
             foreach (var r in root.GetComponentsInChildren<Renderer>(true)) r.shadowCastingMode = ShadowCastingMode.On;
             return root;
