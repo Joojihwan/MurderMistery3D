@@ -68,9 +68,9 @@
 ## 5차 작업 — 플레이 다듬기 · 확장 준비, 2026-10-13 (이어서 작업할 때 여기부터)
 
 - [x] P1 뜬 돌·항아리 내려앉힘(KhsManorBuilder.SettleFloatingPieces), 발 접지(CharacterAnimator), 분이 고개, 얼굴(눈썹·코·입)·손
-- [~] P2 점프(Space, 0.45m)·앉기(C, 눈높이 62%, 네트워크 동기화). 앉기 동작 확인됨. **점프: 가상 Space 입력이 안 먹는 원인 조사 중** (FirstPersonController에 임시 `[JumpDebug]` 로그 있음 → 원인 찾으면 삭제)
+- [x] P2 점프(Space, 0.45m, 프레임 무관 적분)·앉기(C, 눈높이 62%, 네트워크 동기화)
 - [ ] P3 Mixamo 추가 동작(사용자): 바닥에 앉기 → `Sitting.fbx`, 점프 → `Jump.fbx` (Without Skin, In Place). 넣고 Build Rigged Characters 재실행 (없어도 동작은 함)
-- [ ] P4 나머지 플레이 다듬기 점검 (Play로 한 바퀴: 이동·문·조사·HUD)
-- [ ] P5 `docs/design/character_staging.md` — 인물 움직임·배치 기준(다음 시나리오도 참고)
+- [x] P4 HUD·안내서 키 갱신, 주행 21/21, 콘솔 오류 0. 남음: 소품 충돌체 없음(통과됨)
+- [x] P5 `docs/design/character_staging.md`
 - [ ] P6 `docs/design/scenario_platform_proposal.md` — 시나리오 재활용·재플레이·사용자 제작 시나리오 제안
 - [ ] P7 게임 진입 화면 · 시나리오 선택 · 방 만들기 화면 (게임 요소 강화)
