@@ -60,6 +60,6 @@
 - [x] K4 플레이어 몸 프로필 + 계단 보조(StepAssist), NavMesh 검증 + 실제 주행 테스트 21/21
 - [x] K5 인물 6명 한복 조합(CharacterOutfitBuilder), 원격 플레이어·도 검률 적용, LAN 2인 테스트로 확인
 - [ ] K6 **사용자 작업**: KHS Unhyeongung Collect 받기 → 조사 지점 소품 배치
-- [ ] K7 방 문 열림 처리, 메시 압축·LOD·라이트 굽기
+- [~] K7 방 문 열림(근접 시 열림, 127짝)·메시 압축(빌드 557MB) 완료. LOD·라이트 굽기 남음
 - [ ] K8 인물 애니메이션 방식 결정 (asset_plan.md 3·4절)
 

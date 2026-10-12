@@ -158,7 +158,8 @@ namespace MurderMystery.EditorTools
         /// <summary>
         /// The KHS mesh colliders sit on the prefab roots with no mesh (the reference does not survive import),
         /// so they are rebuilt on the child that renders. Room door leaves (raised on a floor) get no collider so
-        /// rooms can be entered; leaves standing on the yard are gates (outer gates, shrine) and stay shut.
+        /// rooms can be entered (a ProximityDoor hides them while someone is near); leaves standing on the yard
+        /// are gates (outer gates, shrine) and stay shut.
         /// </summary>
         private static void FixColliders(Transform house)
         {
@@ -167,10 +168,24 @@ namespace MurderMystery.EditorTools
             foreach (var mf in house.GetComponentsInChildren<MeshFilter>(true))
             {
                 if (mf.sharedMesh == null) continue;
-                if (IsDoorLeaf(mf.transform) && mf.GetComponent<Renderer>().bounds.min.y > GateBottomMaxY) continue;
+                if (IsDoorLeaf(mf.transform) && mf.GetComponent<Renderer>().bounds.min.y > GateBottomMaxY)
+                {
+                    // Opens (hides) while someone is near, so nobody is seen walking through a shut door.
+                    var leaf = DoorLeafRoot(mf.transform);
+                    if (!leaf.TryGetComponent<ProximityDoor>(out _)) leaf.gameObject.AddComponent<ProximityDoor>();
+                    continue;
+                }
                 if (!mf.TryGetComponent<MeshCollider>(out var mc)) mc = mf.gameObject.AddComponent<MeshCollider>();
                 mc.sharedMesh = mf.sharedMesh;
             }
+        }
+
+        private static Transform DoorLeafRoot(Transform t)
+        {
+            Transform root = null;
+            for (; t != null; t = t.parent)
+                if (t.name.StartsWith("SM_Door") && !t.name.StartsWith("SM_DoorFrame")) root = t;
+            return root;
         }
 
         private static bool IsDoorLeaf(Transform t)

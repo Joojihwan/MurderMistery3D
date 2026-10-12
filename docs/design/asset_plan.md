@@ -23,14 +23,15 @@
 2. Claude가 패키지에서 필요한 폴더만 GUID를 유지한 채 `Assets/ThirdParty/KHS/`로 푼다. KHS 패키지에는 TextMesh Pro 사본과 URP 전역 설정 파일이 섞여 있어, 그대로 Import하면 프로젝트 설정을 덮어쓴다. **원본은 git에 올리지 않는다** (`.gitignore`).
 3. `Tools > Murder Mystery > KHS > Convert Built-in Materials to URP` (고택 재질 42개가 Built-in Standard). 의복은 자체 URP Shader Graph라 변환 불필요.
 4. `Tools > Murder Mystery > KHS > Cap Texture Sizes`: 의복 1024, 고택 2048 (빌드 1.04GB → 686MB).
+   `Tools > Murder Mystery > KHS > Compress Meshes`: 고택 Medium, 의복 Low (→ 557MB).
 5. `Tools > Murder Mystery > KHS > Build Character Outfits` → `Tools > Manor > Build KHS Manor Scene`.
 6. 크기: 두 패키지 모두 실측 미터 단위라 배율 조정이 필요 없었다 (기둥 높이·문 높이로 확인).
 
 ### 남은 일
 
 - 실내 소품: 지금 조사 지점은 빈 바닥 위 위치만 있다. Unhyeongung Collect의 생활유물로 각 지점에 실제 물건을 놓는다.
-- 문: 방 문짝은 닫힌 모습 그대로 통과된다. 열리는 문(상호작용) 또는 열린 모습으로 바꾸기.
-- 성능: 스캔 메시가 무겁다 (빌드의 메시 데이터 약 210MB). 메시 압축, LOD, 라이트맵 굽기.
+- ~~문~~: 방 문짝 127개에 `ProximityDoor` — 사람이 1.3m 안에 오면 문짝이 열리고(숨김) 떠나면 닫힌다. 여닫는 동작 애니메이션은 아직 없음.
+- 성능: 메시 압축 완료. LOD·라이트맵 굽기는 남음 (스캔 메시가 2천 개 이상).
 
 ## 3. 한복 캐릭터 (6명: 플레이어 5 + 도 검률)
 

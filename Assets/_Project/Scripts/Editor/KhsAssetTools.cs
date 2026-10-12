@@ -52,6 +52,41 @@ namespace MurderMystery.EditorTools
             return changed;
         }
 
+        /// <summary>
+        /// Mesh compression for the scanned models (the house alone is ~210 MB of mesh data in a build).
+        /// Medium for the house (seen from metres away), Low for the garments (seen close, thin layers).
+        /// </summary>
+        [MenuItem("Tools/Murder Mystery/KHS/Compress Meshes")]
+        public static void CompressMeshes()
+        {
+            var changed = CompressMeshes(Root + "/KimMyeonggwanHouse", ModelImporterMeshCompression.Medium) +
+                          CompressMeshes(Root + "/Joseon_Royal_Wear", ModelImporterMeshCompression.Low);
+            Debug.Log($"[KHS] compressed {changed} models");
+        }
+
+        public static int CompressMeshes(string folder, ModelImporterMeshCompression level)
+        {
+            if (!AssetDatabase.IsValidFolder(folder)) return 0;
+            var changed = 0;
+            AssetDatabase.StartAssetEditing();
+            try
+            {
+                foreach (var guid in AssetDatabase.FindAssets("t:Model", new[] { folder }))
+                {
+                    var importer = AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid)) as ModelImporter;
+                    if (importer == null || importer.meshCompression >= level) continue;
+                    importer.meshCompression = level;
+                    importer.SaveAndReimport();
+                    changed++;
+                }
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+            }
+            return changed;
+        }
+
         public static int ConvertMaterialsCount()
         {
             if (!AssetDatabase.IsValidFolder(Root)) return 0;

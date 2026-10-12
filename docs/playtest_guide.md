@@ -9,7 +9,7 @@
    - Unity: **File > Build Profiles** → Windows → **Build** → 출력 폴더 `Builds/Win64/`
    - 또는 Claude에게 "빌드해 줘"
 2. **`Builds/Win64` 폴더를 통째로 압축**한다 (`MurderMystery.exe`만 보내면 실행되지 않음).
-   - 약 690MB (김명관 고택·한복 텍스처 포함). 구글 드라이브 등에 올리고 링크를 보낸다.
+   - 약 560MB (김명관 고택·한복 포함). 구글 드라이브 등에 올리고 링크를 보낸다.
    - 빌드하려면 이 PC에 KHS 에셋(`Assets/ThirdParty/KHS/`)이 있어야 한다 (git에는 없음, asset_plan.md 2절).
    - `Builds/`는 git에 올라가지 않는다.
 3. Unity Cloud 연결·Vivox·Relay는 이미 켜져 있다 (프로젝트 `MurderMistery3D`). 무료 사용량 안이면 따로 할 일 없음.
