@@ -40,6 +40,7 @@ namespace MurderMystery.EditorTools
             if (idle == null || walk == null) return string.Join("\n", report) + "\nneed Idle.fbx and Walking.fbx";
             var controller = BuildController(idle, walk);
             walkClip = walk;
+            idleClip = idle;
 
             foreach (var id in MixamoExport.Ids)
             {
@@ -179,6 +180,7 @@ namespace MurderMystery.EditorTools
         // ---------------------------------------------------------------- characters
 
         private static AnimationClip walkClip;
+        private static AnimationClip idleClip;
 
         private static string BuildCharacter(string id, string fbx, AnimatorController controller)
         {
@@ -219,7 +221,8 @@ namespace MurderMystery.EditorTools
             animator.avatar = avatar;
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = false;
-            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            // Always animate: only six characters, and the neck fix and foot grounding need fresh poses.
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
             // Never trust the import scale: fit the rig to the outfit's measured height, feet on the ground.
             var h = Height(root);
@@ -229,16 +232,18 @@ namespace MurderMystery.EditorTools
 
             // The rig's ankles sit high inside the shoes, so feet placed at 0 in the bind pose float once the
             // clips play: lower the body by the lowest point the walk's planted foot actually reaches.
-            var lift = AnimatedFloorLift(body, walkClip);
-            body.transform.localPosition -= new Vector3(0f, lift, 0f);
+            // Feet are grounded at runtime by CharacterAnimator from the bind-pose sole height (the clips'
+            // foot heights differ and editor sampling does not match the played result).
+            var soleHeight = Mathf.Min(animator.GetBoneTransform(HumanBodyBones.LeftFoot).position.y,
+                animator.GetBoneTransform(HumanBodyBones.RightFoot).position.y) - root.transform.position.y;
 
             var attached = AttachToBones(staticOutfit, animator);
             var hidden = attached > 0 ? HideLegsUnderSkirt(body) : 0;
 
-            root.AddComponent<CharacterAnimator>();
+            root.AddComponent<CharacterAnimator>().SetSoleHeight(soleHeight);
             PrefabUtility.SaveAsPrefabAsset(root, outfitPath);
             Object.DestroyImmediate(root);
-            return $"rigged, {remapped} materials restored, height {targetHeight:F2} m, lowered {lift * 100f:F0} cm" + (attached > 0 ? $", {attached} pieces on bones" : "") + (hidden > 0 ? $", {hidden} leg slots hidden under the skirt" : "");
+            return $"rigged, {remapped} materials restored, height {targetHeight:F2} m, sole {soleHeight * 100f:F0} cm" + (attached > 0 ? $", {attached} pieces on bones" : "") + (hidden > 0 ? $", {hidden} leg slots hidden under the skirt" : "");
         }
 
         /// <summary>

@@ -120,6 +120,8 @@ namespace MurderMystery.EditorTools
             BuildBlockers(Group(root, "Blockers"));
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
+            var settled = SettleFloatingPieces(house);
+            Debug.Log($"[KhsManorBuilder] settled {settled} floating stones/jars onto the flat yard");
             BuildSpots(Group(root, "InvestigationSpots"));
             BuildMarkers(Group(root, "GameplayMarkers"));
             BuildProps(Group(root, "Props"));
@@ -180,6 +182,83 @@ namespace MurderMystery.EditorTools
                 if (!mf.TryGetComponent<MeshCollider>(out var mc)) mc = mf.gameObject.AddComponent<MeshCollider>();
                 mc.sharedMesh = mf.sharedMesh;
             }
+        }
+
+        // Loose ground pieces. The scan's ground undulates, the yard here is flat, so where it was lower they float.
+        private static readonly string[] LoosePieces =
+            { "SM_Stone", "SM_Jangdokdae", "SM_FoundationStone", "SM_Gamasot", "SM_Gidan", "SM_Seokkalae" };
+
+        /// <summary>
+        /// Drops loose pieces that touch nothing below them onto the nearest surface. Pieces stacked or nested
+        /// together (a jar on its upturned-lid stand) move as one group, so they cannot hold each other up.
+        /// Returns how many pieces moved.
+        /// </summary>
+        public static int SettleFloatingPieces(Transform house)
+        {
+            var loose = new List<(Transform t, Bounds b)>();
+            foreach (Transform piece in house)
+            {
+                if (!LoosePieces.Any(k => piece.name.StartsWith(k)) || piece.name.StartsWith("SM_StoneWall") ||
+                    piece.name.StartsWith("SM_Stonewall")) continue;
+                var renderers = piece.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0) continue;
+                var bb = renderers[0].bounds;
+                foreach (var rr in renderers) bb.Encapsulate(rr.bounds);
+                loose.Add((piece, bb));
+            }
+
+            // Union-find over stacked pieces: bounds overlap and one sits over the other's middle. Spline-built
+            // borders and paths are long and only lie beside things, so they never join a stack.
+            bool Stackable(Transform t) => !t.name.Contains("_Splines");
+            bool Over(Bounds a, Bounds c) =>
+                Mathf.Abs(a.center.x - c.center.x) < Mathf.Max(a.extents.x, c.extents.x) * 0.7f &&
+                Mathf.Abs(a.center.z - c.center.z) < Mathf.Max(a.extents.z, c.extents.z) * 0.7f;
+            var parent = Enumerable.Range(0, loose.Count).ToArray();
+            int Find(int i) => parent[i] == i ? i : parent[i] = Find(parent[i]);
+            for (var i = 0; i < loose.Count; i++)
+            for (var j = i + 1; j < loose.Count; j++)
+            {
+                if (!Stackable(loose[i].t) || !Stackable(loose[j].t)) continue;
+                var a = loose[i].b;
+                var c = loose[j].b;
+                a.Expand(0.02f);
+                if (a.Intersects(c) && Over(a, c)) parent[Find(i)] = Find(j);
+            }
+
+            var moved = 0;
+            foreach (var group in Enumerable.Range(0, loose.Count).GroupBy(Find))
+            {
+                var members = group.Select(i => loose[i]).ToList();
+                var bounds = members[0].b;
+                foreach (var m in members) bounds.Encapsulate(m.b);
+                var gap = FloatGap(bounds, members.Select(m => m.t).ToList());
+                if (gap <= 0.05f) continue;
+                foreach (var m in members) m.t.position -= new Vector3(0f, gap, 0f);
+                Physics.SyncTransforms();
+                moved += members.Count;
+            }
+            return moved;
+        }
+
+        /// <summary>Height of the bounds above the nearest outside surface, 0 when resting on or sunk into one.</summary>
+        private static float FloatGap(Bounds b, List<Transform> group)
+        {
+            var e = b.extents * 0.6f;
+            var best = float.MaxValue;
+            foreach (var off in new[] { Vector3.zero, new Vector3(e.x, 0f, e.z), new Vector3(-e.x, 0f, e.z), new Vector3(e.x, 0f, -e.z), new Vector3(-e.x, 0f, -e.z) })
+            {
+                var p = b.center + off;
+                var support = float.MinValue;
+                var touching = false;
+                foreach (var h in Physics.RaycastAll(new Vector3(p.x, b.max.y + 6f, p.z), Vector3.down, 20f, ~0, QueryTriggerInteraction.Ignore))
+                {
+                    if (group.Any(g => h.collider.transform.IsChildOf(g))) continue;
+                    if (h.point.y >= b.min.y - 0.05f && h.point.y <= b.max.y) touching = true;
+                    if (h.point.y < b.min.y && h.point.y > support) support = h.point.y;
+                }
+                best = Mathf.Min(best, touching ? 0f : support == float.MinValue ? 0f : b.min.y - support);
+            }
+            return best == float.MaxValue ? 0f : best;
         }
 
         private static Transform DoorLeafRoot(Transform t)

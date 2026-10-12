@@ -15,11 +15,36 @@ namespace MurderMystery.Gameplay
         // (set by CharacterRigBuilder; e.g. a long braid pulled 분이's neck bones back).
         [SerializeField] private float neckPitchFix;
         [SerializeField] private float headPitchFix;
+        // Height of the foot bones above the shoe soles in the bind pose (set by CharacterRigBuilder). Each
+        // frame the body is shifted so the lower foot's sole meets the ground: Mixamo clips retargeted onto
+        // these rigs leave the feet hovering by a different amount per clip.
+        [SerializeField] private float soleHeight;
+        [SerializeField] private bool groundFeet = true;
+        private Vector3 modelBase;
+        private float groundOffset;
+        private Transform leftFoot;
+        private Transform rightFoot;
+        // The skinned shoes do not follow the foot bones exactly, so every half second the real lowest
+        // vertex is measured and folded into a bias (cheap: a few bakes per second for the whole cast).
+        private const float CalibrateInterval = 0.5f;
+        private float soleBias;
+        private float nextCalibrate;
+        private SkinnedMeshRenderer[] skins;
+        private Mesh baked;
 
         private Transform neck;
         private Transform head;
         private Quaternion neckApplied;
         private Quaternion headApplied;
+
+        public void SetSoleHeight(float height) => soleHeight = height;
+
+        /// <summary>Off while airborne (jumping), when the feet should leave the ground.</summary>
+        public bool GroundFeet
+        {
+            get => groundFeet;
+            set => groundFeet = value;
+        }
 
         public void SetPitchFix(float neckDegrees, float headDegrees)
         {
@@ -35,10 +60,15 @@ namespace MurderMystery.Gameplay
         {
             animator = GetComponentInChildren<Animator>();
             lastPosition = transform.position;
+            if (animator != null) modelBase = animator.transform.localPosition;
             if (animator != null && animator.isHuman)
             {
                 neck = animator.GetBoneTransform(HumanBodyBones.Neck);
                 head = animator.GetBoneTransform(HumanBodyBones.Head);
+                leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+                rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+                skins = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+                nextCalibrate = Time.time + Random.value * CalibrateInterval;
             }
         }
 
@@ -55,9 +85,68 @@ namespace MurderMystery.Gameplay
 
         private void LateUpdate()
         {
+            Ground();
             var right = transform.right;
             Fix(neck, neckPitchFix, right, ref neckApplied);
             Fix(head, headPitchFix, right, ref headApplied);
+        }
+
+        private void Ground()
+        {
+            if (soleHeight <= 0f || leftFoot == null || rightFoot == null || animator == null) return;
+            var target = 0f;
+            if (groundFeet)
+            {
+                // Foot height as if no offset were applied, relative to this character's ground.
+                var ground = GroundY();
+                var lowest = Mathf.Min(leftFoot.position.y, rightFoot.position.y) - groundOffset - ground;
+                target = soleHeight + soleBias - lowest;
+                if (Time.time >= nextCalibrate)
+                {
+                    nextCalibrate = Time.time + CalibrateInterval;
+                    soleBias -= LowestVertex() - ground;
+                }
+            }
+            groundOffset = Mathf.Lerp(groundOffset, target, 1f - Mathf.Exp(-20f * Time.deltaTime));
+            animator.transform.localPosition = modelBase + Vector3.up * groundOffset;
+        }
+
+        /// <summary>
+        /// The surface under the character. A CharacterController keeps its root a skin width above the
+        /// ground, so the root height alone would leave networked bodies hovering.
+        /// </summary>
+        private float GroundY()
+        {
+            var origin = transform.position + Vector3.up * 0.4f;
+            var best = transform.position.y;
+            var bestDistance = float.MaxValue;
+            foreach (var hit in Physics.RaycastAll(origin, Vector3.down, 0.8f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.collider.transform.IsChildOf(transform) || hit.collider is CharacterController || hit.distance >= bestDistance) continue;
+                bestDistance = hit.distance;
+                best = hit.point.y;
+            }
+            return best;
+        }
+
+        private float LowestVertex()
+        {
+            if (baked == null) baked = new Mesh();
+            var lowest = float.MaxValue;
+            foreach (var smr in skins)
+            {
+                if (smr == null || !smr.enabled) continue;
+                smr.BakeMesh(baked, true);
+                var m = smr.transform.localToWorldMatrix;
+                var vertices = baked.vertices;
+                for (var i = 0; i < vertices.Length; i++) lowest = Mathf.Min(lowest, m.MultiplyPoint3x4(vertices[i]).y);
+            }
+            return lowest == float.MaxValue ? transform.position.y : lowest;
+        }
+
+        private void OnDestroy()
+        {
+            if (baked != null) Destroy(baked);
         }
 
         /// <summary>
