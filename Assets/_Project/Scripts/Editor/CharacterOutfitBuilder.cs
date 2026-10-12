@@ -36,7 +36,7 @@ namespace MurderMystery.EditorTools
 
         // Late-Joseon dress by status: 서자 선비 in 도포 and 갓; 중인 의원 indoors in 탕건 without the 갓;
         // a merchant head with a 쾌자(전복) over the 두루마기; a widowed daughter-in-law in a plain white
-        // 적삼 with 쪽머리; an unmarried maid with a long 댕기 braid; the legal clerk in 흑단령 and 사모.
+        // 적삼 with 쪽머리; an unmarried maid with a long 댕기 braid; the legal clerk in outdoor duty dress.
         private static readonly Outfit[] Cast =
         {
             new Outfit { Id = "jaeha", Height = 1.80f, Girth = 1f,
@@ -51,7 +51,9 @@ namespace MurderMystery.EditorTools
             new Outfit { Id = "buni", Female = true, Height = 1.52f, Girth = 1f,
                 Pieces = new[] { "SM_Underpants", "SM_Daesum_Chima", "SM_Inner_jeogori", "SM_Beoseon02a", "SM_Pigtails01b" } },
             new Outfit { Id = "dogeomnyul", Height = 1.68f, Girth = 1.05f,
-                Pieces = new[] { "SM_Pants", "SM_Black_Danryeong01a", "SM_Rank_Belt", "SM_Black_Shoes", "SM_Samogwandae" } },
+                // Outdoor duty dress (동달이 + 전복, 행전, 갓) rather than the ankle-length 흑단령: the legs must show
+                // for Mixamo's auto-rigger.
+                Pieces = new[] { "SM_Pants", "SM_Leg_Wraps", "SM_Beoseon01a", "SM_Dongdari", "SM_Jeonbok01b", "SM_Black_Shoes", "SM_Gat" } },
         };
 
         /// <summary>
