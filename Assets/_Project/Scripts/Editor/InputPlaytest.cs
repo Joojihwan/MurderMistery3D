@@ -85,12 +85,15 @@ namespace MurderMystery.EditorTools
             }
         }
 
-        private static void Press()
+        private static void Press(bool turn = true)
         {
             if (Keyboard.current == null) InputSystem.AddDevice<Keyboard>();
             if (Mouse.current == null) InputSystem.AddDevice<Mouse>();
+            // With the editor unfocused the input system may have switched the devices off.
+            if (!Keyboard.current.enabled) InputSystem.EnableDevice(Keyboard.current);
+            if (!Mouse.current.enabled) InputSystem.EnableDevice(Mouse.current);
             InputSystem.QueueStateEvent(Keyboard.current, new KeyboardState(current.Keys));
-            if (current.Turn) player.transform.Rotate(0f, current.Yaw, 0f);
+            if (turn && current.Turn) player.transform.Rotate(0f, current.Yaw, 0f);
         }
 
         private static void Tick()
@@ -111,7 +114,12 @@ namespace MurderMystery.EditorTools
                 nextSample = now + 0.1;
                 log.AppendLine($"{player.transform.position.x:F2},{player.transform.position.y:F2},{player.transform.position.z:F2} h={cc.height:F2} eye={eye:F2} g={(cc.isGrounded ? 1 : 0)} keys={string.Join("+", current.Keys)}");
             }
-            if (now < stepEnd) return;
+            if (now < stepEnd)
+            {
+                // Held keys are re-sent: losing focus resets device state.
+                if (current.Keys.Length > 0) Press(false);
+                return;
+            }
             if (steps.Count == 0)
             {
                 Finish(null);

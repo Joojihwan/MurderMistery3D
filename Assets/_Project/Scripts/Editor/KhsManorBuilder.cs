@@ -752,9 +752,8 @@ namespace MurderMystery.EditorTools
         private static int BuildDoorSteps(Transform p, Transform house)
         {
             var template = StoneTemplate(house);
-            var leaves = house.GetComponentsInChildren<ProximityDoor>().Select(d => d.transform).ToList();
-            var count = 0;
-            foreach (var leaf in leaves)
+            var leaves = new List<(Transform leaf, Bounds b, Vector3 through, float width)>();
+            foreach (var leaf in house.GetComponentsInChildren<ProximityDoor>().Select(d => d.transform))
             {
                 var mf = leaf.GetComponentInChildren<MeshFilter>();
                 if (mf == null || mf.sharedMesh == null) continue;
@@ -769,7 +768,7 @@ namespace MurderMystery.EditorTools
                 through.y = 0f;
                 if (through.sqrMagnitude < 0.01f) continue;
                 through.Normalize();
-                var width = Mathf.Max(Mathf.Abs(Vector3.Dot(b.size, Vector3.Cross(Vector3.up, through))), 0.7f);
+                var width = Mathf.Max(Mathf.Abs(Vector3.Dot(b.size, Vector3.Cross(Vector3.up, through))), 0.5f);
 
                 // The wall under many leaves is an open shell with no top face, so nothing can stand on the sill:
                 // cap it with an invisible slab level with the bottom of the leaf.
@@ -777,8 +776,41 @@ namespace MurderMystery.EditorTools
                 cap.transform.SetParent(p, false);
                 cap.transform.SetPositionAndRotation(new Vector3(b.center.x, b.min.y - 0.155f, b.center.z), Quaternion.LookRotation(through));
                 cap.AddComponent<BoxCollider>().size = new Vector3(width, 0.3f, 0.2f);
-                Physics.SyncTransforms();
+                leaves.Add((leaf, b, through, width));
+            }
+            Physics.SyncTransforms();
+            if (template == null) return 0;
 
+            // The leaves of one doorway (a pair, or a run of three or four) share one flight of stones.
+            var doorways = new List<(Bounds b, Vector3 through, float width, string name)>();
+            var used = new bool[leaves.Count];
+            for (var i = 0; i < leaves.Count; i++)
+            {
+                if (used[i]) continue;
+                used[i] = true;
+                var (leaf, b, through, _) = leaves[i];
+                var across = Vector3.Cross(Vector3.up, through);
+                for (var grew = true; grew;)
+                {
+                    grew = false;
+                    for (var j = 0; j < leaves.Count; j++)
+                    {
+                        if (used[j]) continue;
+                        var d = leaves[j].b.center - b.center;
+                        if (Mathf.Abs(Vector3.Dot(d, through)) > 0.2f || Mathf.Abs(d.y) > 0.3f) continue;
+                        var reach = Mathf.Abs(Vector3.Dot(b.size, across)) / 2f + leaves[j].width / 2f + 0.15f;
+                        if (Mathf.Abs(Vector3.Dot(d, across)) > reach) continue;
+                        used[j] = true;
+                        b.Encapsulate(leaves[j].b);
+                        grew = true;
+                    }
+                }
+                doorways.Add((b, through, Mathf.Max(Mathf.Abs(Vector3.Dot(b.size, across)), 0.7f), leaf.name));
+            }
+
+            var count = 0;
+            foreach (var (b, through, width, name) in doorways)
+            {
                 if (!Physics.Raycast(new Vector3(b.center.x, b.min.y + 0.3f, b.center.z), Vector3.down, out var sillHit, 1.5f, ~0, QueryTriggerInteraction.Ignore))
                     continue;
                 var sill = sillHit.point.y;
@@ -787,16 +819,15 @@ namespace MurderMystery.EditorTools
                 // nobody steps through it, so it gets no stone (and looks it).
                 var sideFloors = new[] { 1f, -1f }.Select(sg => WalkableBelow(b.center + through * sg * 0.8f, sill + 0.3f))
                     .Where(f => f != null).Select(f => f.Value).ToList();
-                if (template == null || sideFloors.Count == 0 || sill - sideFloors.Max() > WindowSill) continue;
+                if (sideFloors.Count == 0 || sill - sideFloors.Max() > WindowSill) continue;
 
                 foreach (var sign in new[] { 1f, -1f })
                 {
                     var outward = through * sign;
-                    var floor = WalkableBelow(b.center + outward * 1.1f, sill + 0.3f);
+                    // What is just outside, where the stones go: the ground, a platform, or a 섬돌 of the scan
+                    // (high enough already, then nothing is added).
+                    var floor = WalkableBelow(b.center + outward * 0.45f, sill + 0.3f);
                     if (floor == null || sill - floor.Value <= DoorStepMin || sill - floor.Value > DoorStepMax) continue;
-                    // Already something to step on just outside?
-                    var near = WalkableBelow(b.center + outward * 0.45f, sill + 0.05f);
-                    if (near != null && near.Value > floor.Value + 0.15f) continue;
 
                     // One stone per 0.3 m of rise, like a short flight of 섬돌: the highest against the sill.
                     const float depth = 0.4f;
@@ -806,7 +837,7 @@ namespace MurderMystery.EditorTools
                     for (var k = 1; k <= steps; k++)
                     {
                         var top = sill - rise * k / (steps + 1);
-                        PlaceStone(p, $"Door step stone ({leaf.name})", template,
+                        PlaceStone(p, $"Door step stone ({name})", template,
                             new Vector3(b.center.x, (top + bottom) / 2f, b.center.z) + outward * (0.14f + depth * (k - 0.5f)),
                             new Vector3(width + 0.1f, top - bottom, depth), Quaternion.LookRotation(outward));
                     }
