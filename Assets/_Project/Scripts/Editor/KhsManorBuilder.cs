@@ -62,7 +62,7 @@ namespace MurderMystery.EditorTools
         //  (z -26.8~-29.9). The east arm beyond is an earth-floored barn. 뒷간 = walled hut at (20.3, -29.2).
         private static readonly SpotDef[] Spots =
         {
-            S("01", "서재 서안", 11.2f, -8.9f, 0.45f, SpotLayer.Surface, "N1"),
+            S("01", "서재 서안", 10.95f, -9.7f, 0.45f, SpotLayer.Surface, "N1"),
             S("02", "서재 문갑", 9.9f, -8.7f, 0.6f, SpotLayer.Surface, "C4", "D1", "D2"),
             S("03", "서재 문지방", 10.8f, -10.2f, 0.1f, SpotLayer.Surface, "C3b"),
             S("04", "사랑방 화로", 7.2f, -10.6f, 0.45f, SpotLayer.Surface, "C1"),
@@ -76,7 +76,7 @@ namespace MurderMystery.EditorTools
             S("11", "곳간 쥐약 단지", -11.9f, -1.1f, 0.4f, SpotLayer.Surface, "C2"),
             S("12", "부엌 약탕관", -17.5f, 6.2f, 0.5f, SpotLayer.Surface, "N2"),
             S("13", "부엌 쌀독", -17.5f, 3.0f, 0.4f, SpotLayer.Deep, "H1"),
-            S("14", "건넌방 반닫이", -1.5f, 9.8f, 0.6f, SpotLayer.Deep, "H3"),
+            S("14", "건넌방 반닫이", -1.0f, 9.7f, 0.6f, SpotLayer.Deep, "H3"),
             S("15", "허 의원 약상자", 9.6f, -28.0f, 0.4f, SpotLayer.Surface, "C6"),
             S("16", "허 의원 봇짐", 10.3f, -28.9f, 0.4f, SpotLayer.Deep, "H6"),
             S("17", "변 행수 짐 보따리", 12.6f, -28.6f, 0.4f, SpotLayer.Deep, "H5a", "H5b"),
@@ -102,13 +102,13 @@ namespace MurderMystery.EditorTools
             S("35", "작은사랑 의걸이장 (재하 도포)", 15.6f, -13.0f, 1.0f, SpotLayer.Surface, "M8"),
             // v3 (2026-10-17): more to find in every room. Clue ids come from clues.json (BuildSpots).
             S("36", "사랑방 서책 더미", 8.6f, -11.9f, 0.4f, SpotLayer.Surface),
-            S("37", "서재 서가", 12.0f, -8.75f, 0.9f, SpotLayer.Surface),
-            S("38", "서재 파지 바구니", 10.2f, -9.8f, 0.3f, SpotLayer.Surface),
+            S("37", "서재 서가", 11.55f, -8.75f, 0.9f, SpotLayer.Surface),
+            S("38", "서재 파지 바구니", 10.0f, -9.85f, 0.3f, SpotLayer.Surface),
             S("39", "대청 찬탁", 12.3f, -10.6f, 0.8f, SpotLayer.Surface),
             S("40", "사랑채 굴뚝 옆", 6.6f, -7.3f, 0.3f, SpotLayer.Surface),
             S("41", "작은사랑 서안", 16.4f, -12.2f, 0.8f, SpotLayer.Deep),
             S("42", "작은사랑 이불장", 15.5f, -11.95f, 0.5f, SpotLayer.Deep),
-            S("43", "건넌방 보료", -2.2f, 11.2f, 0.3f, SpotLayer.Deep),
+            S("43", "건넌방 보료", -2.4f, 11.45f, 0.3f, SpotLayer.Deep),
             S("44", "건넌방 바느질 상자", 0.3f, 8.1f, 0.3f, SpotLayer.Deep),
             S("45", "안방 장롱", -13.0f, 14.2f, 0.9f, SpotLayer.Surface),
             S("46", "안방 경대", -11.0f, 8.0f, 0.6f, SpotLayer.Surface),
@@ -1367,10 +1367,14 @@ namespace MurderMystery.EditorTools
         }
 
         /// <summary>
-        /// The top of whatever is below a point (furniture, floor, ground), ignoring trigger spheres. Furniture
-        /// has no colliders, so a table or chest under the point counts by the top of its bounds.
+        /// Where a clue rests at a point: on the floor or ground below it, or on furniture (which has no
+        /// colliders, so it counts by its bounds). Low pieces (tables, chests, trays up to 1 m) carry the clue
+        /// on top, also when it lands just off their edge. Tall pieces (cabinets, shelves) would hide it inside,
+        /// so the clue is set on the floor in front of them, on the side with the most room.
         /// </summary>
-        private static Vector3 SurfaceBelow(Vector3 p)
+        private static Vector3 SurfaceBelow(Vector3 p) => SurfaceBelow(p, 0);
+
+        private static Vector3 SurfaceBelow(Vector3 p, int depth)
         {
             var hits = Physics.RaycastAll(p + Vector3.up * 0.05f, Vector3.down, 2.5f, ~0, QueryTriggerInteraction.Ignore)
                 .Where(h => h.normal.y > 0.5f).OrderBy(h => h.distance).ToList();
@@ -1383,10 +1387,36 @@ namespace MurderMystery.EditorTools
                 if (rs.Length == 0) continue;
                 var b = rs[0].bounds;
                 foreach (var r in rs) b.Encapsulate(r.bounds);
-                // Inside the piece's footprint (a little in from its edges) and its top below the point.
-                if (p.x < b.min.x + 0.05f || p.x > b.max.x - 0.05f || p.z < b.min.z + 0.05f || p.z > b.max.z - 0.05f) continue;
-                if (b.max.y > p.y + 0.05f || b.max.y <= below.y) continue;
-                below = new Vector3(p.x, b.max.y, p.z);
+                if (b.min.y > below.y + 0.3f) continue;                       // on something else, higher up
+                var low = b.size.y <= 1.0f;
+                var reach = low ? 0.15f : -0.02f;
+                if (p.x < b.min.x - reach || p.x > b.max.x + reach || p.z < b.min.z - reach || p.z > b.max.z + reach) continue;
+                if (low)
+                {
+                    if (b.max.y <= below.y) continue;
+                    var inset = Mathf.Min(0.06f, b.extents.x * 0.5f);
+                    var insetZ = Mathf.Min(0.06f, b.extents.z * 0.5f);
+                    p = new Vector3(Mathf.Clamp(p.x, b.min.x + inset, b.max.x - inset), p.y, Mathf.Clamp(p.z, b.min.z + insetZ, b.max.z - insetZ));
+                    below = new Vector3(p.x, b.max.y, p.z);
+                    continue;
+                }
+                if (depth > 1) continue;
+                // Tall piece: out in front, towards the side with the most free floor.
+                var from = new Vector3(b.center.x, b.min.y + 0.4f, b.center.z);
+                var best = Vector3.zero;
+                var bestRoom = -1f;
+                foreach (var dir in new[] { Vector3.forward, Vector3.back, Vector3.left, Vector3.right })
+                {
+                    var edge = Mathf.Abs(dir.x) > 0 ? b.extents.x : b.extents.z;
+                    var room = Physics.RaycastAll(from, dir, 4f, ~0, QueryTriggerInteraction.Ignore)
+                        .Where(h => !h.collider.name.StartsWith("Sill cap"))
+                        .Select(h => h.distance).DefaultIfEmpty(4f).Min() - edge;
+                    if (room > bestRoom) { bestRoom = room; best = dir; }
+                }
+                var outside = Mathf.Abs(best.x) > 0
+                    ? new Vector3(b.center.x + best.x * (b.extents.x + 0.2f), p.y, Mathf.Clamp(p.z, b.min.z + 0.1f, b.max.z - 0.1f))
+                    : new Vector3(Mathf.Clamp(p.x, b.min.x + 0.1f, b.max.x - 0.1f), p.y, b.center.z + best.z * (b.extents.z + 0.2f));
+                return SurfaceBelow(outside, depth + 1);
             }
             return below;
         }
@@ -1641,8 +1671,8 @@ namespace MurderMystery.EditorTools
         // Yaw 180 turns a piece's front to -z (south), for furniture backed against a north wall.
         private static readonly PropDef[] Props =
         {
-            Prop("01 서재 서안", 11.2f, -8.9f, 180f, "SM_Table252"),
-            PropOn("01 서안 위 촛대", 11.0f, -8.9f, 0.64f, "SM_Candlestick122"),
+            Prop("01 서재 서안", 10.95f, -9.7f, 180f, "SM_Table252"),
+            PropOn("01 서안 위 촛대", 11.1f, -9.62f, 0.64f, "SM_Candlestick122"),
             Prop("02 서재 문갑", 9.9f, -8.82f, 180f, "SM_Cabinet237"),
             Prop("04 사랑방 화로", 7.2f, -10.6f, 0f, "SM_Brazier"),
             Prop("05 사랑방 소반", 6.2f, -10.0f, 0f, "SM_TongyeongTable"),
@@ -1657,7 +1687,7 @@ namespace MurderMystery.EditorTools
             Prop("11 곳간 쥐약 단지", -11.9f, -1.3f, 0f, "SM_BlackGlazedJar"),
             Prop("12 부엌 약탕관", -17.5f, 6.2f, 90f, "SM_PotForMedicines"),
             Prop("13 부엌 뒤주(쌀독)", -17.9f, 3.0f, 90f, "SM_GrainChest_body", "SM_GrainChest_cover01", "SM_GrainChest_cover02"),
-            Prop("14 건넌방 반닫이", -1.5f, 9.8f, 270f, "SM_Box286"),
+            Prop("14 건넌방 반닫이", -1.0f, 9.7f, 270f, "SM_Box286"),
             Prop("15 허 의원 약상자", 9.6f, -28.0f, 0f, "SM_Chest_body", "SM_Chest_door", "SM_Chest_lock"),
             Prop("별당 방석 (허 의원)", 10.4f, -28.3f, 0f, "SM_FloorCusion"),
             Prop("별당 방석 (변 행수)", 12.4f, -28.3f, 0f, "SM_FloorCusion"),
@@ -1678,11 +1708,11 @@ namespace MurderMystery.EditorTools
             Prop("34 부엌 찬장", -18.5f, 1.4f, 90f, "SM_CupBoard205_Body", "SM_CupBoard205_DoorL", "SM_CupBoard205_DoorR"),
             Prop("35 작은사랑 의걸이장", 15.6f, -13.25f, 0f, "SM_Cabinet238"),
             // v3 furniture: each searched place has the piece it is named after, and rooms look lived in.
-            Prop("37 서재 서가", 12.0f, -8.75f, 180f, "SM_Shelves241"),
-            Prop("38 파지 바구니", 10.2f, -9.8f, 0f, "SM_Sieve397"),
+            Prop("37 서재 서가", 11.55f, -8.75f, 180f, "SM_Shelves241"),
+            Prop("38 파지 바구니", 10.0f, -9.85f, 0f, "SM_Sieve397"),
             Prop("39 대청 찬탁", 12.3f, -10.6f, 0f, "SM_TableTigersLegs"),
             Prop("41 작은사랑 서안", 16.4f, -12.2f, 90f, "SM_Table252"),
-            Prop("43 건넌방 보료", -2.2f, 11.2f, 90f, "SM_QuiltedMattress"),
+            Prop("43 건넌방 보료", -2.4f, 11.45f, 90f, "SM_QuiltedMattress"),
             Prop("44 건넌방 바느질 상자", 0.3f, 8.1f, 0f, "SM_WoodenTray336"),
             Prop("45 안방 장롱", -13.0f, 14.3f, 0f, "SM_Cabinet237"),
             Prop("46 안방 경대", -11.0f, 7.9f, 180f, "SM_Cabinet238"),
@@ -1697,7 +1727,7 @@ namespace MurderMystery.EditorTools
             Prop("부엌 말", -18.3f, 5.0f, 0f, "SM_Mal"),
             Prop("손님 방 등경", 9.0f, -27.2f, 0f, "SM_FloorLamp"),
             Prop("작은사랑 등경", 16.7f, -13.4f, 0f, "SM_FloorLamp"),
-            Prop("건넌방 등경", 0.5f, 14.6f, 0f, "SM_FloorLamp"),
+            Prop("건넌방 등경", -3.2f, 8.4f, 0f, "SM_FloorLamp"),
         };
 
         private static void BuildProps(Transform p)

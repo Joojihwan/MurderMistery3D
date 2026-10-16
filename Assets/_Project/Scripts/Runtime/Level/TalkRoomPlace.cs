@@ -33,6 +33,7 @@ namespace MurderMystery.Level
         public static TalkRoomPlace Find(Collider c) => c != null && ByCollider.TryGetValue(c, out var place) ? place : null;
 
         /// <summary>The seat for the n-th person inside (wraps around).</summary>
+        public int SeatCount => seats.Length;
         public Transform Seat(int index) => seats.Length == 0 ? transform : seats[Mathf.Abs(index) % seats.Length];
 
         private void OnEnable()
