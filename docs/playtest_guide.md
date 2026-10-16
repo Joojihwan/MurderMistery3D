@@ -6,9 +6,9 @@
 ## 1. 준비 (호스트 = 나)
 
 1. **빌드를 최신으로 만든다.** 코드를 고친 뒤에는 테스터와 내 버전이 같아야 접속된다.
-   - Unity: **File > Build Profiles** → Windows → **Build** → 출력 폴더 `Builds/Win64/`
+   - Unity: **File > Build Profiles** → Windows → **Build** → 출력 `Builds/Release/JoseonMystery/JoseonMystery.exe` (6절)
    - 또는 Claude에게 "빌드해 줘"
-2. **`Builds/Win64` 폴더를 통째로 압축**한다 (`MurderMystery.exe`만 보내면 실행되지 않음).
+2. **`Builds/Release/JoseonMystery` 폴더를 통째로 압축**한다 (`JoseonMystery.exe`만 보내면 실행되지 않음). 보통은 6절의 GitHub 릴리스로 배포한다.
    - 약 560MB (김명관 고택·한복 포함). 구글 드라이브 등에 올리고 링크를 보낸다.
    - 빌드하려면 이 PC에 KHS 에셋(`Assets/ThirdParty/KHS/`)이 있어야 한다 (git에는 없음, asset_plan.md 2절).
    - `Builds/`는 git에 올라가지 않는다.
@@ -26,7 +26,7 @@
 - 혼자 둘러보기: 사건 카드의 **혼자 둘러보기**(오프라인, 1~5로 인물 전환, N 다음 단계).
 - 설정(이름·마우스 감도·소리·음성)은 메인 메뉴의 **설정**.
 
-- 혼자 미리 확인할 때: 에디터에서 방을 만들고, 같은 PC에서 `Builds/Win64/MurderMystery.exe`를 실행해 코드로 참가. 한 PC에서 마이크·스피커를 같이 쓰면 하울링이 나니 이어폰 사용.
+- 혼자 미리 확인할 때: 에디터에서 방을 만들고, 같은 PC에서 `Builds/Release/JoseonMystery/JoseonMystery.exe`를 실행해 코드로 참가. 한 PC에서 마이크·스피커를 같이 쓰면 하울링이 나니 이어폰 사용.
 - 접속은 Relay를 거치므로 같은 와이파이일 필요가 없다.
 - 5명이 다 안 모여도 진행된다 (준비·투표는 들어와 있는 사람 기준).
 
