@@ -40,7 +40,7 @@ namespace MurderMystery.Gameplay
             GUI.Box(new Rect(10, 10, 440, 100), GUIContent.none);
             var timer = snap.timed ? $"  {Mathf.Max(0, (int)snap.remainingSec) / 60}:{Mathf.Max(0, (int)snap.remainingSec) % 60:00}" : "";
             GUI.Label(new Rect(20, 16, 420, 22), $"{Name(c, snap.characterId)}  |  {GameSessionHost.PhaseLabel(phase)}{timer}", wrap);
-            GUI.Label(new Rect(20, 40, 420, 22), $"조사 점수 {snap.investigationPoints}  ·  질문 {snap.questionsLeft}  ·  소지품 {snap.inventory.Length}", wrap);
+            GUI.Label(new Rect(20, 40, 420, 22), $"질문 {snap.questionsLeft}  ·  소지품 {snap.inventory.Length}  ·  아는 단서 {snap.knownClueIds.Length}", wrap);
             var help = c.IsOffline ? "E 살펴보기/대화/문  R 숨긴 물건 회수  Tab 수첩\nSpace 점프  C 앉기  N 다음 단계  1~5 인물 전환" : "E 살펴보기/대화/문  R 숨긴 물건 회수  Tab 수첩·준비\nSpace 점프  C 앉기/일어서기";
             GUI.Label(new Rect(20, 64, 420, 44), help, wrap);
 
@@ -61,8 +61,8 @@ namespace MurderMystery.Gameplay
                 else
                 {
                     var deep = spot.Layer == Investigation.SpotLayer.Deep ? " (2차 조사부터)" : "";
-                    prompt = $"E: {spot.DisplayName} 살펴보기 ({GameRules.SpotCost}점){deep}";
-                    if (snap.retrievableSpots.Contains(spot.SpotId)) prompt += $"   R: 숨긴 물건 회수 ({GameRules.RetrieveCost}점)";
+                    prompt = $"E: {spot.DisplayName} 살펴보기{deep}";
+                    if (snap.retrievableSpots.Contains(spot.SpotId)) prompt += "   R: 숨긴 물건 회수";
                 }
             }
             else if (interactor.FocusedRoom != null)

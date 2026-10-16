@@ -80,26 +80,21 @@ namespace MurderMystery.Core
         {
             if (Phase == GamePhase.Ending) return;
             Phase += 1;
+            // Rooms sealed until a later phase open for everyone when it begins.
+            foreach (var l in Data.Clues.locks ?? new LockData[0])
+                if (l.OpensLater && l.opensAtPhase == Phase.ToString()) unlocked.Add(l.id);
             if (Phase == GamePhase.AutopsyBriefing)
             {
                 foreach (var p in players.Values) p.KnownFacts.UnionWith(Data.PublicFacts);
             }
             if (InvestigationRound > 0)
             {
-                foreach (var p in players.Values)
-                {
-                    p.InvestigationPoints = GameRules.InvestigationPointsPerRound;
-                    p.QuestionsLeft = GameRules.QuestionsPerRound;
-                }
+                foreach (var p in players.Values) p.QuestionsLeft = GameRules.QuestionsPerRound;
             }
             else
             {
-                // Unspent points do not carry over.
-                foreach (var p in players.Values)
-                {
-                    p.InvestigationPoints = 0;
-                    p.QuestionsLeft = 0;
-                }
+                // Unused questions do not carry over.
+                foreach (var p in players.Values) p.QuestionsLeft = 0;
             }
         }
 
@@ -118,13 +113,7 @@ namespace MurderMystery.Core
             if (spot.Deep && InvestigationRound < 2) return ActionResult.Fail("이곳은 2차 조사부터 살필 수 있습니다.");
             var lockData = Data.LockOfSpot(spotId);
             if (lockData != null && !unlocked.Contains(lockData.id)) return ActionResult.Fail(lockData.lockedText);
-            // Looking again at something everyone already knows (e.g. the public tangyak bowl) is free.
-            var cost = spot.RemainingItems.Count == 0 && !spot.Disturbed && spot.Traces.All(Data.PublicFacts.Contains)
-                ? 0
-                : GameRules.SpotCost;
-            if (p.InvestigationPoints < cost) return ActionResult.Fail("조사 점수가 부족합니다.");
-
-            p.InvestigationPoints -= cost;
+            // Searching is free; only the clock limits it.
             var result = new ActionResult { Success = true };
 
             foreach (var traceId in spot.Traces) Learn(p, traceId, $"spot:{spotId}", result);
@@ -149,7 +138,7 @@ namespace MurderMystery.Core
             return result;
         }
 
-        /// <summary>The hider takes back their own hidden items (allowed from round 1, costs more).</summary>
+        /// <summary>The hider takes back their own hidden items (allowed from round 1, even behind a sealed door).</summary>
         public ActionResult RetrieveHidden(string playerId, string spotId)
         {
             if (!players.TryGetValue(playerId, out var p)) return ActionResult.Fail("unknown player");
@@ -157,9 +146,8 @@ namespace MurderMystery.Core
             if (!spots.TryGetValue(spotId, out var spot)) return ActionResult.Fail("숨긴 물건이 없습니다.");
             var own = spot.RemainingItems.Where(id => Data.ClueById[id].owner == playerId).ToList();
             if (own.Count == 0) return ActionResult.Fail("이곳에 당신이 숨긴 물건은 남아 있지 않습니다.");
-            if (p.InvestigationPoints < GameRules.RetrieveCost) return ActionResult.Fail("조사 점수가 부족합니다.");
-
-            p.InvestigationPoints -= GameRules.RetrieveCost;
+            var sealedBy = Data.LockOfSpot(spotId);
+            if (sealedBy != null && !unlocked.Contains(sealedBy.id)) return ActionResult.Fail(sealedBy.lockedText);
             var result = new ActionResult { Success = true };
             foreach (var item in own) TakeItem(p, spot, item, result);
             return result;

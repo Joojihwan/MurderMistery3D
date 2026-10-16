@@ -21,9 +21,6 @@ namespace MurderMystery.Core
 
     public static class GameRules
     {
-        public const int InvestigationPointsPerRound = 4;
-        public const int SpotCost = 1;
-        public const int RetrieveCost = 2;
         public const int QuestionsPerRound = 2;
     }
 
@@ -37,7 +34,6 @@ namespace MurderMystery.Core
     {
         public string CharacterId;
         public bool CanRead;
-        public int InvestigationPoints;
         public int QuestionsLeft;
         public readonly HashSet<string> Inventory = new HashSet<string>();
         public readonly HashSet<string> KnownFacts = new HashSet<string>();

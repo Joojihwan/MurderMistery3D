@@ -71,7 +71,6 @@ namespace MurderMystery.Core
         public string clock;
         public float remainingSec;
         public bool timed;
-        public int investigationPoints;
         public int questionsLeft;
         public bool ready;
         public CardView[] inventory = Array.Empty<CardView>();
@@ -127,7 +126,6 @@ namespace MurderMystery.Core
                 remainingSec = flow?.Remaining ?? 0f,
                 timed = flow?.Current != null && flow.Current.durationSec > 0f,
                 ready = flow != null && flow.Ready.Contains(playerId),
-                investigationPoints = p.InvestigationPoints,
                 questionsLeft = p.QuestionsLeft,
                 inventory = p.Inventory.OrderBy(i => i).Select(Card).ToArray(),
                 publicBoard = s.PublicBoard.OrderBy(i => i).Select(Card).ToArray(),

@@ -138,6 +138,7 @@ namespace MurderMystery.EditorTools
             BuildLockedGates(Group(root, "Locks"), house);
             Physics.SyncTransforms();
             BuildTalkRooms(Group(root, "TalkRooms"), house);
+            BuildSealedRooms(Group(root, "SealedRooms"), house);
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
             BuildSpots(Group(root, "InvestigationSpots"));
@@ -976,6 +977,129 @@ namespace MurderMystery.EditorTools
         }
 
 
+
+        // ---------------------------------------------------------------- rooms sealed until the second search
+
+        // 도 검률 sealed each suspect's quarters at dawn and opens them at 9 (lock opensAtPhase): door leaves in
+        // the area turn solid with a paper seal on them, open sides get a straw rope (금줄) with paper strips.
+        private static readonly (string lockId, Rect leafArea, Vector2[][] ropes)[] SealedRooms =
+        {
+            // 작은사랑: its doors, and the leafless doorway from the 대청.
+            ("sealed_jaeha", new Rect(14.6f, -15.0f, 3.0f, 5.6f), new[] { new[] { new Vector2(14.85f, -10.85f), new Vector2(14.85f, -11.95f) } }),
+            // 건넌방: its doors (also the two from the 안대청) and the open bay from the 안대청 at its north end.
+            ("sealed_jeong", new Rect(-4.05f, 7.8f, 5.25f, 9.4f), new[] { new[] { new Vector2(-3.65f, 13.55f), new Vector2(-3.65f, 16.75f) } }),
+            ("sealed_guests", new Rect(0f, 0f, 0f, 0f), new[]
+            {
+                // The guests' open-fronted room (rotated with the 행랑채): front, west and east sides.
+                new[] { new Vector2(8.80f, -26.73f), new Vector2(13.68f, -27.76f) },
+                new[] { new Vector2(8.80f, -26.73f), new Vector2(8.29f, -29.30f) },
+                new[] { new Vector2(13.68f, -27.76f), new Vector2(13.17f, -30.33f) },
+            }),
+        };
+
+        private static void BuildSealedRooms(Transform p, Transform house)
+        {
+            var paper = SimpleMaterial("Assets/_Project/Art/Materials/SealPaper.mat", new Color(0.93f, 0.91f, 0.84f));
+            var rope = SimpleMaterial("Assets/_Project/Art/Materials/SealRope.mat", new Color(0.62f, 0.52f, 0.33f));
+            foreach (var (lockId, area, ropes) in SealedRooms)
+            {
+                var holder = new GameObject($"Sealed ({lockId})").transform;
+                holder.SetParent(p, false);
+                var leaves = new List<Transform>();
+                var seals = new List<GameObject>();
+                foreach (var door in house.GetComponentsInChildren<ProximityDoor>(true).ToList())
+                {
+                    var rs = door.GetComponentsInChildren<Renderer>();
+                    if (rs.Length == 0) continue;
+                    var b = rs[0].bounds;
+                    foreach (var r in rs) b.Encapsulate(r.bounds);
+                    if (!area.Contains(new Vector2(b.center.x, b.center.z))) continue;
+                    foreach (var mf in door.GetComponentsInChildren<MeshFilter>())
+                    {
+                        if (mf.sharedMesh == null) continue;
+                        if (!mf.TryGetComponent<MeshCollider>(out var mc)) mc = mf.gameObject.AddComponent<MeshCollider>();
+                        mc.sharedMesh = mf.sharedMesh;
+                    }
+                    leaves.Add(door.transform);
+                    Object.DestroyImmediate(door);   // LockedDoor adds it back when the seal comes off
+                    seals.Add(PaperSeal(holder, b, paper));
+                }
+                foreach (var r in ropes) seals.Add(StrawRope(holder, r[0], r[1], rope, paper));
+                holder.gameObject.AddComponent<LockedDoor>().Configure(lockId, leaves.ToArray(), seals.ToArray());
+            }
+            Physics.SyncTransforms();
+        }
+
+        private static Material SimpleMaterial(string path, Color color)
+        {
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.color = color;
+            mat.SetFloat("_Smoothness", 0.1f);
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        /// <summary>A strip of paper across the middle of a door leaf, on both faces.</summary>
+        private static GameObject PaperSeal(Transform parent, Bounds leaf, Material paper)
+        {
+            var thin = leaf.size.x < leaf.size.z;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = "Paper seal";
+            Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.transform.SetParent(parent, false);
+            go.transform.position = new Vector3(leaf.center.x, leaf.min.y + leaf.size.y * 0.55f, leaf.center.z);
+            go.transform.localScale = thin
+                ? new Vector3(leaf.size.x + 0.02f, 0.5f, Mathf.Min(0.14f, leaf.size.z))
+                : new Vector3(Mathf.Min(0.14f, leaf.size.x), 0.5f, leaf.size.z + 0.02f);
+            go.GetComponent<MeshRenderer>().sharedMaterial = paper;
+            return go;
+        }
+
+        /// <summary>A 금줄 between two points at waist height with paper strips, and a wall-high collider under it.</summary>
+        private static GameObject StrawRope(Transform parent, Vector2 a, Vector2 b, Material rope, Material paper)
+        {
+            var go = new GameObject("Straw rope (금줄)");
+            go.transform.SetParent(parent, false);
+            var mid = (a + b) / 2f;
+            var floor = Mathf.Max(FloorY(a.x, a.y), FloorY(b.x, b.y), FloorY(mid.x, mid.y));
+            var ground = Mathf.Min(LowestFloorY(a.x, a.y), LowestFloorY(b.x, b.y), LowestFloorY(mid.x, mid.y));
+            var length = Vector2.Distance(a, b);
+            var dir = new Vector3(b.x - a.x, 0f, b.y - a.y).normalized;
+            var facing = Quaternion.LookRotation(Vector3.Cross(Vector3.up, dir));
+            go.transform.SetPositionAndRotation(new Vector3(mid.x, 0f, mid.y), facing);
+
+            var line = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            line.name = "Rope";
+            Object.DestroyImmediate(line.GetComponent<Collider>());
+            line.transform.SetParent(go.transform, false);
+            line.transform.SetPositionAndRotation(new Vector3(mid.x, floor + 0.95f, mid.y), Quaternion.FromToRotation(Vector3.up, dir));
+            line.transform.localScale = new Vector3(0.04f, length / 2f, 0.04f);
+            line.GetComponent<MeshRenderer>().sharedMaterial = rope;
+
+            var strips = Mathf.Max(2, Mathf.RoundToInt(length / 0.6f));
+            for (var i = 1; i < strips; i++)
+            {
+                var at = Vector2.Lerp(a, b, i / (float)strips);
+                var strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                strip.name = "Paper strip";
+                Object.DestroyImmediate(strip.GetComponent<Collider>());
+                strip.transform.SetParent(go.transform, false);
+                strip.transform.SetPositionAndRotation(new Vector3(at.x, floor + 0.8f, at.y), facing);
+                strip.transform.localScale = new Vector3(0.07f, 0.26f, 0.005f);
+                strip.GetComponent<MeshRenderer>().sharedMaterial = paper;
+            }
+
+            var block = go.AddComponent<BoxCollider>();
+            block.center = new Vector3(0f, (ground + floor + 2.2f) / 2f, 0f);
+            block.size = new Vector3(length, floor + 2.2f - ground, 0.1f);
+            return go;
+        }
+
         // ---------------------------------------------------------------- private rooms (밀담 방)
 
         // The 사당 building (its platform, walls, roof and four door leaves), copied for the private rooms.
@@ -1275,11 +1399,12 @@ namespace MurderMystery.EditorTools
         {
             // Checked with every lock that has a key opened (the shrine): what is behind it must be reachable
             // then, and nothing beyond it may leak out.
-            var openable = new HashSet<string>(GameData.LoadFromResources().Clues.locks.Where(l => l.Openable).Select(l => l.id));
+            var openable = new HashSet<string>(GameData.LoadFromResources().Clues.locks.Where(l => l.Openable || l.OpensLater).Select(l => l.id));
             var opened = Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None)
                 .Where(d => openable.Contains(d.LockId))
-                .SelectMany(d => d.Leaves.Where(l => l != null).SelectMany(l => l.GetComponentsInChildren<Collider>()))
-                .Where(c => c.enabled).ToList();
+                .SelectMany(d => d.Leaves.Where(l => l != null).SelectMany(l => l.GetComponentsInChildren<Collider>())
+                    .Concat(d.GetComponentsInChildren<Collider>()))
+                .Where(c => c.enabled).Distinct().ToList();
             foreach (var c in opened) c.enabled = false;
             try
             {

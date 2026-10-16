@@ -61,7 +61,9 @@ namespace MurderMystery.Tests
         {
             var data = s.Data;
             var order = s.Players.Keys.OrderBy(_ => rng.Next()).ToList();
-            // Players act in turns, one action each, until everyone is out of points.
+            // Searching is free: the clock is the limit, modelled as a number of actions per player and round.
+            const int actionsPerRound = 10;
+            var left = s.Players.Keys.ToDictionary(k => k, _ => actionsPerRound);
             var anyActed = true;
             while (anyActed)
             {
@@ -69,11 +71,12 @@ namespace MurderMystery.Tests
                 foreach (var id in order)
                 {
                     var p = s.Players[id];
-                    if (p.InvestigationPoints <= 0) continue;
+                    if (left[id] <= 0) continue;
+                    left[id]--;
 
                     // Owners retrieve their own hidden items in round 1 half the time (the culprit always, when cleaning up).
                     var ownSpot = s.Spots.Values.FirstOrDefault(sp => sp.RemainingItems.Any(i => data.ClueById[i].owner == id));
-                    var wantsRetrieve = ownSpot != null && p.InvestigationPoints >= GameRules.RetrieveCost &&
+                    var wantsRetrieve = ownSpot != null &&
                                         (round == 2 || rng.NextDouble() < 0.5 || (scenario != "random" && data.CharacterById[id].isCulprit));
                     if (wantsRetrieve && s.RetrieveHidden(id, ownSpot.SpotId).Success)
                     {
@@ -91,10 +94,10 @@ namespace MurderMystery.Tests
                         .Where(sp => !sp.Deep || round == 2)
                         .Where(sp => !sp.Traces.All(t => p.KnownFacts.Contains(t)) || sp.RemainingItems.Count > 0)
                         .ToList();
-                    if (candidates.Count == 0) { p.InvestigationPoints = 0; continue; }
+                    if (candidates.Count == 0) { left[id] = 0; continue; }
                     var pick = candidates[rng.Next(candidates.Count)];
                     if (s.Investigate(id, pick.SpotId).Success) anyActed = true;
-                    else p.InvestigationPoints = 0;
+                    else left[id] = 0;
                 }
             }
         }

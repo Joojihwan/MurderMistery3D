@@ -847,6 +847,43 @@
       "spotIds": [],
       "lockedText": "열 수 없다. 협문은 밖에서 빗장이 걸려 있다.",
       "openedText": ""
+    },
+    {
+      "id": "sealed_jaeha",
+      "title": "작은사랑",
+      "keyId": "",
+      "spotIds": [
+        "10",
+        "35"
+      ],
+      "lockedText": "작은사랑은 도 검률이 봉해 두었다. 문마다 봉인 종이가 붙어 있다. 아침 9시(2차 조사)에 봉인을 뗀다.",
+      "openedText": "작은사랑의 봉인을 뗐다.",
+      "opensAtPhase": "Investigation2"
+    },
+    {
+      "id": "sealed_jeong",
+      "title": "건넌방",
+      "keyId": "",
+      "spotIds": [
+        "14",
+        "26"
+      ],
+      "lockedText": "건넌방은 도 검률이 봉해 두었다. 문마다 봉인 종이가 붙어 있다. 아침 9시(2차 조사)에 봉인을 뗀다.",
+      "openedText": "건넌방의 봉인을 뗐다.",
+      "opensAtPhase": "Investigation2"
+    },
+    {
+      "id": "sealed_guests",
+      "title": "손님 방 (별당)",
+      "keyId": "",
+      "spotIds": [
+        "15",
+        "16",
+        "17"
+      ],
+      "lockedText": "손님 방 (별당)은 도 검률이 봉해 두었다. 문마다 봉인 종이가 붙어 있다. 아침 9시(2차 조사)에 봉인을 뗀다.",
+      "openedText": "손님 방 (별당)의 봉인을 뗐다.",
+      "opensAtPhase": "Investigation2"
     }
   ]
 }

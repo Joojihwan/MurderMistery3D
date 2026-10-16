@@ -54,8 +54,11 @@ namespace MurderMystery.Core
         public string[] spotIds = Array.Empty<string>();
         public string lockedText;
         public string openedText;
+        /// <summary>Opens by itself when this phase begins (the rooms 도 검률 sealed until the second search).</summary>
+        public string opensAtPhase;
 
         public bool Openable => !string.IsNullOrEmpty(keyId);
+        public bool OpensLater => !string.IsNullOrEmpty(opensAtPhase);
     }
 
     [Serializable]

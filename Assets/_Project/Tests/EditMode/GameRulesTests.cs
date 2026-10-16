@@ -38,21 +38,15 @@ namespace MurderMystery.Tests
         }
 
         [Test]
-        public void Points_ResetPerRoundAndDoNotCarryOver()
+        public void Searching_IsFree_AndRepeatable()
         {
             var s = NewSession(GamePhase.Investigation1);
-            Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints);
-            s.Investigate("heo", "04");
-            Assert.AreEqual(GameRules.InvestigationPointsPerRound - 1, s.Players["heo"].InvestigationPoints);
-            s.AdvancePhase(); // council
-            Assert.AreEqual(0, s.Players["heo"].InvestigationPoints);
-            s.AdvancePhase(); // discussion
-            s.AdvancePhase(); // investigation 2
-            Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints);
+            for (var i = 0; i < 10; i++) Assert.IsTrue(s.Investigate("heo", "01").Success);
+            Assert.IsTrue(s.Investigate("heo", "04").Success);
         }
 
         [Test]
-        public void DeepSpot_BlockedInRound1_ButOwnerCanRetrieveForTwoPoints()
+        public void DeepSpot_BlockedInRound1_ButOwnerCanRetrieve()
         {
             var s = NewSession(GamePhase.Investigation1);
             Assert.IsFalse(s.Investigate("jeong", "13").Success, "deep spot must be closed in round 1");
@@ -60,7 +54,6 @@ namespace MurderMystery.Tests
             var r = s.RetrieveHidden("buni", "13");
             Assert.IsTrue(r.Success, r.Error);
             CollectionAssert.Contains(r.GainedItems, "H1");
-            Assert.AreEqual(GameRules.InvestigationPointsPerRound - GameRules.RetrieveCost, s.Players["buni"].InvestigationPoints);
 
             s.SetPhase(GamePhase.Investigation2);
             var later = s.Investigate("jeong", "13");
@@ -90,25 +83,11 @@ namespace MurderMystery.Tests
         {
             var s = NewSession(GamePhase.Investigation1);
             s.Investigate("heo", "05");
-            Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints, "public bowl costs nothing");
 
             s.Investigate("jaeha", "04");                       // culprit pockets the burnt paper
             var later = s.Investigate("jeong", "04");
             Assert.IsEmpty(later.GainedItems);
             Assert.IsTrue(later.Messages.Any(m => m.Contains("화로")), "disturbed hearth must be visible");
-        }
-
-        [Test]
-        public void NotEnoughPoints_IsRejected()
-        {
-            var s = NewSession(GamePhase.Investigation1);
-            // Spend down to one point.
-            var spots = new[] { "01", "03", "07", "11", "12", "09" };
-            var i = 0;
-            while (s.Players["byeon"].InvestigationPoints > 1) s.Investigate("byeon", spots[i++]);
-            Assert.IsFalse(s.RetrieveHidden("byeon", "17").Success, "1 point left, retrieve costs 2");
-            Assert.IsTrue(s.Investigate("byeon", spots[i++]).Success);
-            Assert.IsFalse(s.Investigate("byeon", spots[i]).Success);
         }
 
         [Test]
@@ -128,6 +107,18 @@ namespace MurderMystery.Tests
             Assert.IsTrue(s.TryUnlock("heo", "shrine").Success);
             Assert.IsTrue(s.IsUnlocked("shrine"));
             Assert.IsTrue(s.Investigate("jeong", "20").Success, "open for everyone once unlocked");
+        }
+
+        [Test]
+        public void SealedQuarters_OpenAtTheSecondSearch()
+        {
+            var s = NewSession(GamePhase.Investigation1);
+            Assert.IsFalse(s.Investigate("jeong", "15").Success, "guests' room sealed in round 1");
+            Assert.IsFalse(s.RetrieveHidden("heo", "16").Success, "even the owner waits for the seal to come off");
+            Assert.IsFalse(s.TryUnlock("heo", "sealed_guests").Success);
+            s.SetPhase(GamePhase.Investigation2);
+            Assert.IsTrue(s.IsUnlocked("sealed_guests"));
+            Assert.IsTrue(s.Investigate("jeong", "15").Success);
         }
 
         [Test]

@@ -14,6 +14,8 @@ namespace MurderMystery.Level
     {
         [SerializeField] private string lockId;
         [SerializeField] private Transform[] leaves = new Transform[0];
+        // Shown while locked and removed when it opens (the paper seals and straw ropes of a sealed room).
+        [SerializeField] private GameObject[] seals = new GameObject[0];
 
         private static readonly Dictionary<Collider, LockedDoor> ByCollider = new Dictionary<Collider, LockedDoor>();
         private readonly List<Collider> blocking = new List<Collider>();
@@ -23,10 +25,11 @@ namespace MurderMystery.Level
         public string LockId => lockId;
         public IReadOnlyList<Transform> Leaves => leaves;
 
-        public void Configure(string id, Transform[] leafRoots)
+        public void Configure(string id, Transform[] leafRoots, GameObject[] sealObjects = null)
         {
             lockId = id;
             leaves = leafRoots ?? new Transform[0];
+            seals = sealObjects ?? new GameObject[0];
         }
 
         /// <summary>The lock a collider the player is looking at belongs to, if any.</summary>
@@ -35,6 +38,7 @@ namespace MurderMystery.Level
         private void Awake()
         {
             blocking.AddRange(GetComponentsInChildren<Collider>(true));
+            foreach (var seal in seals.Where(s => s != null)) blocking.AddRange(seal.GetComponentsInChildren<Collider>(true));
             foreach (var leaf in leaves.Where(l => l != null)) blocking.AddRange(leaf.GetComponentsInChildren<Collider>(true));
             foreach (var c in blocking) ByCollider[c] = this;
         }
@@ -56,6 +60,7 @@ namespace MurderMystery.Level
         {
             open = true;
             foreach (var c in blocking) c.enabled = false;
+            foreach (var seal in seals.Where(s => s != null)) seal.SetActive(false);
             foreach (var leaf in leaves.Where(l => l != null))
                 if (!leaf.TryGetComponent<ProximityDoor>(out _)) leaf.gameObject.AddComponent<ProximityDoor>();
         }
