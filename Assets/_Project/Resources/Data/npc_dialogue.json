@@ -1081,6 +1081,135 @@
           ]
         }
       ]
+    },
+    {
+      "id": "T_SPOON",
+      "category": "Evidence",
+      "label": "은수저",
+      "visibleIfAny": [
+        "B15"
+      ],
+      "entries": [
+        {
+          "tier": 0,
+          "requiredFacts": [
+            "B15"
+          ],
+          "conveysFacts": [
+            "B15"
+          ],
+          "variants": [
+            "은수저가 그대로라면 저녁상에는 독이 없었소.",
+            "저녁 밥상은 탈이 없었소. 독은 그 뒤에 든 것이오.",
+            "수저가 검지 않으니 저녁 음식은 깨끗했소."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T_OILJAR",
+      "category": "Evidence",
+      "label": "기름 항아리",
+      "visibleIfAny": [
+        "B9",
+        "N3",
+        "C2"
+      ],
+      "entries": [
+        {
+          "tier": 1,
+          "requiredFacts": [
+            "B9",
+            "C2"
+          ],
+          "conveysFacts": [
+            "B9",
+            "C2"
+          ],
+          "variants": [
+            "기름을 퍼 간 사람과 쥐약 단지를 건드린 사람이 같은 때 곳간에 있었을 법하오. 단지 옆의 기름 방울이 그걸 말해 주오.",
+            "곳간에서 기름을 뜬 자가 쥐약 단지 곁에 있었소.",
+            "기름 항아리와 쥐약 단지의 기름 방울은 한 사람의 손을 가리키오."
+          ]
+        },
+        {
+          "tier": 0,
+          "requiredFacts": [
+            "B9"
+          ],
+          "conveysFacts": [
+            "B9"
+          ],
+          "variants": [
+            "누군가 어젯밤 곳간에서 등잔 기름을 떠 갔소.",
+            "기름 항아리가 줄었소. 어젯밤 일이오.",
+            "곳간 기름을 뜬 사람이 있소."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T_LEDGER_SOCIETY",
+      "category": "Evidence",
+      "label": "모임 명부",
+      "visibleIfAny": [
+        "B5"
+      ],
+      "entries": [
+        {
+          "tier": 0,
+          "requiredFacts": [
+            "B5"
+          ],
+          "conveysFacts": [
+            "B5"
+          ],
+          "variants": [
+            "서얼 허통을 청하는 모임이오. 나라에 죄 되는 일은 아니나, 대감 같은 분 눈에는 거슬렸을 게요.",
+            "그 명부는 상소를 준비하던 선비들 이름이오.",
+            "명부 끝의 후원자 이름을 눈여겨보시오."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T_LOG",
+      "category": "Evidence",
+      "label": "진찰 일지",
+      "visibleIfAny": [
+        "B10",
+        "B1"
+      ],
+      "entries": [
+        {
+          "tier": 0,
+          "requiredFacts": [
+            "B10"
+          ],
+          "conveysFacts": [
+            "B10"
+          ],
+          "variants": [
+            "의원의 일지대로라면 대감은 봄부터 병이 깊었소.",
+            "대감은 여름을 넘기기 어려운 몸이었소. 일지가 그렇소.",
+            "그 일지는 대감의 병을 숨겨 왔다는 뜻도 되오."
+          ]
+        },
+        {
+          "tier": 0,
+          "requiredFacts": [
+            "B1"
+          ],
+          "conveysFacts": [
+            "B1"
+          ],
+          "variants": [
+            "대감이 스스로 의서를 뒤져 자기 병을 알아본 듯하오.",
+            "의서의 '여름' 두 글자는 대감 자신의 짐작이었을 게요.",
+            "대감은 자기 병을 알고 있었던 것 같소."
+          ]
+        }
+      ]
     }
   ]
 }

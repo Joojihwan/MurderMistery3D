@@ -109,7 +109,8 @@
         "F_BUNI_TOOK_ENVELOPE",
         "F_JEONG_RATPOISON_KNOWN",
         "F_BUNI_BROKE_BOWL",
-        "F_BUNI_FLOUR"
+        "F_BUNI_FLOUR",
+        "F_BUNI_BURNT_WRAPPERS"
       ],
       "goals": [
         {
@@ -155,7 +156,8 @@
         "F_HEO_FAINT_MEANS_SMALL",
         "F_HEO_OWN_ARSENIC",
         "F_HEO_0015_VISIT",
-        "F_HEO_BUJA"
+        "F_HEO_BUJA",
+        "F_HEO_LOG"
       ],
       "goals": [
         {
@@ -200,7 +202,8 @@
         "F_BYEON_SHADOW_2305",
         "F_BYEON_DEAD_0130",
         "F_BYEON_TOOK_LEDGER",
-        "F_BYEON_SAMPLE"
+        "F_BYEON_SAMPLE",
+        "F_BYEON_COINS"
       ],
       "goals": [
         {

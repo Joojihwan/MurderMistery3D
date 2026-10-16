@@ -122,6 +122,16 @@ namespace MurderMystery.Tests
         }
 
         [Test]
+        public void TakenItems_AreListedAsGone()
+        {
+            var g = new LocalSessionGateway(TestData.Load());
+            g.JumpTo(GamePhase.Investigation1);
+            Assert.IsFalse(g.GetSnapshot("jeong").goneItems.Contains("K1"));
+            g.Investigate("heo", "19", "K1");
+            CollectionAssert.Contains(g.GetSnapshot("jeong").goneItems, "K1");
+        }
+
+        [Test]
         public void GateWithoutKey_NeverOpens()
         {
             var s = NewSession(GamePhase.Investigation1);

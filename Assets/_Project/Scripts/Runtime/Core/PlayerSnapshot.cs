@@ -81,6 +81,8 @@ namespace MurderMystery.Core
         public string[] retrievableSpots = Array.Empty<string>();
         /// <summary>Locks that are open (shared by everyone).</summary>
         public string[] unlockedLocks = Array.Empty<string>();
+        /// <summary>Items no longer where they lay (public: anyone can see the spot was searched).</summary>
+        public string[] goneItems = Array.Empty<string>();
 
         // Private rooms: all rooms with their members (public), this player's room and requests.
         public RoomView[] rooms = Array.Empty<RoomView>();
@@ -136,7 +138,10 @@ namespace MurderMystery.Core
                 retrievableSpots = s.Spots.Values
                     .Where(sp => sp.RemainingItems.Any(i => s.Data.ClueById[i].owner == playerId))
                     .Select(sp => sp.SpotId).ToArray(),
-                unlockedLocks = s.UnlockedLocks.OrderBy(i => i).ToArray()
+                unlockedLocks = s.UnlockedLocks.OrderBy(i => i).ToArray(),
+                goneItems = s.Data.Clues.clues
+                    .Where(c => c.Kind == ClueKind.Item && c.SpotIds.Length > 0 && !s.Spots.Values.Any(sp => sp.RemainingItems.Contains(c.id)))
+                    .Select(c => c.id).ToArray()
             };
         }
 

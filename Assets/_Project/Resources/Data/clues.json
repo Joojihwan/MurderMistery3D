@@ -726,6 +726,400 @@
       "sealedText": "",
       "exposes": [],
       "unlocks": ""
+    },
+    {
+      "id": "M9",
+      "kind": "Item",
+      "spotId": "36",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "논어 언해 한 권",
+      "text": "사랑방 구석 서책 더미 맨 위의 논어 언해. 한 장이 접혀 있다. '아버지가 아들을 위해 숨겨 주고, 아들이 아버지를 위해 숨겨 준다.'",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M22",
+      "kind": "Item",
+      "spotId": "06",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "대감의 인장",
+      "text": "서랍 속 대감의 도장. 붉은 인주가 말라 있다. 어젯밤 쓰인 흔적은 없다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B15",
+      "kind": "Trace",
+      "spotId": "05",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "소반 밑 은수저",
+      "text": "소반 다리 옆에 은수저 한 벌이 떨어져 있다. 수저는 검게 변하지 않았다. 저녁상은 탈이 없었던 듯하다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B1",
+      "kind": "Item",
+      "spotId": "37",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "종이를 끼운 의서",
+      "text": "서재 서가의 의서(잡병편). '비상(砒霜)' 항목과 '허로(虛勞) — 기력이 다한 병' 항목에 종이가 끼워져 있고, 뒤쪽 여백에 대감 필체로 '여름'이라고만 적혀 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B2",
+      "kind": "Item",
+      "spotId": "38",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "구겨진 파지",
+      "text": "파지 바구니의 구겨진 종이들. 같은 글을 여러 번 고쳐 쓴 초고다. '…양자의 일은 없던 것으로…', '…아비의 허물이 자식의 이름을 막았으니…'. 끝을 맺은 장은 없다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M10",
+      "kind": "Trace",
+      "spotId": "39",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "잔치 술잔",
+      "text": "대청 찬탁 위에 잔치 때 쓴 술잔이 가지런하다. 열두 벌 중 한 벌이 모자란다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M18",
+      "kind": "Trace",
+      "spotId": "40",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "굴뚝 옆 잿더미",
+      "text": "사랑채 굴뚝 옆에 아궁이에서 긁어낸 재가 쌓여 있다. 비에 젖어 굳었다. 어제 낮의 재다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B4",
+      "kind": "Item",
+      "spotId": "41",
+      "owner": "jaeha",
+      "layer": "Deep",
+      "readable": true,
+      "sealed": false,
+      "title": "과거 답안 연습지",
+      "text": "작은사랑 서안 위의 답안 연습지. 어제 날짜. 서얼은 볼 수 없는 문과의 시제를 반듯하게 풀어 놓았다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B5",
+      "kind": "Item",
+      "spotId": "41",
+      "owner": "jaeha",
+      "layer": "Deep",
+      "readable": true,
+      "sealed": false,
+      "title": "모임 명부",
+      "text": "서안 서랍 속 얇은 명부. '서얼 허통(許通)을 청하는 선비들' — 이름 열한 개, 맨 앞에 '尹在夏', 맨 끝에 '후원: 변(卞) 객주'.",
+      "sealedText": "",
+      "exposes": [
+        "jaeha.secret"
+      ],
+      "unlocks": ""
+    },
+    {
+      "id": "M11",
+      "kind": "Trace",
+      "spotId": "42",
+      "owner": "",
+      "layer": "Deep",
+      "readable": false,
+      "sealed": false,
+      "title": "펴지 않은 이불",
+      "text": "작은사랑 이불장 옆에 이불이 개켜진 그대로다. 어젯밤 이 방 주인은 잠자리를 펴지 않았다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M12",
+      "kind": "Trace",
+      "spotId": "43",
+      "owner": "",
+      "layer": "Deep",
+      "readable": false,
+      "sealed": false,
+      "title": "젖은 베개",
+      "text": "건넌방 보료 위 베개가 한쪽만 젖었다가 마른 자국이 있다. 밤새 울었던 듯하다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M13",
+      "kind": "Item",
+      "spotId": "44",
+      "owner": "jeong",
+      "layer": "Deep",
+      "readable": false,
+      "sealed": false,
+      "title": "수놓다 만 베갯모",
+      "text": "바느질 상자 속, 원앙을 수놓다 만 베갯모. 혼례 때 쓰는 것이다. 바늘이 꽂힌 채다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M14",
+      "kind": "Trace",
+      "spotId": "45",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "돌아가신 마님의 옷",
+      "text": "안방 장롱에 돌아가신 마님의 옷이 그대로 개켜져 있다. 좀약 냄새가 난다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B6",
+      "kind": "Item",
+      "spotId": "46",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "마님의 오래된 편지",
+      "text": "안방 경대 서랍 깊은 곳의 빛바랜 편지. 마님이 대감에게: '재하 어미를 내치지 마시고 그 아이를 아들로 불러 주소서. 가문이 사람을 살리지 못하면 무슨 소용이옵니까.' 날짜는 십여 년 전.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M21",
+      "kind": "Item",
+      "spotId": "59",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "잔치 손님 명부",
+      "text": "안대청 상 위의 잔치 손님 명부. 문중 어른들, 마을 사람들, 맨 끝에 '許醫員', '卞客主'. 허 의원과 변 행수는 같은 날 같은 시각에 왔다고 적혀 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B7",
+      "kind": "Trace",
+      "spotId": "47",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "아궁이 속 약첩 종이",
+      "text": "부엌 아궁이 재 속에 약첩을 싸던 한지가 여러 장 타다 남아 있다. 약 냄새가 밴 종이다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M15",
+      "kind": "Trace",
+      "spotId": "48",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "물동이와 장병",
+      "text": "물동이 옆에 식초병, 간장병이 놓였다. 식초병 마개가 열려 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B8",
+      "kind": "Trace",
+      "spotId": "49",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "안마당의 작은 짚신 자국",
+      "text": "안마당 진흙에 작은 짚신 자국이 부엌에서 사랑채 쪽으로 오갔다. 비가 그치기 전, 깊은 밤에 찍힌 것이다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B9",
+      "kind": "Trace",
+      "spotId": "50",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "줄어든 기름 항아리",
+      "text": "곳간 선반의 등잔 기름 항아리. 기름이 한 됫박쯤 줄었고, 국자에 기름이 묻은 채 항아리 밖에 놓여 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M16",
+      "kind": "Trace",
+      "spotId": "51",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "쥐덫",
+      "text": "곳간 구석 쥐덫에 쥐 한 마리가 걸려 죽어 있다. 며칠 된 듯하다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B10",
+      "kind": "Item",
+      "spotId": "52",
+      "owner": "heo",
+      "layer": "Deep",
+      "readable": true,
+      "sealed": false,
+      "title": "허 의원의 진찰 일지",
+      "text": "허 의원 의관 옆 진찰 일지. '삼월. 대감 맥이 가늘다. 허로가 깊어 여름을 넘기기 어렵다. 대감께서 함구하라 하심.' 어제 저녁: '맥이 더 약해짐. 처방을 고침.'",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "B11",
+      "kind": "Trace",
+      "spotId": "53",
+      "owner": "",
+      "layer": "Deep",
+      "readable": false,
+      "sealed": false,
+      "title": "젖은 갓끈",
+      "text": "변 행수의 갓끈이 젖었다 마른 자국이 있고, 진흙이 튀어 있다. 갓을 쓰고 비 오는 밤에 꽤 걸었다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M17",
+      "kind": "Item",
+      "spotId": "54",
+      "owner": "byeon",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "엽전 꾸러미",
+      "text": "손님 방 툇마루 밑에 엽전 백 냥 꾸러미가 밀어 넣어져 있다. 꾸러미 끈에 '卞'이라 쓴 나무패.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M19",
+      "kind": "Trace",
+      "spotId": "55",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "물확의 꽃잎",
+      "text": "사랑마당 물확에 동백 꽃잎 몇 장이 떠 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M20",
+      "kind": "Trace",
+      "spotId": "56",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "깨진 화분",
+      "text": "툇마루 끝의 화분이 깨져 흙이 쏟아졌다. 바람에 넘어진 듯하다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M23",
+      "kind": "Item",
+      "spotId": "29",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "뒷간의 젖은 수건",
+      "text": "뒷간 문고리에 걸린 무명 수건. 젖은 채로 진흙이 묻었다. 누구 것인지 표시가 없다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "S3",
+      "kind": "Item",
+      "spotId": "20",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "빈 술잔",
+      "text": "사당 앞 제상 위의 빈 술잔. 제주를 올리고 비운 잔이다. 잔 밑에 접은 쪽지: '못다 한 말은 글로 남기니'.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M24",
+      "kind": "Item",
+      "spotId": "09",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "심지 가위",
+      "text": "등경 옆의 심지 가위. 기름이 묻어 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
     }
   ],
   "retrievedTraces": [
@@ -792,6 +1186,58 @@
     {
       "spotId": "34",
       "text": "찬장 안쪽 못이 비어 있다."
+    },
+    {
+      "spotId": "41",
+      "text": "서안 서랍이 열려 있고 종이 묶음이 빠진 자리가 있다."
+    },
+    {
+      "spotId": "44",
+      "text": "바느질 상자 뚜껑이 열려 있다."
+    },
+    {
+      "spotId": "52",
+      "text": "의관 옆이 비어 있다. 무언가 놓였던 자리다."
+    },
+    {
+      "spotId": "36",
+      "text": "서책 더미가 흐트러져 있다."
+    },
+    {
+      "spotId": "37",
+      "text": "서가에 책 한 권이 빠진 자리가 있다."
+    },
+    {
+      "spotId": "38",
+      "text": "파지 바구니가 비어 있다."
+    },
+    {
+      "spotId": "46",
+      "text": "경대 서랍이 열려 있다."
+    },
+    {
+      "spotId": "54",
+      "text": "툇마루 밑 흙에 무언가 끌어낸 자국이 있다."
+    },
+    {
+      "spotId": "59",
+      "text": "상 위가 비어 있다."
+    },
+    {
+      "spotId": "42",
+      "text": "이불장 앞에 누군가 뒤적인 자국이 있다."
+    },
+    {
+      "spotId": "43",
+      "text": "보료가 들춰져 있다."
+    },
+    {
+      "spotId": "53",
+      "text": "갓이 놓인 자리가 어지럽다."
+    },
+    {
+      "spotId": "29",
+      "text": "문고리가 비어 있다."
     }
   ],
   "locks": [
@@ -854,7 +1300,9 @@
       "keyId": "",
       "spotIds": [
         "10",
-        "35"
+        "35",
+        "41",
+        "42"
       ],
       "lockedText": "작은사랑은 도 검률이 봉해 두었다. 문마다 봉인 종이가 붙어 있다. 아침 9시(2차 조사)에 봉인을 뗀다.",
       "openedText": "작은사랑의 봉인을 뗐다.",
@@ -866,7 +1314,9 @@
       "keyId": "",
       "spotIds": [
         "14",
-        "26"
+        "26",
+        "43",
+        "44"
       ],
       "lockedText": "건넌방은 도 검률이 봉해 두었다. 문마다 봉인 종이가 붙어 있다. 아침 9시(2차 조사)에 봉인을 뗀다.",
       "openedText": "건넌방의 봉인을 뗐다.",
@@ -879,7 +1329,9 @@
       "spotIds": [
         "15",
         "16",
-        "17"
+        "17",
+        "52",
+        "53"
       ],
       "lockedText": "손님 방 (별당)은 도 검률이 봉해 두었다. 문마다 봉인 종이가 붙어 있다. 아침 9시(2차 조사)에 봉인을 뗀다.",
       "openedText": "손님 방 (별당)의 봉인을 뗐다.",

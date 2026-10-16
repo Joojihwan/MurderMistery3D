@@ -100,6 +100,29 @@ namespace MurderMystery.EditorTools
             S("33", "곳간 궤짝", -13.0f, -2.2f, 0.5f, SpotLayer.Surface, "L1", "L2"),
             S("34", "부엌 찬장", -18.4f, 1.4f, 1.0f, SpotLayer.Surface, "K2", "M7"),
             S("35", "작은사랑 의걸이장 (재하 도포)", 15.6f, -13.0f, 1.0f, SpotLayer.Surface, "M8"),
+            // v3 (2026-10-17): more to find in every room. Clue ids come from clues.json (BuildSpots).
+            S("36", "사랑방 서책 더미", 8.6f, -11.9f, 0.4f, SpotLayer.Surface),
+            S("37", "서재 서가", 12.0f, -8.75f, 0.9f, SpotLayer.Surface),
+            S("38", "서재 파지 바구니", 10.2f, -9.8f, 0.3f, SpotLayer.Surface),
+            S("39", "대청 찬탁", 12.3f, -10.6f, 0.6f, SpotLayer.Surface),
+            S("40", "사랑채 굴뚝 옆", 6.6f, -7.3f, 0.3f, SpotLayer.Surface),
+            S("41", "작은사랑 서안", 16.4f, -12.2f, 0.5f, SpotLayer.Deep),
+            S("42", "작은사랑 이불장", 15.5f, -10.7f, 0.5f, SpotLayer.Deep),
+            S("43", "건넌방 보료", -2.2f, 11.2f, 0.3f, SpotLayer.Deep),
+            S("44", "건넌방 바느질 상자", 0.3f, 8.1f, 0.3f, SpotLayer.Deep),
+            S("45", "안방 장롱", -13.0f, 14.2f, 0.9f, SpotLayer.Surface),
+            S("46", "안방 경대", -11.0f, 8.0f, 0.6f, SpotLayer.Surface),
+            S("47", "부엌 아궁이", -18.6f, 6.9f, 0.4f, SpotLayer.Surface),
+            S("48", "부엌 물동이", -16.7f, 0.9f, 0.4f, SpotLayer.Surface),
+            S("49", "안마당 진흙", -14.6f, 3.6f, 0.1f, SpotLayer.Surface),
+            S("50", "곳간 선반", -13.3f, -0.7f, 0.8f, SpotLayer.Surface),
+            S("51", "곳간 쥐덫", -11.6f, -2.6f, 0.2f, SpotLayer.Surface),
+            S("52", "허 의원 의관", 9.3f, -29.2f, 0.4f, SpotLayer.Deep),
+            S("53", "변 행수 갓", 13.0f, -29.4f, 0.4f, SpotLayer.Deep),
+            S("54", "손님 방 툇마루 밑", 12.4f, -26.4f, -0.15f, SpotLayer.Surface),
+            S("55", "사랑마당 물확", 4.6f, -20.8f, 0.5f, SpotLayer.Surface),
+            S("56", "툇마루 끝 화분", 3.9f, -14.7f, 0.3f, SpotLayer.Surface),
+            S("59", "안대청 상", -6.5f, 15.2f, 0.5f, SpotLayer.Surface),
         };
 
         private static readonly Vector2 Discussion = new Vector2(8f, -18.5f);
@@ -142,9 +165,12 @@ namespace MurderMystery.EditorTools
             BuildSealedRooms(Group(root, "SealedRooms"), house);
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
-            BuildSpots(Group(root, "InvestigationSpots"));
+            var spotsRoot = Group(root, "InvestigationSpots");
+            BuildSpots(spotsRoot);
             BuildMarkers(Group(root, "GameplayMarkers"));
             BuildProps(Group(root, "Props"));
+            Physics.SyncTransforms();
+            BuildClueObjects(spotsRoot);
 
             var profile = new GameObject("PlayerBodyProfile").AddComponent<PlayerBodyProfile>();
             profile.height = BodyHeight;
@@ -1280,16 +1306,297 @@ namespace MurderMystery.EditorTools
 
         private static void BuildSpots(Transform p)
         {
+            // clues.json says what lies where; the table only places the spots.
+            var data = GameData.LoadFromResources();
             foreach (var s in Spots)
             {
                 var go = new GameObject($"Spot_{s.Id} ({s.Name})");
                 go.transform.SetParent(p, false);
                 var floor = s.Lift >= 0f ? FloorY(s.X, s.Z) : LowestFloorY(s.X, s.Z);
                 go.transform.position = new Vector3(s.X, floor + Mathf.Abs(s.Lift), s.Z);
-                go.AddComponent<InvestigationSpot>().Configure(s.Id, s.Name, s.Layer, s.Clues);
+                var clues = data.CluesAtSpot(s.Id).Select(c => c.id).ToArray();
+                var layer = data.CluesAtSpot(s.Id).Any(c => c.IsDeep) ? SpotLayer.Deep : SpotLayer.Surface;
+                go.AddComponent<InvestigationSpot>().Configure(s.Id, s.Name, layer, clues.Length > 0 ? clues : s.Clues);
                 var col = go.AddComponent<SphereCollider>();
                 col.isTrigger = true;
                 col.radius = 1.2f;
+            }
+        }
+
+        // ---------------------------------------------------------------- clue objects
+
+        /// <summary>
+        /// Every clue gets something to see where it lies: items a sheet, book, letter, pouch, key... (hidden
+        /// once someone takes it, SpotProps), traces mud prints, drops or powder on the floor. Made of simple
+        /// shapes on the nearest surface below the spot.
+        /// </summary>
+        private static void BuildClueObjects(Transform spotsRoot)
+        {
+            var data = GameData.LoadFromResources();
+            var mats = new Dictionary<string, Material>();
+            Material M(string name, Color color, float smooth = 0.15f)
+            {
+                if (mats.TryGetValue(name, out var m)) return m;
+                m = SimpleMaterial($"Assets/_Project/Art/Materials/Clue{name}.mat", color);
+                m.SetFloat("_Smoothness", smooth);
+                return mats[name] = m;
+            }
+
+            foreach (var spot in spotsRoot.GetComponentsInChildren<InvestigationSpot>())
+            {
+                var holder = new GameObject("Clue objects").transform;
+                holder.SetParent(spot.transform, false);
+                var props = new List<SpotProps.Entry>();
+                var surface = SurfaceBelow(spot.transform.position);
+                var index = 0;
+                foreach (var clue in data.CluesAtSpot(spot.SpotId))
+                {
+                    if (clue.Kind == ClueKind.Public) continue;
+                    var angle = index * 2.1f;
+                    var offset = clue.Kind == ClueKind.Item ? new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * (index == 0 ? 0f : 0.22f) : Vector3.zero;
+                    index++;
+                    var at = clue.Kind == ClueKind.Item ? SurfaceBelow(spot.transform.position + offset) : surface;
+                    var obj = new GameObject(clue.id).transform;
+                    obj.SetParent(holder, false);
+                    obj.SetPositionAndRotation(at, Quaternion.Euler(0f, (clue.id.GetHashCode() & 0xff) * 1.4f, 0f));
+                    BuildClueShape(obj, ClueShape(clue), M);
+                    if (clue.Kind == ClueKind.Item) props.Add(new SpotProps.Entry { clueId = clue.id, root = obj.gameObject });
+                }
+                if (props.Count > 0) spot.gameObject.AddComponent<SpotProps>().Configure(props.ToArray());
+            }
+        }
+
+        /// <summary>The top of whatever is below a point (furniture, floor, ground), ignoring trigger spheres.</summary>
+        private static Vector3 SurfaceBelow(Vector3 p)
+        {
+            var hits = Physics.RaycastAll(p + Vector3.up * 0.05f, Vector3.down, 2.5f, ~0, QueryTriggerInteraction.Ignore)
+                .Where(h => h.normal.y > 0.5f).OrderBy(h => h.distance).ToList();
+            return hits.Count > 0 ? hits[0].point : new Vector3(p.x, FloorY(p.x, p.z), p.z);
+        }
+
+        private static readonly Dictionary<string, string> ClueShapes = new Dictionary<string, string>
+        {
+            // letters and envelopes
+            {"D1", "envelope"}, {"D2", "envelope"}, {"H1", "envelope"}, {"H4", "envelope"}, {"H5b", "envelope"}, {"B6", "letter"},
+            // sheets
+            {"C1", "burnt"}, {"C5", "sheet"}, {"C7", "sheets"}, {"S1", "sheet"}, {"L1", "sheet"}, {"B2", "crumpled"}, {"B4", "sheets"},
+            // books
+            {"H5a", "ledger"}, {"B1", "book"}, {"B5", "book"}, {"M9", "book"}, {"M21", "ledger"}, {"B10", "book"}, {"L2", "books"}, {"H3", "bundle_letters"},
+            // small things
+            {"K1", "key"}, {"K2", "key"}, {"M1", "rustykey"}, {"X1", "case"}, {"X2", "shards"}, {"X3", "apron"}, {"X4", "sock"},
+            {"X5", "pouch"}, {"X6", "pouch"}, {"H5c", "pouch"}, {"H6", "sheets"}, {"M4", "fan"}, {"M5", "norigae"}, {"M13", "cloth"},
+            {"M17", "coins"}, {"M22", "stamp"}, {"M23", "cloth"}, {"S3", "cup"}, {"M24", "scissors"},
+            // traces
+            {"C3a", "mud_trail"}, {"C3b", "mud"}, {"C3c", "mud"}, {"B8", "mud_trail_small"}, {"M3", "mud"}, {"C2", "drops"}, {"N4", "powder"},
+            {"M18", "ash"}, {"C8", "boots"}, {"N3", "drops"}, {"B9", "drops"}, {"S2", "ash"}, {"M2", "none"},
+            {"N1", "inkstone"}, {"C4", "sheet"}, {"T19", "robe"}, {"M8", "robe"}, {"M7", "sheet"}, {"M10", "cups"},
+            {"M11", "prefab:SM_QuiltedMattress"}, {"M12", "cloth"}, {"M14", "robe"}, {"M15", "prefab:SM_WhitePorcelainBottle"},
+            {"M16", "trap"}, {"M19", "basin"}, {"M20", "prefab:SM_Pot154"}, {"B7", "burnt"}, {"B11", "hat"}, {"B15", "spoon"},
+        };
+
+        private static string ClueShape(ClueData clue) =>
+            ClueShapes.TryGetValue(clue.id, out var shape) ? shape : clue.Kind == ClueKind.Item ? "sheet" : "none";
+
+        private static void BuildClueShape(Transform root, string shape, System.Func<string, Color, float, Material> M)
+        {
+            var paper = M("Paper", new Color(0.92f, 0.89f, 0.80f), 0.1f);
+            var ink = M("Ink", new Color(0.12f, 0.1f, 0.09f), 0.2f);
+            var red = M("Red", new Color(0.62f, 0.09f, 0.08f), 0.3f);
+            var cover = M("Cover", new Color(0.18f, 0.22f, 0.36f), 0.2f);
+            var brown = M("Brown", new Color(0.36f, 0.24f, 0.14f), 0.25f);
+            var cloth = M("Cloth", new Color(0.83f, 0.80f, 0.72f), 0.05f);
+            var mud = M("Mud", new Color(0.24f, 0.17f, 0.11f), 0.45f);
+            var brass = M("Brass", new Color(0.72f, 0.56f, 0.24f), 0.6f);
+            var rust = M("Rust", new Color(0.42f, 0.24f, 0.14f), 0.2f);
+            var white = M("White", new Color(0.95f, 0.95f, 0.93f), 0.5f);
+            var ash = M("Ash", new Color(0.35f, 0.34f, 0.33f), 0.05f);
+
+            void Box(Vector3 c, Vector3 size, Material m, float yaw = 0f)
+            {
+                var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                Object.DestroyImmediate(g.GetComponent<Collider>());
+                g.transform.SetParent(root, false);
+                g.transform.localPosition = c;
+                g.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+                g.transform.localScale = size;
+                g.GetComponent<MeshRenderer>().sharedMaterial = m;
+            }
+            void Ball(Vector3 c, Vector3 size, Material m)
+            {
+                var g = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Object.DestroyImmediate(g.GetComponent<Collider>());
+                g.transform.SetParent(root, false);
+                g.transform.localPosition = c;
+                g.transform.localScale = size;
+                g.GetComponent<MeshRenderer>().sharedMaterial = m;
+            }
+            void Rod(Vector3 c, Vector3 size, Material m, Vector3 euler)
+            {
+                var g = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                Object.DestroyImmediate(g.GetComponent<Collider>());
+                g.transform.SetParent(root, false);
+                g.transform.localPosition = c;
+                g.transform.localRotation = Quaternion.Euler(euler);
+                g.transform.localScale = size;
+                g.GetComponent<MeshRenderer>().sharedMaterial = m;
+            }
+
+            if (shape.StartsWith("prefab:"))
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PropDir + shape.Substring(7) + ".prefab");
+                if (prefab != null)
+                {
+                    var g = (GameObject)PrefabUtility.InstantiatePrefab(prefab, root);
+                    var rs = g.GetComponentsInChildren<Renderer>();
+                    if (rs.Length > 0) g.transform.position += Vector3.up * (root.position.y - rs.Min(r => r.bounds.min.y));
+                }
+                return;
+            }
+            var stone = M("Stone", new Color(0.55f, 0.53f, 0.5f), 0.3f);
+            switch (shape)
+            {
+                case "inkstone":
+                    Box(new Vector3(0f, 0.02f, 0f), new Vector3(0.14f, 0.04f, 0.22f), ink);
+                    Box(new Vector3(0.1f, 0.012f, 0f), new Vector3(0.02f, 0.02f, 0.09f), ink, 20f);
+                    break;
+                case "robe":
+                    Box(new Vector3(0f, 0.02f, 0f), new Vector3(0.5f, 0.04f, 0.4f), M("Robe", new Color(0.78f, 0.80f, 0.86f), 0.05f), 8f);
+                    break;
+                case "cups":
+                    for (var i = 0; i < 6; i++) Rod(new Vector3(-0.15f + (i % 3) * 0.08f, 0.02f, (i / 3) * 0.08f), new Vector3(0.05f, 0.02f, 0.05f), white, Vector3.zero);
+                    break;
+                case "trap":
+                    Box(new Vector3(0f, 0.04f, 0f), new Vector3(0.14f, 0.08f, 0.26f), brown);
+                    Ball(new Vector3(0f, 0.03f, 0.18f), new Vector3(0.05f, 0.04f, 0.09f), ash);
+                    break;
+                case "basin":
+                    Rod(new Vector3(0f, 0.12f, 0f), new Vector3(0.6f, 0.12f, 0.6f), stone, Vector3.zero);
+                    for (var i = 0; i < 4; i++) Ball(new Vector3(-0.1f + i * 0.07f, 0.245f, (i % 2) * 0.08f), new Vector3(0.05f, 0.01f, 0.04f), red);
+                    break;
+                case "hat":
+                    Rod(new Vector3(0f, 0.01f, 0f), new Vector3(0.42f, 0.006f, 0.42f), ink, Vector3.zero);
+                    Rod(new Vector3(0f, 0.08f, 0f), new Vector3(0.16f, 0.07f, 0.16f), ink, Vector3.zero);
+                    break;
+                case "spoon":
+                    Box(new Vector3(0f, 0.004f, 0f), new Vector3(0.015f, 0.006f, 0.2f), white, 15f);
+                    Box(new Vector3(0.05f, 0.004f, 0f), new Vector3(0.012f, 0.006f, 0.22f), white, 10f);
+                    break;
+                case "envelope":
+                    Box(new Vector3(0f, 0.004f, 0f), new Vector3(0.14f, 0.008f, 0.26f), paper);
+                    Box(new Vector3(0f, 0.009f, -0.06f), new Vector3(0.05f, 0.003f, 0.05f), red);
+                    Box(new Vector3(0f, 0.009f, 0.05f), new Vector3(0.012f, 0.002f, 0.12f), ink);
+                    break;
+                case "letter":
+                    Box(new Vector3(0f, 0.004f, 0f), new Vector3(0.2f, 0.006f, 0.28f), paper, 8f);
+                    Box(new Vector3(0.03f, 0.008f, 0f), new Vector3(0.01f, 0.002f, 0.2f), ink, 8f);
+                    Box(new Vector3(-0.03f, 0.008f, 0f), new Vector3(0.01f, 0.002f, 0.2f), ink, 8f);
+                    break;
+                case "sheet":
+                    Box(new Vector3(0f, 0.003f, 0f), new Vector3(0.24f, 0.004f, 0.32f), paper);
+                    for (var i = 0; i < 4; i++) Box(new Vector3(-0.07f + i * 0.045f, 0.006f, 0f), new Vector3(0.008f, 0.002f, 0.24f), ink);
+                    break;
+                case "sheets":
+                    for (var i = 0; i < 4; i++) Box(new Vector3(0.01f * i, 0.004f + i * 0.005f, 0.008f * i), new Vector3(0.24f, 0.004f, 0.32f), paper, i * 6f);
+                    Box(new Vector3(0.03f, 0.027f, 0f), new Vector3(0.01f, 0.002f, 0.24f), ink, 18f);
+                    break;
+                case "burnt":
+                    Box(new Vector3(0f, 0.003f, 0f), new Vector3(0.12f, 0.004f, 0.14f), paper, 20f);
+                    Box(new Vector3(0.05f, 0.004f, 0.05f), new Vector3(0.07f, 0.004f, 0.08f), ash, 35f);
+                    break;
+                case "crumpled":
+                    for (var i = 0; i < 4; i++) Ball(new Vector3(-0.08f + i * 0.06f, 0.04f, (i % 2) * 0.06f), Vector3.one * 0.08f, paper);
+                    break;
+                case "book":
+                    Box(new Vector3(0f, 0.02f, 0f), new Vector3(0.19f, 0.03f, 0.27f), cover);
+                    Box(new Vector3(0f, 0.02f, 0f), new Vector3(0.18f, 0.026f, 0.265f), paper);
+                    Box(new Vector3(0.05f, 0.036f, 0f), new Vector3(0.04f, 0.002f, 0.2f), paper);
+                    break;
+                case "books":
+                    for (var i = 0; i < 3; i++) Box(new Vector3(0f, 0.02f + i * 0.033f, 0f), new Vector3(0.2f, 0.03f, 0.28f), i == 1 ? brown : cover, i * 7f);
+                    break;
+                case "ledger":
+                    Box(new Vector3(0f, 0.03f, 0f), new Vector3(0.24f, 0.05f, 0.32f), brown);
+                    Box(new Vector3(0f, 0.056f, 0f), new Vector3(0.05f, 0.002f, 0.22f), paper);
+                    break;
+                case "bundle_letters":
+                    for (var i = 0; i < 3; i++) Box(new Vector3(0f, 0.005f + i * 0.008f, 0f), new Vector3(0.14f, 0.007f, 0.26f), paper, i * 4f);
+                    Box(new Vector3(0f, 0.016f, 0f), new Vector3(0.15f, 0.03f, 0.012f), red);
+                    break;
+                case "key":
+                    Box(new Vector3(0f, 0.008f, 0f), new Vector3(0.02f, 0.012f, 0.12f), brass);
+                    Rod(new Vector3(0f, 0.008f, -0.075f), new Vector3(0.05f, 0.006f, 0.05f), brass, Vector3.zero);
+                    Box(new Vector3(0.015f, 0.008f, 0.05f), new Vector3(0.02f, 0.012f, 0.02f), brass);
+                    break;
+                case "rustykey":
+                    Box(new Vector3(0f, 0.008f, 0f), new Vector3(0.02f, 0.012f, 0.1f), rust);
+                    Rod(new Vector3(0f, 0.008f, -0.06f), new Vector3(0.045f, 0.006f, 0.045f), rust, Vector3.zero);
+                    break;
+                case "case":
+                    Rod(new Vector3(0f, 0.022f, 0f), new Vector3(0.04f, 0.09f, 0.04f), brown, new Vector3(90f, 0f, 0f));
+                    break;
+                case "shards":
+                    for (var i = 0; i < 5; i++) Box(new Vector3(-0.08f + i * 0.04f, 0.01f, (i % 3) * 0.03f), new Vector3(0.05f, 0.012f, 0.04f), white, i * 33f);
+                    break;
+                case "apron":
+                    Box(new Vector3(0f, 0.005f, 0f), new Vector3(0.45f, 0.01f, 0.5f), cloth, 12f);
+                    for (var i = 0; i < 6; i++) Box(new Vector3(-0.15f + i * 0.06f, 0.011f, (i % 2) * 0.1f), new Vector3(0.05f, 0.002f, 0.05f), white, i * 20f);
+                    break;
+                case "sock":
+                    Rod(new Vector3(0f, 0.03f, 0f), new Vector3(0.07f, 0.11f, 0.06f), white, new Vector3(90f, 0f, 0f));
+                    Ball(new Vector3(0f, 0.03f, 0.11f), new Vector3(0.08f, 0.06f, 0.1f), white);
+                    break;
+                case "pouch":
+                    Ball(new Vector3(0f, 0.04f, 0f), new Vector3(0.1f, 0.08f, 0.1f), cloth);
+                    Rod(new Vector3(0f, 0.085f, 0f), new Vector3(0.035f, 0.02f, 0.035f), red, Vector3.zero);
+                    break;
+                case "fan":
+                    Box(new Vector3(0f, 0.006f, 0f), new Vector3(0.05f, 0.01f, 0.3f), brown, 0f);
+                    Box(new Vector3(0.04f, 0.006f, 0.02f), new Vector3(0.05f, 0.01f, 0.28f), brown, 25f);
+                    break;
+                case "norigae":
+                    Ball(new Vector3(0f, 0.02f, 0f), new Vector3(0.04f, 0.04f, 0.04f), M("Jade", new Color(0.3f, 0.6f, 0.45f), 0.6f));
+                    Box(new Vector3(0f, 0.005f, 0.08f), new Vector3(0.03f, 0.008f, 0.12f), red);
+                    break;
+                case "cloth":
+                    Box(new Vector3(0f, 0.008f, 0f), new Vector3(0.3f, 0.015f, 0.22f), cloth, 15f);
+                    break;
+                case "coins":
+                    for (var i = 0; i < 8; i++) Rod(new Vector3(-0.1f + i * 0.028f, 0.015f, 0f), new Vector3(0.03f, 0.006f, 0.03f), brass, new Vector3(90f, 0f, 0f));
+                    Box(new Vector3(0f, 0.015f, 0f), new Vector3(0.24f, 0.004f, 0.004f), brown);
+                    break;
+                case "stamp":
+                    Box(new Vector3(0f, 0.03f, 0f), new Vector3(0.05f, 0.06f, 0.05f), M("Stone", new Color(0.7f, 0.66f, 0.58f), 0.4f));
+                    Box(new Vector3(0f, 0.002f, 0f), new Vector3(0.05f, 0.004f, 0.05f), red);
+                    break;
+                case "cup":
+                    Rod(new Vector3(0f, 0.025f, 0f), new Vector3(0.07f, 0.025f, 0.07f), white, Vector3.zero);
+                    break;
+                case "scissors":
+                    Box(new Vector3(0f, 0.005f, 0f), new Vector3(0.02f, 0.008f, 0.14f), ink, 10f);
+                    Box(new Vector3(0f, 0.005f, 0f), new Vector3(0.02f, 0.008f, 0.14f), ink, -10f);
+                    break;
+                case "boots":
+                    Box(new Vector3(-0.09f, 0.06f, 0f), new Vector3(0.11f, 0.12f, 0.3f), mud);
+                    Box(new Vector3(0.09f, 0.06f, 0.03f), new Vector3(0.11f, 0.12f, 0.3f), mud, 8f);
+                    break;
+                case "mud":
+                    for (var i = 0; i < 3; i++) Box(new Vector3(-0.15f + i * 0.15f, 0.003f, (i % 2) * 0.12f), new Vector3(0.11f, 0.004f, 0.28f), mud, i * 9f);
+                    break;
+                case "mud_trail":
+                case "mud_trail_small":
+                    var small = shape == "mud_trail_small";
+                    for (var i = 0; i < 6; i++)
+                        Box(new Vector3((i % 2 == 0 ? -0.1f : 0.1f), 0.003f, -0.9f + i * 0.36f), small ? new Vector3(0.08f, 0.004f, 0.2f) : new Vector3(0.12f, 0.004f, 0.3f), mud);
+                    break;
+                case "drops":
+                    for (var i = 0; i < 6; i++) Rod(new Vector3(-0.12f + i * 0.05f, 0.002f, (i % 3) * 0.04f), new Vector3(0.03f + 0.01f * (i % 2), 0.002f, 0.03f), mud, Vector3.zero);
+                    break;
+                case "powder":
+                    for (var i = 0; i < 8; i++) Rod(new Vector3(-0.3f + i * 0.08f, 0.002f, ((i * 3) % 5) * 0.06f - 0.12f), new Vector3(0.08f, 0.002f, 0.06f), white, Vector3.zero);
+                    break;
+                case "ash":
+                    Ball(new Vector3(0f, 0.02f, 0f), new Vector3(0.3f, 0.06f, 0.24f), ash);
+                    break;
             }
         }
 

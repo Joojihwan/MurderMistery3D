@@ -317,6 +317,30 @@
         "jaeha"
       ],
       "description": "새벽 1시 10분쯤 버선 엄지 쪽에 흰 가루가 묻은 것을 보고 한 짝을 벗어 대청 마루 밑에 밀어 넣음"
+    },
+    {
+      "id": "F_BUNI_BURNT_WRAPPERS",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "새벽 5시쯤 아궁이에 불을 지피며 지난 며칠 약첩 싸던 종이를 태움 (늘 하는 일)"
+    },
+    {
+      "id": "F_BYEON_COINS",
+      "scope": "Character",
+      "holders": [
+        "byeon"
+      ],
+      "description": "노잣돈 엽전 백 냥을 손님 방 툇마루 밑에 밀어 넣어 둠 (도둑 걱정)"
+    },
+    {
+      "id": "F_HEO_LOG",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "진찰 일지에 대감의 병세를 봄부터 적어 왔다. 손님 방 의관 옆에 있다"
     }
   ]
 }
