@@ -1328,7 +1328,9 @@ namespace MurderMystery.EditorTools
                     Box(name + " rail", new Vector3(min.x, 2.2f, min.z) - trim, new Vector3(max.x, 2.3f, max.z) + trim, wood, false);
             }
 
-            // Wall up every way out but the hall's own doors from the 툇마루.
+            // Every way out but the hall's own doors from the 툇마루 stays a door, barred: solid leaves under a
+            // lock that never opens (looking at one says why).
+            var barred = new List<Transform>();
             foreach (var leaf in leaves.ToList())
             {
                 var rs = leaf.GetComponentsInChildren<Renderer>();
@@ -1337,26 +1339,19 @@ namespace MurderMystery.EditorTools
                 var at = Local(b.center);
                 var hallEntrance = Mathf.Abs(at.y - HallFront) < 0.15f && at.x > HallWall + 0.3f;
                 if (hallEntrance) continue;
-                // Fill the opening: the leaf's own extent in the house frame.
-                var corners = new List<Vector3>();
-                foreach (var mf in leaf.GetComponentsInChildren<MeshFilter>())
+                foreach (var d in leaf.GetComponentsInChildren<ProximityDoor>()) Object.DestroyImmediate(d);
+                foreach (var f in leaf.GetComponentsInChildren<MeshFilter>())
                 {
-                    if (mf.sharedMesh == null) continue;
-                    var mb = mf.sharedMesh.bounds;
-                    for (var i = 0; i < 8; i++)
-                        corners.Add(holder.InverseTransformPoint(mf.transform.TransformPoint(new Vector3(
-                            (i & 1) == 0 ? mb.min.x : mb.max.x, (i & 2) == 0 ? mb.min.y : mb.max.y, (i & 4) == 0 ? mb.min.z : mb.max.z))));
+                    if (f.sharedMesh == null) continue;
+                    if (!f.TryGetComponent<MeshCollider>(out var mc)) mc = f.gameObject.AddComponent<MeshCollider>();
+                    mc.sharedMesh = f.sharedMesh;
                 }
-                var lo = new Vector3(corners.Min(c => c.x), corners.Min(c => c.y), corners.Min(c => c.z));
-                var hi = new Vector3(corners.Max(c => c.x), corners.Max(c => c.y), corners.Max(c => c.z));
-                var alongU = hi.x - lo.x > hi.z - lo.z;
-                var mid = (lo + hi) / 2f;
-                if (alongU) { lo.z = mid.z - 0.07f; hi.z = mid.z + 0.07f; }
-                else { lo.x = mid.x - 0.07f; hi.x = mid.x + 0.07f; }
-                Box("Walled-up door", lo, hi, wall);
+                barred.Add(leaf);
                 leaves.Remove(leaf);
-                Object.DestroyImmediate(leaf.gameObject);
             }
+            var barLock = new GameObject("Lock (talkhouse)");
+            barLock.transform.SetParent(holder, false);
+            barLock.AddComponent<LockedDoor>().Configure("talkhouse", barred.ToArray());
 
             // Floors level with the 툇마루, and a ceiling under the rafters.
             Box("Floor (hall and rooms)", new Vector3(WestEnd, HallFloor - 0.12f, HallFront), new Vector3(EastEnd, HallFloor, Back), boards);
