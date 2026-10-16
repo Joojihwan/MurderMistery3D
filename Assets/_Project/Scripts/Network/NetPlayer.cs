@@ -3,6 +3,7 @@ using MurderMystery.Gameplay;
 using MurderMystery.Level;
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
 namespace MurderMystery.Network
@@ -60,6 +61,13 @@ namespace MurderMystery.Network
                     if (cc != null) cc.enabled = true;
                 }
                 LocalPlayerRig.Attach(gameObject);
+                // Room moves jump straight there for everyone instead of gliding across the map.
+                RoomPresence.Teleport = (go, position, rotation) =>
+                {
+                    var nt = go.GetComponent<NetworkTransform>();
+                    if (nt != null && nt.CanCommitToTransform) nt.Teleport(position, rotation, go.transform.localScale);
+                    else go.transform.SetPositionAndRotation(position, rotation);
+                };
                 localController = GetComponent<FirstPersonController>();
             }
             else

@@ -6,7 +6,7 @@ namespace MurderMystery.Gameplay
 {
     /// <summary>
     /// IMGUI HUD driven only by the local client's snapshot, so the same screen works offline and online:
-    /// phase/timer, focus prompt, log, notebook (items, board, secret talks, ready), NPC menu, vote, ending.
+    /// phase/timer, focus prompt, log, notebook (items, board, rooms, ready), NPC menu, vote, ending.
     /// </summary>
     public class PrototypeHud : MonoBehaviour
     {
@@ -40,14 +40,11 @@ namespace MurderMystery.Gameplay
             GUI.Box(new Rect(10, 10, 440, 100), GUIContent.none);
             var timer = snap.timed ? $"  {Mathf.Max(0, (int)snap.remainingSec) / 60}:{Mathf.Max(0, (int)snap.remainingSec) % 60:00}" : "";
             GUI.Label(new Rect(20, 16, 420, 22), $"{Name(c, snap.characterId)}  |  {GameSessionHost.PhaseLabel(phase)}{timer}", wrap);
-            GUI.Label(new Rect(20, 40, 420, 22), $"조사 점수 {snap.investigationPoints}  ·  질문 {snap.questionsLeft}  ·  밀담 {snap.secretTalksLeft}  ·  소지품 {snap.inventory.Length}", wrap);
-            var help = c.IsOffline ? "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩\nSpace 점프  C 앉기  N 다음 단계  1~5 인물 전환" : "E 살펴보기/대화  R 숨긴 물건 회수  Tab 수첩·밀담·준비\nSpace 점프  C 앉기/일어서기";
+            GUI.Label(new Rect(20, 40, 420, 22), $"조사 점수 {snap.investigationPoints}  ·  질문 {snap.questionsLeft}  ·  소지품 {snap.inventory.Length}", wrap);
+            var help = c.IsOffline ? "E 살펴보기/대화/문  R 숨긴 물건 회수  Tab 수첩\nSpace 점프  C 앉기  N 다음 단계  1~5 인물 전환" : "E 살펴보기/대화/문  R 숨긴 물건 회수  Tab 수첩·준비\nSpace 점프  C 앉기/일어서기";
             GUI.Label(new Rect(20, 64, 420, 44), help, wrap);
 
-            if (!string.IsNullOrEmpty(snap.talkPartner))
-                GUI.Label(new Rect(Screen.width / 2f - 200, 14, 400, 24), $"밀담 중: {Name(c, snap.talkPartner)}  ({(int)snap.talkRemainingSec}초)", wrap);
-            else if (snap.incomingTalks.Length > 0)
-                GUI.Label(new Rect(Screen.width / 2f - 200, 14, 400, 24), $"{Name(c, snap.incomingTalks[0].from)}이(가) 밀담을 청합니다 (Tab)", wrap);
+            DrawRoomStatus(c, snap);
 
             // Crosshair and prompt.
             GUI.Label(new Rect(Screen.width / 2f - 5, Screen.height / 2f - 12, 20, 24), "+", wrap);
@@ -68,12 +65,16 @@ namespace MurderMystery.Gameplay
                     if (snap.retrievableSpots.Contains(spot.SpotId)) prompt += $"   R: 숨긴 물건 회수 ({GameRules.RetrieveCost}점)";
                 }
             }
+            else if (interactor.FocusedRoom != null)
+            {
+                prompt = RoomDoorPrompt(c, snap, interactor.FocusedRoom.RoomId);
+            }
             else if (interactor.FocusedDoor != null && c.Data.LockById.TryGetValue(interactor.FocusedDoor.LockId, out var door))
             {
                 prompt = door.Openable ? $"{door.lockedText}  E: 열쇠를 써 본다" : door.lockedText;
             }
             if (prompt != null)
-                GUI.Label(new Rect(Screen.width / 2f - 220, Screen.height / 2f + 20, 440, 30), prompt, wrap);
+                GUI.Label(new Rect(Screen.width / 2f - 260, Screen.height / 2f + 20, 520, 54), prompt, wrap);
 
             var y = Screen.height - 24 * c.Log.Count - 12;
             foreach (var line in c.Log)
@@ -95,6 +96,47 @@ namespace MurderMystery.Gameplay
             if (phase == GamePhase.Vote) DrawVote(c, snap);
             if (interactor.NotebookOpen) DrawNotebook(c, snap);
             if (interactor.NpcMenuOpen) DrawNpcMenu(c, snap);
+        }
+
+        private string Names(IGameClient c, string[] ids) => ids.Length == 0 ? "아무도 없음" : string.Join(", ", ids.Select(i => Name(c, i)));
+
+        /// <summary>Top of the screen: the room I am in, a request I am waiting on, people at my door.</summary>
+        private void DrawRoomStatus(IGameClient c, PlayerSnapshot snap)
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            var mine = snap.rooms.FirstOrDefault(r => r.id == snap.room);
+            if (mine != null)
+            {
+                lines.Add($"{mine.name} 안: {Names(c, mine.members)}");
+                lines.Add("말소리는 이 방 안에만 들립니다.");
+            }
+            var waiting = snap.rooms.FirstOrDefault(r => r.id == snap.pendingRoom);
+            if (waiting != null) lines.Add($"{waiting.name}에 들어가기를 청하는 중…  (문에서 E: 그만두기)");
+            foreach (var q in snap.roomRequests)
+                lines.Add($"{Korean.WithParticle(Name(c, q.from), "이", "가")} 들어오려 합니다.  Y: 들이기   N: 거절");
+            if (lines.Count == 0) return;
+            var rect = new Rect(Screen.width / 2f - 330, 12, 660, 26 * lines.Count + 10);
+            GUI.Box(rect, GUIContent.none);
+            for (var i = 0; i < lines.Count; i++)
+                GUI.Label(new Rect(rect.x + 10, rect.y + 5 + 26 * i, rect.width - 20, 24), lines[i], wrap);
+        }
+
+        private string RoomDoorPrompt(IGameClient c, PlayerSnapshot snap, string roomId)
+        {
+            var room = snap.rooms.FirstOrDefault(r => r.id == roomId);
+            if (room == null) return null;
+            var head = $"{room.name} — 안: {Names(c, room.members)} ({room.members.Length}/{room.capacity})";
+            if (snap.room == roomId)
+                return snap.Phase == GamePhase.Council1 || snap.Phase == GamePhase.Council2
+                    ? $"{head}\n밀담 시간이 끝날 때까지 나갈 수 없다."
+                    : $"{head}\nE: 나가기";
+            if (roomId == "council") return $"{head}\n큰 방은 밀담 시간에만 열린다.";
+            if (!snap.phase.StartsWith("Investigation")) return $"{head}\n작은 방은 조사 시간에만 쓸 수 있다.";
+            if (snap.pendingRoom == roomId) return $"{head}\n안에서 허락하기를 기다리는 중…  E: 그만두기";
+            if (!string.IsNullOrEmpty(snap.room)) return $"{head}\n지금 있는 방에서 먼저 나와야 한다.";
+            if (snap.shutOutOf.Contains(roomId)) return $"{head}\n세 번 거절당했다. 안에서 누군가 나올 때까지 청할 수 없다.";
+            if (room.members.Length >= room.capacity) return $"{head}\n방이 꽉 찼다.";
+            return room.members.Length == 0 ? $"{head}\nE: 들어가기" : $"{head}\nE: 들어가기를 청하기 (안에 있는 사람이 모두 허락해야 한다)";
         }
 
         private void DrawVote(IGameClient c, PlayerSnapshot snap)
@@ -191,27 +233,18 @@ namespace MurderMystery.Gameplay
 
             if (snap.timed && GUILayout.Button(snap.ready ? "준비 완료 취소" : "준비 완료 (모두 누르면 다음 단계)")) c.SetReady(!snap.ready);
 
-            GUILayout.Label("밀담", wrap);
-            if (!string.IsNullOrEmpty(snap.talkPartner))
-            {
-                GUILayout.Label($"{Name(c, snap.talkPartner)}와(과) 밀담 중 · {(int)snap.talkRemainingSec}초 남음", wrap);
-                if (GUILayout.Button("밀담 끝내기")) c.EndTalk();
-            }
-            foreach (var req in snap.incomingTalks)
+            GUILayout.Label("방", wrap);
+            foreach (var room in snap.rooms)
+                GUILayout.Label($"{(room.id == snap.room ? "▶ " : "")}{room.name}: {Names(c, room.members)} ({room.members.Length}/{room.capacity})", wrap);
+            foreach (var req in snap.roomRequests)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{Name(c, req.from)}의 요청", wrap, GUILayout.Width(200));
-                if (GUILayout.Button("수락")) c.RespondTalk(req.id, true);
-                if (GUILayout.Button("거절")) c.RespondTalk(req.id, false);
+                GUILayout.Label($"{Korean.WithParticle(Name(c, req.from), "이", "가")} 들어오려 함", wrap, GUILayout.Width(220));
+                if (GUILayout.Button("들이기")) c.RespondRoom(req.id, true);
+                if (GUILayout.Button("거절")) c.RespondRoom(req.id, false);
                 GUILayout.EndHorizontal();
             }
-            if (string.IsNullOrEmpty(snap.talkPartner) && snap.secretTalksLeft > 0)
-            {
-                GUILayout.BeginHorizontal();
-                foreach (var seat in snap.seats.Where(s => s.characterId != snap.characterId))
-                    if (GUILayout.Button(Name(c, seat.characterId))) c.RequestTalk(seat.characterId);
-                GUILayout.EndHorizontal();
-            }
+            if (!string.IsNullOrEmpty(snap.room) && !snap.phase.StartsWith("Council") && GUILayout.Button("방에서 나가기")) c.LeaveRoom();
 
             GUILayout.Space(8);
             GUILayout.Label("소지품", wrap);
@@ -221,12 +254,20 @@ namespace MurderMystery.Gameplay
                 GUILayout.Label(card.title, wrap, GUILayout.Width(200));
                 if (card.sealedClosed && GUILayout.Button("뜯기")) c.Open(card.id);
                 if (GUILayout.Button("공개")) c.Disclose(card.id);
-                if (!string.IsNullOrEmpty(snap.talkPartner))
-                {
-                    if (GUILayout.Button("보여 주기")) c.Show(snap.talkPartner, card.id);
-                    if (GUILayout.Button("건네기")) c.Give(snap.talkPartner, card.id);
-                }
                 GUILayout.EndHorizontal();
+                // Show or hand over to someone in the same room.
+                var roomMates = snap.rooms.FirstOrDefault(r => r.id == snap.room)?.members.Where(m => m != snap.characterId).ToArray()
+                                ?? System.Array.Empty<string>();
+                if (roomMates.Length > 0)
+                {
+                    GUILayout.BeginHorizontal();
+                    foreach (var m in roomMates)
+                    {
+                        if (GUILayout.Button($"{Name(c, m)}에게 보여 주기")) c.Show(m, card.id);
+                        if (GUILayout.Button("건네기")) c.Give(m, card.id);
+                    }
+                    GUILayout.EndHorizontal();
+                }
             }
 
             GUILayout.Space(8);

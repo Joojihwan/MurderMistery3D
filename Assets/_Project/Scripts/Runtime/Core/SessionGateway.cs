@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MurderMystery.Core
 {
@@ -18,23 +19,25 @@ namespace MurderMystery.Core
         ActionResult Give(string fromId, string toId, string itemId);
         ActionResult Show(string fromId, string toId, string clueId);
         NpcAnswer AskNpc(string playerId, string topicId);
-        ActionResult RequestTalk(string fromId, string toId);
-        ActionResult RespondTalk(string responderId, int talkId, bool accept);
-        ActionResult EndTalk(string playerId);
+        ActionResult RequestRoom(string playerId, string roomId);
+        ActionResult RespondRoom(string playerId, int requestId, bool accept);
+        ActionResult LeaveRoom(string playerId);
         ActionResult SetReady(string playerId, bool ready);
         ActionResult CastVote(string voterId, string targetId, int bonusAnswer);
     }
 
     /// <summary>
-    /// Host-side implementation: owns the session, phase flow, secret talks and the vote.
-    /// Enforces the "hand items over only in a secret talk or when nearby" rule; proximity is
+    /// Host-side implementation: owns the session, phase flow, the private rooms and the vote.
+    /// Enforces the "hand items over only in the same room or when nearby" rule; proximity is
     /// supplied by the caller because the rule core knows nothing about positions.
     /// </summary>
     public class LocalSessionGateway : ISessionGateway
     {
         public GameSession Session { get; }
         public GameFlow Flow { get; }
-        public SecretTalkManager Talks { get; }
+        public RoomManager Rooms { get; }
+        /// <summary>Messages for one player that are not the answer to their own action (room requests...).</summary>
+        public event Action<string, string> Notice;
         public VoteFlow Vote { get; private set; }
 
         public Func<string, string, bool> AreNearby { get; set; } = (_, __) => false;
@@ -57,7 +60,12 @@ namespace MurderMystery.Core
         {
             Session = new GameSession(data, seed);
             Flow = new GameFlow(Session, data.Flow);
-            Talks = new SecretTalkManager(Session);
+            Rooms = new RoomManager(Session);
+            Rooms.Notify += (who, text) =>
+            {
+                AddNotice(who, text);
+                Notice?.Invoke(who, text);
+            };
             Flow.PhaseStarted += OnPhaseStarted;
             Flow.Warning += w => Announcement?.Invoke(w);
         }
@@ -72,7 +80,7 @@ namespace MurderMystery.Core
         public void Tick(float dt)
         {
             Flow.Tick(dt);
-            Talks.Tick(dt);
+            Rooms.Tick();
         }
 
         private void OnPhaseStarted(GamePhase phase, PhaseConfig cfg)
@@ -83,6 +91,19 @@ namespace MurderMystery.Core
         }
 
         public PlayerSnapshot GetSnapshot(string playerId) => PlayerSnapshot.Build(this, playerId);
+
+        private readonly Dictionary<string, List<NoticeView>> notices = new Dictionary<string, List<NoticeView>>();
+        private int noticeSeq;
+
+        private void AddNotice(string playerId, string text)
+        {
+            if (!notices.TryGetValue(playerId, out var list)) notices[playerId] = list = new List<NoticeView>();
+            list.Add(new NoticeView { seq = ++noticeSeq, text = text });
+            if (list.Count > 6) list.RemoveAt(0);
+        }
+
+        public IEnumerable<NoticeView> NoticesFor(string playerId) =>
+            notices.TryGetValue(playerId, out var list) ? list : Enumerable.Empty<NoticeView>();
         public ActionResult Investigate(string playerId, string spotId, string preferredItem = null) =>
             Session.Investigate(playerId, spotId, preferredItem);
         public ActionResult RetrieveHidden(string playerId, string spotId) => Session.RetrieveHidden(playerId, spotId);
@@ -92,28 +113,22 @@ namespace MurderMystery.Core
 
         public ActionResult Give(string fromId, string toId, string itemId)
         {
-            if (!Talks.InTalkTogether(fromId, toId) && !AreNearby(fromId, toId))
-                return ActionResult.Fail("물건은 밀담 중이거나 가까이 있을 때만 건넬 수 있습니다.");
+            if (!Rooms.InSameRoom(fromId, toId) && !AreNearby(fromId, toId))
+                return ActionResult.Fail("물건은 같은 방 안에 있거나 가까이 있을 때만 건넬 수 있습니다.");
             return Session.Give(fromId, toId, itemId);
         }
 
         public ActionResult Show(string fromId, string toId, string clueId)
         {
-            if (!Talks.InTalkTogether(fromId, toId)) return ActionResult.Fail("보여 주기는 밀담 중에만 할 수 있습니다.");
+            if (!Rooms.InSameRoom(fromId, toId)) return ActionResult.Fail("보여 주기는 같은 방 안에서만 할 수 있습니다.");
             return Session.Show(fromId, toId, clueId);
         }
 
         public NpcAnswer AskNpc(string playerId, string topicId) => Session.AskNpc(playerId, topicId);
-        public ActionResult RequestTalk(string fromId, string toId) => Talks.Request(fromId, toId);
-        public ActionResult RespondTalk(string responderId, int talkId, bool accept) => Talks.Respond(responderId, talkId, accept);
-
-        public ActionResult EndTalk(string playerId)
-        {
-            var talk = Talks.ActiveFor(playerId);
-            if (talk == null) return ActionResult.Fail("밀담 중이 아닙니다.");
-            Talks.End(talk.Id);
-            return new ActionResult { Success = true };
-        }
+        public ActionResult RequestRoom(string playerId, string roomId) => Rooms.RequestEnter(playerId, roomId);
+        public ActionResult RespondRoom(string playerId, int requestId, bool accept) => Rooms.Respond(playerId, requestId, accept);
+        public ActionResult LeaveRoom(string playerId) =>
+            Rooms.PendingOf(playerId) != null && Rooms.RoomOf(playerId) == null ? Rooms.CancelRequest(playerId) : Rooms.Leave(playerId);
 
         public ActionResult SetReady(string playerId, bool ready)
         {

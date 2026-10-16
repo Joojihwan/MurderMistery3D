@@ -29,6 +29,7 @@ namespace MurderMystery.Gameplay
                 other.gameObject.SetActive(false);
 
             player.AddComponent<FirstPersonController>().Init(pivot);
+            player.AddComponent<RoomPresence>();
             var interactor = player.AddComponent<PlayerInteractor>();
             interactor.Init(cam);
             player.AddComponent<PrototypeHud>().Init(interactor);

@@ -49,7 +49,8 @@ namespace MurderMystery.Network
         // ---------------- client state
         private readonly List<string> log = new List<string>();
         private GameData data;
-        private int lastVoiceTalk = -1;
+        private string lastVoiceRoom;
+        private int lastNotice;
         private string lastVoicePhase;
 
         public string LocalId => Snapshot?.characterId;
@@ -76,8 +77,8 @@ namespace MurderMystery.Network
                 gateway.ActiveSeats = () => seatOfClient.Values.Distinct().ToList();
                 gateway.AreNearby = Near;
                 gateway.Announcement += line => AnnounceRpc(line);
-                gateway.Talks.Started += t => PushAll();
-                gateway.Talks.Ended += t => PushAll();
+                gateway.Rooms.Changed += PushAll;
+                gateway.Notice += (_, __) => PushAll();
                 NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
                 PublishRoom();
             }
@@ -119,7 +120,8 @@ namespace MurderMystery.Network
         private void OnClientDisconnected(ulong clientId)
         {
             // The seat stays reserved for the same player key so a reconnect gets the same character back.
-            if (seatOfClient.TryGetValue(clientId, out var seat) && gateway.Talks.ActiveFor(seat) != null) gateway.EndTalk(seat);
+            // A dropped player leaves their small room (the council room keeps everyone).
+            if (seatOfClient.TryGetValue(clientId, out var seat)) gateway.LeaveRoom(seat);
             seatOfClient.Remove(clientId);
             PushAll();
         }
@@ -208,9 +210,9 @@ namespace MurderMystery.Network
         [Rpc(SendTo.Server)] private void DiscloseRpc(string clueId, RpcParams p = default) => Handle(p, id => gateway.Disclose(id, clueId));
         [Rpc(SendTo.Server)] private void GiveRpc(string toId, string itemId, RpcParams p = default) => Handle(p, id => gateway.Give(id, toId, itemId));
         [Rpc(SendTo.Server)] private void ShowRpc(string toId, string clueId, RpcParams p = default) => Handle(p, id => gateway.Show(id, toId, clueId));
-        [Rpc(SendTo.Server)] private void RequestTalkRpc(string toId, RpcParams p = default) => Handle(p, id => gateway.RequestTalk(id, toId));
-        [Rpc(SendTo.Server)] private void RespondTalkRpc(int talkId, bool accept, RpcParams p = default) => Handle(p, id => gateway.RespondTalk(id, talkId, accept));
-        [Rpc(SendTo.Server)] private void EndTalkRpc(RpcParams p = default) => Handle(p, id => gateway.EndTalk(id));
+        [Rpc(SendTo.Server)] private void RequestRoomRpc(string roomId, RpcParams p = default) => Handle(p, id => gateway.RequestRoom(id, roomId));
+        [Rpc(SendTo.Server)] private void RespondRoomRpc(int requestId, bool accept, RpcParams p = default) => Handle(p, id => gateway.RespondRoom(id, requestId, accept));
+        [Rpc(SendTo.Server)] private void LeaveRoomRpc(RpcParams p = default) => Handle(p, id => gateway.LeaveRoom(id));
         [Rpc(SendTo.Server)] private void ReadyRpc(bool ready, RpcParams p = default) => Handle(p, id => gateway.SetReady(id, ready));
         [Rpc(SendTo.Server)] private void VoteRpc(string targetId, int bonus, RpcParams p = default) => Handle(p, id => gateway.CastVote(id, targetId, bonus));
 
@@ -230,6 +232,12 @@ namespace MurderMystery.Network
         private void SnapshotRpc(string json, RpcParams p)
         {
             Snapshot = JsonUtility.FromJson<PlayerSnapshot>(json);
+            // Messages addressed to this player (room requests answered, someone came in...).
+            foreach (var n in Snapshot.notices.Where(n => n.seq > lastNotice))
+            {
+                Push(n.text);
+                lastNotice = n.seq;
+            }
             if (!endingRecorded && Snapshot.Phase == GamePhase.Ending)
             {
                 endingRecorded = true;
@@ -267,10 +275,10 @@ namespace MurderMystery.Network
         private void UpdateVoice()
         {
             if (Snapshot == null) return;
-            if (Snapshot.phase == lastVoicePhase && Snapshot.talkId == lastVoiceTalk) return;
+            if (Snapshot.phase == lastVoicePhase && Snapshot.room == lastVoiceRoom) return;
             lastVoicePhase = Snapshot.phase;
-            lastVoiceTalk = Snapshot.talkId;
-            VoiceService.Apply(Snapshot.Phase, Snapshot.talkId);
+            lastVoiceRoom = Snapshot.room;
+            VoiceService.Apply(Snapshot.Phase, Snapshot.room);
         }
 
         // =========================================================== IGameClient (local UI → host)
@@ -288,9 +296,9 @@ namespace MurderMystery.Network
         public void Give(string toId, string itemId) => GiveRpc(toId, itemId);
         public void Show(string toId, string clueId) => ShowRpc(toId, clueId);
         public void Ask(string topicId) => AskRpc(topicId);
-        public void RequestTalk(string toId) => RequestTalkRpc(toId);
-        public void RespondTalk(int talkId, bool accept) => RespondTalkRpc(talkId, accept);
-        public void EndTalk() => EndTalkRpc();
+        public void RequestRoom(string roomId) => RequestRoomRpc(roomId);
+        public void RespondRoom(int requestId, bool accept) => RespondRoomRpc(requestId, accept);
+        public void LeaveRoom() => LeaveRoomRpc();
         public void SetReady(bool ready) => ReadyRpc(ready);
         public void Vote(string targetId, int bonusAnswer) => VoteRpc(targetId, bonusAnswer);
     }

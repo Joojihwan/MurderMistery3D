@@ -9,8 +9,9 @@ using UnityEngine;
 namespace MurderMystery.Network
 {
     /// <summary>
-    /// Vivox voice (docs/design/tech_decisions.md §4): one room channel used in discussion-type phases,
-    /// and a two-person channel per secret talk. Outside those, the mic transmits nowhere.
+    /// Vivox voice (docs/design/tech_decisions.md §4): one channel for everyone used in discussion-type phases,
+    /// and one channel per private room (small rooms, council room) heard only by those inside. Outside
+    /// those, the mic transmits nowhere.
     /// Voice is optional — if Vivox is not enabled for the project the game continues text-only.
     /// </summary>
     public static class VoiceService
@@ -23,7 +24,7 @@ namespace MurderMystery.Network
         private static string transmittingTo;
         private static bool busy;
         private static string room;
-        private static (GamePhase phase, int talkId)? wanted;
+        private static (GamePhase phase, string roomId)? wanted;
 
         public static async Task StartAsync(string roomKey)
         {
@@ -63,9 +64,9 @@ namespace MurderMystery.Network
         /// Called whenever the local snapshot changes. Requests that arrive while Vivox is still starting or
         /// switching are kept (latest wins) and applied once it is free, so no phase/talk change is lost.
         /// </summary>
-        public static void Apply(GamePhase phase, int talkId)
+        public static void Apply(GamePhase phase, string roomId)
         {
-            wanted = (phase, talkId);
+            wanted = (phase, roomId);
             _ = PumpAsync();
         }
 
@@ -77,9 +78,9 @@ namespace MurderMystery.Network
             {
                 while (wanted.HasValue)
                 {
-                    var (phase, talkId) = wanted.Value;
+                    var (phase, roomId) = wanted.Value;
                     wanted = null;
-                    await SwitchAsync(phase, talkId);
+                    await SwitchAsync(phase, roomId);
                 }
             }
             catch (Exception e)
@@ -92,9 +93,9 @@ namespace MurderMystery.Network
             }
         }
 
-        private static async Task SwitchAsync(GamePhase phase, int talkId)
+        private static async Task SwitchAsync(GamePhase phase, string roomId)
         {
-            var wantTalk = talkId > 0 ? Channel($"mm{room}t{talkId}") : null;
+            var wantTalk = !string.IsNullOrEmpty(roomId) ? Channel($"mm{room}r{roomId}") : null;
             if (talkChannel != null && talkChannel != wantTalk)
             {
                 await VivoxService.Instance.LeaveChannelAsync(talkChannel);
@@ -108,7 +109,7 @@ namespace MurderMystery.Network
 
             var target = talkChannel ?? (IsOpenFloor(phase) ? roomChannel : null);
             await TransmitAsync(target);
-            SetStatus(target == null ? "음성: 말할 수 없는 단계" : target == talkChannel ? "음성: 밀담" : "음성: 전체");
+            SetStatus(target == null ? "음성: 말할 수 없는 곳" : target == talkChannel ? "음성: 방 안" : "음성: 전체");
         }
 
         private static void SetStatus(string status)

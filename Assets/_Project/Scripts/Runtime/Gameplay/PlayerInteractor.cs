@@ -8,7 +8,8 @@ namespace MurderMystery.Gameplay
 {
     /// <summary>
     /// Finds the investigation spot or NPC the player is looking at and handles keys:
-    /// E investigate / talk, R retrieve own hidden item, Tab notebook.
+    /// E investigate / talk / use a door, R retrieve own hidden item, Tab notebook, Y / N answer someone asking
+    /// to enter the room the player is in.
     /// Offline only (debug): N next phase, 1–5 switch character.
     /// </summary>
     public class PlayerInteractor : MonoBehaviour
@@ -23,6 +24,8 @@ namespace MurderMystery.Gameplay
         public InvestigationSpot Focused { get; private set; }
         /// <summary>A shut gate or blocked passage in front of the player.</summary>
         public LockedDoor FocusedDoor { get; private set; }
+        /// <summary>The door of a private room in front of the player (or the one they are in).</summary>
+        public TalkRoomPlace FocusedRoom { get; private set; }
         public bool NpcFocused { get; private set; }
         public bool NotebookOpen { get; private set; }
         public bool NpcMenuOpen { get; set; }
@@ -64,6 +67,14 @@ namespace MurderMystery.Gameplay
 
             if (NpcMenuOpen) return;
 
+            // Someone at the door of the room I am in: Y lets them in, N refuses (they never learn who).
+            var requests = client.Snapshot?.roomRequests;
+            if (requests != null && requests.Length > 0)
+            {
+                if (keyboard.yKey.wasPressedThisFrame) client.RespondRoom(requests[0].id, true);
+                else if (keyboard.nKey.wasPressedThisFrame && !client.IsOffline) client.RespondRoom(requests[0].id, false);
+            }
+
             if (keyboard.eKey.wasPressedThisFrame)
             {
                 if (NpcFocused)
@@ -77,6 +88,12 @@ namespace MurderMystery.Gameplay
                     var lockData = client.Data.LockOfSpot(Focused.SpotId);
                     if (lockData != null && !IsUnlocked(client, lockData.id)) client.TryUnlock(lockData.id);
                     else client.Investigate(Focused.SpotId);
+                }
+                else if (FocusedRoom != null)
+                {
+                    var snap = client.Snapshot;
+                    if (snap != null && (snap.room == FocusedRoom.RoomId || snap.pendingRoom == FocusedRoom.RoomId)) client.LeaveRoom();
+                    else client.RequestRoom(FocusedRoom.RoomId);
                 }
                 else if (FocusedDoor != null)
                 {
@@ -95,9 +112,9 @@ namespace MurderMystery.Gameplay
             var origin = view.transform.position;
             var forward = view.transform.forward;
 
-            FocusedDoor = Physics.Raycast(origin, forward, out var hit, maxDistance, ~0, QueryTriggerInteraction.Ignore)
-                ? LockedDoor.Find(hit.collider)
-                : null;
+            var looking = Physics.Raycast(origin, forward, out var hit, maxDistance, ~0, QueryTriggerInteraction.Ignore);
+            FocusedDoor = looking ? LockedDoor.Find(hit.collider) : null;
+            FocusedRoom = looking ? TalkRoomPlace.Find(hit.collider) : null;
 
             NpcFocused = npc != null && Vector3.Distance(origin, npc.position) < npcDistance &&
                          Vector3.Angle(forward, npc.position + Vector3.up * 1.2f - origin) < 25f;

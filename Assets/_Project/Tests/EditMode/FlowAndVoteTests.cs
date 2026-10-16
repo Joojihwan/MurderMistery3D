@@ -40,36 +40,136 @@ namespace MurderMystery.Tests
             Assert.AreEqual(GamePhase.Ending, g.Session.Phase);
         }
 
-        [Test]
-        public void SecretTalk_RequestAcceptExpire_AndLimit()
+        private static LocalSessionGateway InInvestigation(GameData d)
         {
-            var g = new LocalSessionGateway(data);
+            var g = new LocalSessionGateway(d);
             g.JumpTo(GamePhase.Investigation1);
+            return g;
+        }
 
-            var req = g.RequestTalk("jeong", "buni");
-            Assert.IsTrue(req.Success, req.Error);
-            var id = req.TalkId;
-            Assert.IsTrue(g.RespondTalk("buni", id, true).Success);
-            Assert.IsTrue(g.Talks.InTalkTogether("jeong", "buni"));
-            Assert.IsFalse(g.RequestTalk("jeong", "heo").Success, "already in a talk");
+        private static int RequestId(LocalSessionGateway g, string requester) => g.Rooms.PendingOf(requester).Id;
 
-            g.Tick(181f);
-            Assert.IsFalse(g.Talks.InTalkTogether("jeong", "buni"), "3 minute limit");
+        [Test]
+        public void Room_EmptyIsFree_OthersNeedEveryInsideToAgree()
+        {
+            var g = InInvestigation(data);
+            Assert.IsTrue(g.RequestRoom("jeong", "small1").Success);
+            Assert.AreEqual("small1", g.Rooms.RoomOf("jeong").Id, "empty room: walk straight in");
 
-            var second = g.RequestTalk("jeong", "heo").TalkId;
-            g.RespondTalk("heo", second, true);
-            g.Talks.End(second);
-            Assert.IsFalse(g.RequestTalk("jeong", "byeon").Success, "two initiated talks per round");
-            Assert.IsTrue(g.RequestTalk("byeon", "jeong").Success, "receiving is unlimited");
+            Assert.IsTrue(g.RequestRoom("buni", "small1").Success);
+            Assert.IsNull(g.Rooms.RoomOf("buni"), "waits for jeong");
+            Assert.IsTrue(g.RespondRoom("jeong", RequestId(g, "buni"), true).Success);
+            Assert.AreEqual("small1", g.Rooms.RoomOf("buni").Id);
+
+            // Two inside: both must agree; a later arrival is not asked about an earlier request.
+            g.RequestRoom("heo", "small1");
+            var heo = RequestId(g, "heo");
+            g.RespondRoom("jeong", heo, true);
+            Assert.IsNull(g.Rooms.RoomOf("heo"), "buni has not agreed yet");
+            g.RespondRoom("buni", heo, true);
+            Assert.AreEqual("small1", g.Rooms.RoomOf("heo").Id);
+
+            Assert.IsFalse(g.RequestRoom("byeon", "small1").Success, "three is the limit");
         }
 
         [Test]
-        public void ShowAndGive_RequireSecretTalkOrProximity()
+        public void Room_SimultaneousRequests_EachNeedsOnlyTheOriginalOccupants()
         {
-            var g = new LocalSessionGateway(data);
-            g.JumpTo(GamePhase.Investigation1);
+            var g = InInvestigation(data);
+            g.RequestRoom("jeong", "small1");
+            g.RequestRoom("buni", "small1");
+            g.RequestRoom("heo", "small1");
+            g.RespondRoom("jeong", RequestId(g, "buni"), true);
+            Assert.AreEqual("small1", g.Rooms.RoomOf("buni").Id);
+            g.RespondRoom("jeong", RequestId(g, "heo"), true);
+            Assert.AreEqual("small1", g.Rooms.RoomOf("heo").Id, "buni came in later and is not asked");
+        }
+
+        [Test]
+        public void Room_FullRoomRefusesWaitingRequest()
+        {
+            var g = InInvestigation(data);
+            g.RequestRoom("jeong", "small1");
+            g.RequestRoom("buni", "small1");
+            g.RequestRoom("heo", "small1");
+            g.RequestRoom("byeon", "small1");
+            g.RespondRoom("jeong", RequestId(g, "buni"), true);
+            g.RespondRoom("jeong", RequestId(g, "heo"), true);
+            g.RespondRoom("jeong", RequestId(g, "byeon"), true);
+            Assert.IsNull(g.Rooms.RoomOf("byeon"), "full: refused automatically");
+            Assert.IsNull(g.Rooms.PendingOf("byeon"));
+        }
+
+        [Test]
+        public void Room_ThreeRefusalsShutOut_UntilSomeoneLeaves()
+        {
+            var g = InInvestigation(data);
+            g.RequestRoom("jeong", "small1");
+            for (var i = 0; i < 3; i++)
+            {
+                Assert.IsTrue(g.RequestRoom("byeon", "small1").Success, $"attempt {i + 1}");
+                g.RespondRoom("jeong", RequestId(g, "byeon"), false);
+            }
+            Assert.IsFalse(g.RequestRoom("byeon", "small1").Success, "shut out after three refusals");
+            Assert.IsTrue(g.RequestRoom("byeon", "small2").Success, "other room unaffected");
+            g.LeaveRoom("byeon");
+
+            g.RequestRoom("buni", "small1");
+            g.RespondRoom("jeong", RequestId(g, "buni"), true);
+            g.LeaveRoom("buni");                       // someone came out
+            Assert.IsTrue(g.RequestRoom("byeon", "small1").Success, "may ask again once someone leaves");
+            g.LeaveRoom("byeon");                      // withdraws the request
+            g.LeaveRoom("jeong");
+            Assert.IsTrue(g.RequestRoom("byeon", "small1").Success);
+            Assert.AreEqual("small1", g.Rooms.RoomOf("byeon").Id, "empty again: anyone walks in");
+        }
+
+        [Test]
+        public void Room_RequesterNeverLearnsWhoRefused()
+        {
+            var g = InInvestigation(data);
+            var notices = new List<(string who, string text)>();
+            g.Notice += (who, text) => notices.Add((who, text));
+            g.RequestRoom("jeong", "small1");
+            g.RequestRoom("buni", "small1");
+            g.RespondRoom("jeong", RequestId(g, "buni"), true);
+            g.RequestRoom("heo", "small1");
+            g.RespondRoom("buni", RequestId(g, "heo"), false);
+            var told = notices.Where(n => n.who == "heo").Select(n => n.text).ToList();
+            Assert.IsNotEmpty(told);
+            Assert.IsFalse(told.Any(t => t.Contains("분이") || t.Contains("정씨")), string.Join(" / ", told));
+        }
+
+        [Test]
+        public void Council_GathersEveryone_NoLeaving_ThenEmpties()
+        {
+            var g = InInvestigation(data);
+            g.RequestRoom("jeong", "small1");
+            g.Flow.Advance();                          // council
+            Assert.AreEqual(GamePhase.Council1, g.Session.Phase);
+            g.Tick(0f);
+            Assert.AreEqual(5, g.Rooms.Room("council").Members.Count);
+            Assert.IsNull(g.Rooms.Room("small1").Members.FirstOrDefault());
+            Assert.IsFalse(g.LeaveRoom("jeong").Success, "cannot leave the council room");
+            Assert.IsFalse(g.RequestRoom("buni", "small2").Success);
+
+            g.Flow.Advance();                          // discussion
+            g.Tick(0f);
+            Assert.AreEqual(0, g.Rooms.Room("council").Members.Count);
+        }
+
+        [Test]
+        public void ShowAndGive_RequireSameRoomOrProximity()
+        {
+            var g = InInvestigation(data);
             Assert.IsFalse(g.Show("buni", "jeong", "H2").Success);
             Assert.IsFalse(g.Give("buni", "jeong", "H2").Success);
+
+            g.RequestRoom("buni", "small2");
+            g.RequestRoom("jeong", "small2");
+            g.RespondRoom("buni", RequestId(g, "jeong"), true);
+            Assert.IsTrue(g.Show("buni", "jeong", "H2").Success);
+            g.LeaveRoom("jeong");
 
             g.AreNearby = (a, b) => true;
             Assert.IsTrue(g.Give("buni", "jeong", "H2").Success);

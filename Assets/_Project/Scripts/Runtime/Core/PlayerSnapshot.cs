@@ -21,10 +21,27 @@ namespace MurderMystery.Core
     }
 
     [Serializable]
-    public class TalkRequestView
+    public class RoomView
+    {
+        public string id;
+        public string name;
+        public int capacity;
+        public string[] members = Array.Empty<string>();   // public: everyone sees who is talking inside
+    }
+
+    [Serializable]
+    public class RoomRequestView
     {
         public int id;
+        public string roomId;
         public string from;
+    }
+
+    [Serializable]
+    public class NoticeView
+    {
+        public int seq;
+        public string text;
     }
 
     [Serializable]
@@ -56,7 +73,6 @@ namespace MurderMystery.Core
         public bool timed;
         public int investigationPoints;
         public int questionsLeft;
-        public int secretTalksLeft;
         public bool ready;
         public CardView[] inventory = Array.Empty<CardView>();
         public CardView[] publicBoard = Array.Empty<CardView>();
@@ -67,11 +83,14 @@ namespace MurderMystery.Core
         /// <summary>Locks that are open (shared by everyone).</summary>
         public string[] unlockedLocks = Array.Empty<string>();
 
-        // Secret talks (only the ones involving this player).
-        public TalkRequestView[] incomingTalks = Array.Empty<TalkRequestView>();
-        public string talkPartner;
-        public int talkId;
-        public float talkRemainingSec;
+        // Private rooms: all rooms with their members (public), this player's room and requests.
+        public RoomView[] rooms = Array.Empty<RoomView>();
+        public string room;                 // the room this player is in, or empty
+        public string pendingRoom;          // the room this player is waiting to enter
+        public RoomRequestView[] roomRequests = Array.Empty<RoomRequestView>();   // waiting for this player's answer
+        public string[] shutOutOf = Array.Empty<string>();
+        // Recent messages for this player only (increasing seq), e.g. "들어가지 못했습니다".
+        public NoticeView[] notices = Array.Empty<NoticeView>();
 
         // Vote and ending (public once reached).
         public string voteStage;
@@ -110,7 +129,6 @@ namespace MurderMystery.Core
                 ready = flow != null && flow.Ready.Contains(playerId),
                 investigationPoints = p.InvestigationPoints,
                 questionsLeft = p.QuestionsLeft,
-                secretTalksLeft = p.SecretTalksLeft,
                 inventory = p.Inventory.OrderBy(i => i).Select(Card).ToArray(),
                 publicBoard = s.PublicBoard.OrderBy(i => i).Select(Card).ToArray(),
                 knownClueIds = p.KnownFacts.Where(s.Data.ClueById.ContainsKey).OrderBy(i => i).ToArray(),
@@ -124,19 +142,20 @@ namespace MurderMystery.Core
             };
         }
 
-        /// <summary>Full view including talks, vote and ending state held by the gateway.</summary>
+        /// <summary>Full view including rooms, vote and ending state held by the gateway.</summary>
         public static PlayerSnapshot Build(LocalSessionGateway g, string playerId, SeatView[] seats = null)
         {
             var snap = Build(g.Session, g.Flow, playerId);
-            snap.incomingTalks = g.Talks.Pending.Where(t => t.Partner == playerId)
-                .Select(t => new TalkRequestView { id = t.Id, from = t.Initiator }).ToArray();
-            var active = g.Talks.ActiveFor(playerId);
-            if (active != null)
+            snap.rooms = g.Rooms.Rooms.Select(r => new RoomView
             {
-                snap.talkId = active.Id;
-                snap.talkPartner = active.Initiator == playerId ? active.Partner : active.Initiator;
-                snap.talkRemainingSec = active.Remaining;
-            }
+                id = r.Id, name = r.Name, capacity = r.Capacity, members = r.Members.ToArray()
+            }).ToArray();
+            snap.room = g.Rooms.RoomOf(playerId)?.Id ?? string.Empty;
+            snap.pendingRoom = g.Rooms.PendingOf(playerId)?.RoomId ?? string.Empty;
+            snap.roomRequests = g.Rooms.AwaitingAnswerFrom(playerId)
+                .Select(q => new RoomRequestView { id = q.Id, roomId = q.RoomId, from = q.Requester }).ToArray();
+            snap.shutOutOf = g.Rooms.Rooms.Where(r => r.ShutOut.Contains(playerId)).Select(r => r.Id).ToArray();
+            snap.notices = g.NoticesFor(playerId).ToArray();
 
             if (g.Vote != null)
             {

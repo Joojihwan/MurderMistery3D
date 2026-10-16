@@ -44,8 +44,9 @@ namespace MurderMystery.Tests
             Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints);
             s.Investigate("heo", "04");
             Assert.AreEqual(GameRules.InvestigationPointsPerRound - 1, s.Players["heo"].InvestigationPoints);
-            s.AdvancePhase(); // discussion
+            s.AdvancePhase(); // council
             Assert.AreEqual(0, s.Players["heo"].InvestigationPoints);
+            s.AdvancePhase(); // discussion
             s.AdvancePhase(); // investigation 2
             Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints);
         }

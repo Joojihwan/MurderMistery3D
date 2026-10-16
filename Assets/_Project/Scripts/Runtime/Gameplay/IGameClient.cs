@@ -29,9 +29,12 @@ namespace MurderMystery.Gameplay
         void Give(string toId, string itemId);
         void Show(string toId, string clueId);
         void Ask(string topicId);
-        void RequestTalk(string toId);
-        void RespondTalk(int talkId, bool accept);
-        void EndTalk();
+        /// <summary>Ask to enter a private room (walks straight in when it is empty).</summary>
+        void RequestRoom(string roomId);
+        /// <summary>Answer someone asking to enter the room this player is in.</summary>
+        void RespondRoom(int requestId, bool accept);
+        /// <summary>Leave the room (or withdraw a waiting request).</summary>
+        void LeaveRoom();
         void SetReady(bool ready);
         void Vote(string targetId, int bonusAnswer);
     }

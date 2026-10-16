@@ -10,7 +10,7 @@ namespace MurderMystery.Network
     /// <summary>
     /// Test hook for multi-instance runs. With command-line arguments a built player joins a LAN host,
     /// (or an online session by code) claims a seat and optionally investigates a spot, logging what it receives:
-    ///   -mmJoin 127.0.0.1 -mmSeat buni [-mmName 분이] [-mmInvestigate 02] [-mmAcceptTalk] [-mmVote heo] [-mmWalk 30] [-mmQuitAfter 60]
+    ///   -mmJoin 127.0.0.1 -mmSeat buni [-mmName 분이] [-mmInvestigate 02] [-mmRoom small1] [-mmAcceptRoom] [-mmVote heo] [-mmWalk 30] [-mmQuitAfter 60]
     ///   -mmCode ABC123 ... joins an online session (Sessions + Relay) instead of -mmJoin.
     ///   -mmWatch logs other players' bodies (position, sitting, ducking) whenever their pose changes.
     /// Does nothing when neither -mmJoin nor -mmCode is given.
@@ -24,7 +24,8 @@ namespace MurderMystery.Network
         private string spot;
         private float quitAfter;
         private float walkFor;
-        private bool acceptTalk;
+        private bool acceptRoom;
+        private string roomToEnter;
         private string lastLine;
         private string voteFor;
 
@@ -50,7 +51,8 @@ namespace MurderMystery.Network
             playerName = Arg("-mmName") ?? seat;
             spot = Arg("-mmInvestigate");
             quitAfter = float.TryParse(Arg("-mmQuitAfter"), out var q) ? q : 0f;
-            acceptTalk = Array.IndexOf(Environment.GetCommandLineArgs(), "-mmAcceptTalk") >= 0;
+            acceptRoom = Array.IndexOf(Environment.GetCommandLineArgs(), "-mmAcceptRoom") >= 0;
+            roomToEnter = Arg("-mmRoom");
             voteFor = Arg("-mmVote");
             walkFor = float.TryParse(Arg("-mmWalk"), out var w) ? w : 0f;
         }
@@ -114,13 +116,18 @@ namespace MurderMystery.Network
         private void OnChanged(NetGame net)
         {
             var snap = net.Snapshot;
-            var line = $"voice={VoiceService.Status} phase={snap?.phase} talk={snap?.talkPartner}#{snap?.talkId} vote={snap?.voteStage} end={snap?.endingKey} log={net.Log.LastOrDefault()}";
+            var line = $"voice={VoiceService.Status} phase={snap?.phase} room={snap?.room} pending={snap?.pendingRoom} vote={snap?.voteStage} end={snap?.endingKey} log={net.Log.LastOrDefault()}";
             if (line != lastLine) Debug.Log($"[AutoPlay] {lastLine = line}");
-            if (acceptTalk && snap != null && snap.incomingTalks.Length > 0 && string.IsNullOrEmpty(snap.talkPartner))
+            if (acceptRoom && snap != null && snap.roomRequests.Length > 0)
             {
-                Debug.Log($"[AutoPlay] accepting talk #{snap.incomingTalks[0].id} from {snap.incomingTalks[0].from}");
-                net.RespondTalk(snap.incomingTalks[0].id, true);
-                acceptTalk = false;
+                Debug.Log($"[AutoPlay] letting {snap.roomRequests[0].from} into {snap.roomRequests[0].roomId}");
+                net.RespondRoom(snap.roomRequests[0].id, true);
+            }
+            if (!string.IsNullOrEmpty(roomToEnter) && snap != null && snap.phase.StartsWith("Investigation") && string.IsNullOrEmpty(snap.room))
+            {
+                Debug.Log($"[AutoPlay] entering {roomToEnter}");
+                net.RequestRoom(roomToEnter);
+                roomToEnter = null;
             }
             if (!string.IsNullOrEmpty(voteFor) && snap != null && !string.IsNullOrEmpty(snap.voteStage) && !snap.hasVoted &&
                 snap.voteCandidates.Contains(voteFor))

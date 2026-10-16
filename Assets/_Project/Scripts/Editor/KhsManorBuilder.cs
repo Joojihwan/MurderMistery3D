@@ -136,6 +136,8 @@ namespace MurderMystery.EditorTools
             Debug.Log($"[KhsManorBuilder] {BuildDoorSteps(Group(root, "DoorSteps"), house)} stepping stones in front of high doors");
             BuildBlockers(Group(root, "Blockers"));
             BuildLockedGates(Group(root, "Locks"), house);
+            Physics.SyncTransforms();
+            BuildTalkRooms(Group(root, "TalkRooms"), house);
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
             BuildSpots(Group(root, "InvestigationSpots"));
@@ -970,6 +972,115 @@ namespace MurderMystery.EditorTools
                 go.AddComponent<BoxCollider>().size = new Vector3(b.z, 3f, b.w);
                 // Looking at the invisible wall tells the player why they cannot go on.
                 go.AddComponent<LockedDoor>().Configure(lockId, null);
+            }
+        }
+
+
+        // ---------------------------------------------------------------- private rooms (밀담 방)
+
+        // The 사당 building (its platform, walls, roof and four door leaves), copied for the private rooms.
+        private static readonly Rect ShrineArea = new Rect(9.6f, 18.5f, 5.4f, 5.9f);
+        // Template points (x, z in the 사당 as scanned): the room behind the doors and the porch outside them.
+        private static readonly Vector2 ShrineOrigin = new Vector2(12.25f, 21.35f);
+        private const float ShrineInteriorZ = 22.05f;
+        private const float ShrinePorchZ = 20.55f;
+
+        // The rooms, side by side in the empty back yard north of the 안채 (centre x, z; scale).
+        private static readonly (string id, Vector2 at, float scale, Vector2[] seats)[] TalkRooms =
+        {
+            ("small2", new Vector2(-25.0f, 33.0f), 1.0f, new[] { new Vector2(-0.85f, 0f), new Vector2(0f, 0.35f), new Vector2(0.85f, 0f) }),
+            ("small1", new Vector2(-18.0f, 33.0f), 1.0f, new[] { new Vector2(-0.85f, 0f), new Vector2(0f, 0.35f), new Vector2(0.85f, 0f) }),
+            ("council", new Vector2(-9.5f, 33.5f), 1.5f, new[] { new Vector2(-0.95f, -0.15f), new Vector2(-0.5f, 0.35f), new Vector2(0.5f, 0.35f),
+                                                                  new Vector2(0.95f, -0.15f), new Vector2(0f, -0.4f) }),
+        };
+
+        /// <summary>
+        /// Builds the private rooms (RoomManager): copies of the 사당 building, the council room half again as
+        /// large. Their doors are solid (no ProximityDoor): people go in and out only by the room rules and are
+        /// moved by RoomPresence to a seat inside or to the porch. The scan leaves the room behind the doors
+        /// without boards, so the porch floor is copied in there too.
+        /// </summary>
+        private static void BuildTalkRooms(Transform p, Transform house)
+        {
+            var parts = new List<Transform>();
+            Transform porch = null;
+            foreach (Transform piece in house)
+            {
+                var renderers = piece.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0) continue;
+                var b = renderers[0].bounds;
+                foreach (var r in renderers) b.Encapsulate(r.bounds);
+                if (!ShrineArea.Contains(new Vector2(b.center.x, b.center.z)) || Mathf.Max(b.size.x, b.size.z) > 7f) continue;
+                if (piece.name.StartsWith("SM_StoneWall") || piece.name.StartsWith("SM_Stonewall")) continue;
+                parts.Add(piece);
+                if (piece.name.StartsWith("SM_Floor") && b.center.z < ShrineOrigin.y) porch = piece;
+            }
+            if (parts.Count == 0) return;
+            var baseY = parts.Min(t => t.GetComponentsInChildren<Renderer>().Min(r => r.bounds.min.y));
+            var origin = new Vector3(ShrineOrigin.x, baseY, ShrineOrigin.y);
+
+            foreach (var (id, at, scale, seatOffsets) in TalkRooms)
+            {
+                var holder = new GameObject($"Talk room ({id})").transform;
+                holder.SetParent(p, false);
+                holder.SetPositionAndRotation(origin, Quaternion.identity);
+                foreach (var part in parts)
+                {
+                    var copy = Object.Instantiate(part.gameObject, part.position, part.rotation);
+                    copy.name = part.name;
+                    copy.transform.SetParent(holder, true);
+                }
+                if (porch != null)
+                {
+                    var inside = Object.Instantiate(porch.gameObject, porch.position + new Vector3(0f, 0f, 1.42f), porch.rotation);
+                    inside.name = "Room floor";
+                    inside.transform.SetParent(holder, true);
+                }
+
+                // Solid doors: no opening when someone comes near.
+                var doors = new List<Collider>();
+                foreach (var door in holder.GetComponentsInChildren<ProximityDoor>(true).ToList())
+                {
+                    foreach (var mf in door.GetComponentsInChildren<MeshFilter>())
+                    {
+                        if (mf.sharedMesh == null) continue;
+                        if (!mf.TryGetComponent<MeshCollider>(out var mc)) mc = mf.gameObject.AddComponent<MeshCollider>();
+                        mc.sharedMesh = mf.sharedMesh;
+                        doors.Add(mc);
+                    }
+                    Object.DestroyImmediate(door);
+                }
+
+                var ground = FloorY(at.x, at.y);
+                holder.localScale = Vector3.one * scale;
+                holder.position = new Vector3(at.x, ground - 0.03f, at.y);
+                Physics.SyncTransforms();
+
+                Vector3 Local(float x, float z) => holder.position + new Vector3(x - ShrineOrigin.x, 0f, z - ShrineOrigin.y) * scale;
+                float FloorAt(Vector3 w) => Physics.RaycastAll(new Vector3(w.x, holder.position.y + 1.6f * scale, w.z), Vector3.down, 3f * scale,
+                        ~0, QueryTriggerInteraction.Ignore).Where(h => h.normal.y > 0.7f).OrderBy(h => h.distance)
+                    .Select(h => h.point.y).DefaultIfEmpty(ground).First();
+
+                var seats = new List<Transform>();
+                var middle = Local(ShrineOrigin.x, ShrineInteriorZ);
+                for (var i = 0; i < seatOffsets.Length; i++)
+                {
+                    var w = Local(ShrineOrigin.x + seatOffsets[i].x, ShrineInteriorZ + seatOffsets[i].y);
+                    var seat = new GameObject($"Seat {i + 1}").transform;
+                    seat.SetParent(holder, true);
+                    // Turned towards the middle of the room, so people face each other.
+                    var look = middle - w;
+                    look.y = 0f;
+                    var facing = look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.Euler(0f, 180f, 0f);
+                    seat.SetPositionAndRotation(new Vector3(w.x, FloorAt(w) + 0.05f, w.z), facing);
+                    seats.Add(seat);
+                }
+                var porchPoint = Local(ShrineOrigin.x, ShrinePorchZ);
+                var outside = new GameObject("Outside").transform;
+                outside.SetParent(holder, true);
+                outside.SetPositionAndRotation(new Vector3(porchPoint.x, FloorAt(porchPoint) + 0.05f, porchPoint.z), Quaternion.Euler(0f, 180f, 0f));
+
+                holder.gameObject.AddComponent<TalkRoomPlace>().Configure(id, seats.ToArray(), outside, doors.ToArray());
             }
         }
 

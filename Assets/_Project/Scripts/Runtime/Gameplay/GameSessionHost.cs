@@ -36,6 +36,7 @@ namespace MurderMystery.Gameplay
             GameClient.Current = this;
             Gateway = new LocalSessionGateway(GameData.LoadFromResources(), seed);
             Gateway.Announcement += line => Push($"도 검률: {line}");
+            Gateway.Notice += (who, text) => { if (who == localCharacterId) Push(text); };
             // Prototype starts straight at the first investigation round.
             Gateway.JumpTo(GamePhase.Investigation1);
             Push($"[{Data.CharacterById[localCharacterId].name}] 으로 시작합니다. 1차 조사 단계.");
@@ -84,9 +85,9 @@ namespace MurderMystery.Gameplay
         public void Disclose(string clueId) => Report(Gateway.Disclose(LocalId, clueId));
         public void Give(string toId, string itemId) => Report(Gateway.Give(LocalId, toId, itemId));
         public void Show(string toId, string clueId) => Report(Gateway.Show(LocalId, toId, clueId));
-        public void RequestTalk(string toId) => Report(Gateway.RequestTalk(LocalId, toId));
-        public void RespondTalk(int talkId, bool accept) => Report(Gateway.RespondTalk(LocalId, talkId, accept));
-        public void EndTalk() => Report(Gateway.EndTalk(LocalId));
+        public void RequestRoom(string roomId) => Report(Gateway.RequestRoom(LocalId, roomId));
+        public void RespondRoom(int requestId, bool accept) => Report(Gateway.RespondRoom(LocalId, requestId, accept));
+        public void LeaveRoom() => Report(Gateway.LeaveRoom(LocalId));
         public void SetReady(bool ready) => Report(Gateway.SetReady(LocalId, ready));
 
         public void Ask(string topicId)
@@ -145,8 +146,10 @@ namespace MurderMystery.Gameplay
             GamePhase.Introductions => "자기소개",
             GamePhase.AutopsyBriefing => "첫 검시 발표",
             GamePhase.Investigation1 => "1차 조사 (아침 7시)",
+            GamePhase.Council1 => "밀담 시간 (큰 방)",
             GamePhase.Discussion1 => "1차 토론",
             GamePhase.Investigation2 => "2차 조사 (아침 9시)",
+            GamePhase.Council2 => "밀담 시간 (큰 방)",
             GamePhase.Discussion2 => "2차 토론",
             GamePhase.FinalStatements => "최종 변론",
             GamePhase.Vote => "투표",

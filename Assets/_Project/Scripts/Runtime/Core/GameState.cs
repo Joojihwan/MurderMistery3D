@@ -9,8 +9,10 @@ namespace MurderMystery.Core
         Introductions,
         AutopsyBriefing,
         Investigation1,
+        Council1,
         Discussion1,
         Investigation2,
+        Council2,
         Discussion2,
         FinalStatements,
         Vote,
@@ -23,7 +25,6 @@ namespace MurderMystery.Core
         public const int SpotCost = 1;
         public const int RetrieveCost = 2;
         public const int QuestionsPerRound = 2;
-        public const int InitiatedSecretTalksPerRound = 2;
     }
 
     public class NotebookEntry
@@ -38,7 +39,6 @@ namespace MurderMystery.Core
         public bool CanRead;
         public int InvestigationPoints;
         public int QuestionsLeft;
-        public int SecretTalksLeft;
         public readonly HashSet<string> Inventory = new HashSet<string>();
         public readonly HashSet<string> KnownFacts = new HashSet<string>();
         public readonly List<NotebookEntry> Notebook = new List<NotebookEntry>();
