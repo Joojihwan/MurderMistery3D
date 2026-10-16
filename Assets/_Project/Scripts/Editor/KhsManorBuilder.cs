@@ -135,6 +135,7 @@ namespace MurderMystery.EditorTools
             Physics.SyncTransforms();
             Debug.Log($"[KhsManorBuilder] {BuildDoorSteps(Group(root, "DoorSteps"), house)} stepping stones in front of high doors");
             BuildBlockers(Group(root, "Blockers"));
+            BuildBarricades(Group(root, "Barricades"));
             BuildLockedGates(Group(root, "Locks"), house);
             Physics.SyncTransforms();
             BuildTalkRooms(Group(root, "TalkRooms"), house);
@@ -212,6 +213,16 @@ namespace MurderMystery.EditorTools
             (new Vector2(22.6f, 30.1f), "barn"),       // north-east gates to the barn yard
             (new Vector2(23.4f, 34.0f), "barn"),
             (new Vector2(-2.05f, -17.4f), "outer"),    // 중문 to the outer yard (also behind a blocker)
+            (new Vector2(-15.05f, -17.65f), "dogeomnyul"),
+            (new Vector2(18.45f, 27.6f), "eastgate"),      // east side gate by the 사당, out to the barn yard
+            // Store rooms with padlocked doors (found unreachable by VerifyPockets): the 행랑채 east arm and the
+            // 안채 bay between the 곳간 and the 중문간.
+            (new Vector2(14.5f, -24.1f), "storeroom"),
+            (new Vector2(17.1f, -24.6f), "storeroom"),
+            (new Vector2(16.6f, -27.1f), "storeroom"),
+            (new Vector2(14.0f, -26.5f), "storeroom"),
+            (new Vector2(-9.5f, -0.2f), "storeroom"),
+            (new Vector2(-8.1f, -1.6f), "storeroom"), // west doors of the 행랑채 room 도 검률 sleeps in
         };
 
         private static bool IsLockedGate(Vector3 leafCenter) => LockedGateAt(leafCenter) != null;
@@ -787,6 +798,10 @@ namespace MurderMystery.EditorTools
         private const float DoorStepMin = 0.25f;
         // Higher than two steps: not meant to be entered from that side (a window over a drop).
         private const float DoorStepMax = 1.2f;
+        // Doorways with a high sill on both sides (a store room's raised threshold) that are the only way into
+        // their room: they get steps although they look like windows (found by VerifyPockets).
+        private static readonly Vector2[] ForcedDoorways = new Vector2[0];
+
         // A sill this far above the floor on its higher side marks a window, not a door.
         private const float WindowSill = 0.25f;
 
@@ -866,7 +881,8 @@ namespace MurderMystery.EditorTools
                 // nobody steps through it, so it gets no stone (and looks it).
                 var sideFloors = new[] { 1f, -1f }.Select(sg => WalkableBelow(b.center + through * sg * 0.8f, sill + 0.3f))
                     .Where(f => f != null).Select(f => f.Value).ToList();
-                if (sideFloors.Count == 0 || sill - sideFloors.Max() > WindowSill) continue;
+                var forced = ForcedDoorways.Any(d => Vector2.Distance(d, new Vector2(b.center.x, b.center.z)) < 0.9f);
+                if (!forced && (sideFloors.Count == 0 || sill - sideFloors.Max() > WindowSill)) continue;
 
                 foreach (var sign in new[] { 1f, -1f })
                 {
@@ -961,6 +977,58 @@ namespace MurderMystery.EditorTools
             go.transform.localPosition = new Vector3(0f, (y0 + y1) / 2f, (a + b) / 2f);
             go.transform.localScale = new Vector3(PartitionThickness + extra, y1 - y0, b - a);
             if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+        }
+
+        private static void BuildBarricades(Transform p)
+        {
+            var wood = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_Wood01A.mat");
+            foreach (var (a, b, height, planks, lockId) in Barricades)
+            {
+                var go = new GameObject($"Barricade ({lockId})");
+                go.transform.SetParent(p, false);
+                var mid = (a + b) / 2f;
+                var length = Vector2.Distance(a, b);
+                var along = new Vector3(b.x - a.x, 0f, b.y - a.y).normalized;
+                var ground = Mathf.Min(LowestFloorY(a.x, a.y), LowestFloorY(b.x, b.y), LowestFloorY(mid.x, mid.y));
+                go.transform.SetPositionAndRotation(new Vector3(mid.x, ground, mid.y), Quaternion.LookRotation(Vector3.Cross(Vector3.up, along)));
+
+                void Piece(Vector3 localCenter, Vector3 size)
+                {
+                    var c = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    Object.DestroyImmediate(c.GetComponent<Collider>());
+                    c.transform.SetParent(go.transform, false);
+                    c.transform.localPosition = localCenter;
+                    c.transform.localScale = size;
+                    if (wood != null) c.GetComponent<MeshRenderer>().sharedMaterial = wood;
+                }
+
+                if (planks)
+                {
+                    // A row of rough upright boards, slightly uneven, with two cross battens.
+                    var n = Mathf.CeilToInt(length / 0.2f);
+                    for (var i = 0; i < n; i++)
+                    {
+                        var h = height - 0.08f * ((i * 7) % 3);
+                        Piece(new Vector3(-length / 2f + (i + 0.5f) * length / n, h / 2f, 0f), new Vector3(length / n - 0.015f, h, 0.05f));
+                    }
+                    Piece(new Vector3(0f, 0.5f, -0.05f), new Vector3(length, 0.1f, 0.04f));
+                    Piece(new Vector3(0f, height - 0.4f, -0.05f), new Vector3(length, 0.1f, 0.04f));
+                }
+                else
+                {
+                    // Posts with three rails (울짱).
+                    var posts = Mathf.Max(2, Mathf.CeilToInt(length / 1.2f) + 1);
+                    for (var i = 0; i < posts; i++)
+                        Piece(new Vector3(-length / 2f + i * length / (posts - 1), height / 2f, 0f), new Vector3(0.1f, height, 0.1f));
+                    foreach (var y in new[] { 0.35f, 0.8f, 1.25f })
+                        if (y < height) Piece(new Vector3(0f, y, 0.06f), new Vector3(length, 0.07f, 0.04f));
+                }
+
+                var box = go.AddComponent<BoxCollider>();
+                box.center = new Vector3(0f, 1.5f, 0f);
+                box.size = new Vector3(length + 0.1f, 3f, 0.3f);
+                go.AddComponent<LockedDoor>().Configure(lockId, null);
+            }
         }
 
         private static void BuildBlockers(Transform p)
@@ -1395,10 +1463,15 @@ namespace MurderMystery.EditorTools
         /// </summary>
         public static string VerifyWalkability() => VerifyWalkability(0f, -4f, 42f);
 
-        public static string VerifyWalkability(float mapX, float mapZ, float mapHalf)
+        public static string VerifyWalkability(float mapX, float mapZ, float mapHalf) =>
+            WithLocksOpen(() => VerifyWalkabilityNow(mapX, mapZ, mapHalf));
+
+        /// <summary>
+        /// Runs a check with every lock that opens during the game open (keys, sealed quarters): what is behind
+        /// them must be reachable then, and nothing beyond them may leak out.
+        /// </summary>
+        private static string WithLocksOpen(System.Func<string> check)
         {
-            // Checked with every lock that has a key opened (the shrine): what is behind it must be reachable
-            // then, and nothing beyond it may leak out.
             var openable = new HashSet<string>(GameData.LoadFromResources().Clues.locks.Where(l => l.Openable || l.OpensLater).Select(l => l.id));
             var opened = Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None)
                 .Where(d => openable.Contains(d.LockId))
@@ -1408,7 +1481,7 @@ namespace MurderMystery.EditorTools
             foreach (var c in opened) c.enabled = false;
             try
             {
-                return VerifyWalkabilityNow(mapX, mapZ, mapHalf);
+                return check();
             }
             finally
             {
@@ -1416,6 +1489,70 @@ namespace MurderMystery.EditorTools
                 Physics.SyncTransforms();
             }
         }
+
+        /// <summary>
+        /// Walkable places inside the compound that nobody can reach (with every lock that opens open): a yard or
+        /// room closed off with no door. Places joined to the known closed areas (outside, 바깥마당, the barn
+        /// yard) are expected; anything else is listed as a pocket with its size and centre.
+        /// </summary>
+        public static string VerifyPockets() => WithLocksOpen(() =>
+        {
+            Physics.SyncTransforms();
+            var instance = BakeTempNavMesh();
+            try
+            {
+                var start = SampleOrNull(GameObject.Find("DiscussionArea").transform.position);
+                if (start == null) return "discussion area is not on the NavMesh";
+                var closed = Forbidden.Select(f => SampleOrNull(new Vector3(f.Item2.x, FloorY(f.Item2.x, f.Item2.y), f.Item2.y)))
+                    .Concat(LockedRooms.Select(SampleOrNull))
+                    .Where(v => v != null).Select(v => v.Value).ToList();
+                bool Joined(Vector3 a, Vector3 b)
+                {
+                    var path = new NavMeshPath();
+                    return NavMesh.CalculatePath(a, b, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete;
+                }
+
+                var stranded = new List<Vector3>();
+                for (var x = -44f; x <= 40f; x += 1f)
+                for (var z = -58f; z <= 44f; z += 1f)
+                {
+                    if (!NavMesh.SamplePosition(new Vector3(x, FloorY(x, z), z), out var hit, 0.45f, NavMesh.AllAreas)) continue;
+                    if (hit.position.y > 1.9f) continue;                          // roofs
+                    // Standing on a wall top or the rim of the well is not a place.
+                    var under = Physics.Raycast(hit.position + Vector3.up * 0.3f, Vector3.down, out var surf, 0.6f, ~0, QueryTriggerInteraction.Ignore)
+                        ? TopPiece(surf.collider.transform).name : "";
+                    if (under.Contains("tonewall") || under.Contains("toneWall") || under.StartsWith("SM_Wall") || under.StartsWith("SM_TopWall") ||
+                        under.StartsWith("SM_Stone01C_Splines") || under.StartsWith("SM_Roof") || under.StartsWith("SM_GateRoof") ||
+                        under.StartsWith("SM_Plant") || under.StartsWith("SM_Gamasot")) continue;
+                    if (Object.FindObjectsByType<TalkRoomPlace>(FindObjectsSortMode.None)
+                        .Any(r => Vector3.Distance(r.transform.position, hit.position) < 4f)) continue;   // entered by the room rules
+                    if (Joined(start.Value, hit.position)) continue;
+                    if (closed.Any(c => Joined(hit.position, c))) continue;
+                    stranded.Add(hit.position);
+                }
+
+                // Group the stranded points into pockets (points joined to each other).
+                var pockets = new List<List<Vector3>>();
+                foreach (var pt in stranded)
+                {
+                    var home = pockets.FirstOrDefault(pk => Joined(pk[0], pt));
+                    if (home != null) home.Add(pt);
+                    else pockets.Add(new List<Vector3> { pt });
+                }
+                var sb = new StringBuilder($"pockets: {pockets.Count(pk => pk.Count >= 2)} (≥ 2 m²), stranded points {stranded.Count}\n");
+                foreach (var pk in pockets.OrderByDescending(pk => pk.Count))
+                {
+                    var c = pk.Aggregate(Vector3.zero, (acc, v) => acc + v) / pk.Count;
+                    var on = Physics.Raycast(pk[0] + Vector3.up * 0.3f, Vector3.down, out var h0, 0.6f, ~0, QueryTriggerInteraction.Ignore) ? TopPiece(h0.collider.transform).name : "?";
+                    sb.AppendLine($"{pk.Count,3} m² around ({c.x:F1}, {c.y:F2}, {c.z:F1})  x {pk.Min(v => v.x):F0}..{pk.Max(v => v.x):F0}  z {pk.Min(v => v.z):F0}..{pk.Max(v => v.z):F0}  on {on}");
+                }
+                return sb.ToString();
+            }
+            finally
+            {
+                NavMesh.RemoveNavMeshData(instance);
+            }
+        });
 
         private static string VerifyWalkabilityNow(float mapX, float mapZ, float mapHalf)
         {
@@ -1467,6 +1604,13 @@ namespace MurderMystery.EditorTools
             }
         }
 
+        // Rooms behind doors that never open (store rooms): expected to be out of reach (VerifyPockets).
+        private static readonly Vector3[] LockedRooms =
+        {
+            new Vector3(15.5f, 0.9f, -27.0f),
+            new Vector3(-9.5f, 0.5f, -2.0f),
+        };
+
         // Points players must not reach (checked by VerifyWalkability).
         private static readonly (string, Vector2)[] Forbidden =
         {
@@ -1482,12 +1626,19 @@ namespace MurderMystery.EditorTools
         // (the 중문 and the gap beside the thatched shed), and a side gate with no door leaf.
         private static readonly (Vector4 box, string lockId)[] Blockers =
         {
-            (new Vector4(-2.1f, -17.2f, 0.6f, 2.4f), "outer"),
-            // Gap between the thatched shed and the 행랑채 west arm. Reaches up to the shed's south edge: the yard
-            // ground now ramps up to the stone footings there, so the old ledge no longer stops anyone.
-            (new Vector4(-13.5f, -16.2f, 6.2f, 3.2f), "outer"),
-            (new Vector4(-11.0f, -12.8f, 0.5f, 4.4f), "outer"),     // the shed's open east side, from the yard wall's end down
-            (new Vector4(18.8f, 27.9f, 1.4f, 2.6f), "eastgate"),    // east side gate by the shrine, out to the thatched barn
+            (new Vector4(-2.1f, -17.2f, 0.6f, 2.4f), "outer"),     // behind the shut 중문 leaves
+        };
+
+        // Visible barriers (from, to, height, solid planks or a rail fence; lock whose reason they show):
+        // where the scan leaves a gap that must stay closed. Players see why they cannot pass.
+        private static readonly (Vector2 a, Vector2 b, float height, bool planks, string lockId)[] Barricades =
+        {
+            // The gap between the thatched shed and the 행랑채 west arm, out to the 바깥마당 (the shed itself is open).
+            // The shed opens off the 안채 yard; its east and south sides, and the passage behind it between it and
+            // the 행랑채 west arm, belong to the 바깥마당.
+            (new Vector2(-11.0f, -10.55f), new Vector2(-11.0f, -14.75f), 1.5f, false, "outer"),
+            (new Vector2(-14.9f, -14.75f), new Vector2(-11.0f, -14.75f), 1.5f, false, "outer"),
+            (new Vector2(-14.9f, -14.75f), new Vector2(-14.9f, -16.6f), 1.5f, false, "outer"),
         };
 
         /// <summary>

@@ -884,6 +884,24 @@
       "lockedText": "손님 방 (별당)은 도 검률이 봉해 두었다. 문마다 봉인 종이가 붙어 있다. 아침 9시(2차 조사)에 봉인을 뗀다.",
       "openedText": "손님 방 (별당)의 봉인을 뗐다.",
       "opensAtPhase": "Investigation2"
+    },
+    {
+      "id": "dogeomnyul",
+      "title": "도 검률의 방",
+      "keyId": "",
+      "spotIds": [],
+      "lockedText": "열 수 없다. 도 검률이 묵는 방이라 함부로 들어갈 수 없다.",
+      "openedText": "",
+      "opensAtPhase": ""
+    },
+    {
+      "id": "storeroom",
+      "title": "광",
+      "keyId": "",
+      "spotIds": [],
+      "lockedText": "열 수 없다. 광 문에 큰 자물쇠가 채워져 있다. 잔치 물건을 넣어 둔 곳이라 한다.",
+      "openedText": "",
+      "opensAtPhase": ""
     }
   ]
 }
