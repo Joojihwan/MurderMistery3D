@@ -74,3 +74,14 @@
 | 음성 안 들림 | 인물 선택 화면의 음성 상태 표시("음성 연결됨"인지), Windows 마이크 권한, 조사 단계에는 밀담 중에만 들림 |
 | 인물이 선택 안 됨 | 이미 다른 사람이 고름 / 배역 선택이 끝난 뒤에는 원래 내 인물만 선택 가능 |
 | 방 만들기 실패 | 인터넷 연결, Unity 대시보드에서 Relay가 켜져 있는지 |
+
+## 6. GitHub 릴리스로 배포 (알파)
+
+- 배포 저장소: https://github.com/Joojihwan/MurderMistery3D-release (**비공개**, 설치 파일·테스터 안내만 있음. 코드·설정집 없음)
+- 테스터 추가: 저장소 Settings → Collaborators → **Add people** (GitHub 계정 필요, 권한은 Read면 충분)
+- 새 버전 올리는 순서
+  1. `ProjectSettings` 버전 올리기 (Player > Version, 예: 0.1.1-alpha)
+  2. 배포용 빌드: Development Build 끄고 `Builds/Release/JoseonMystery/JoseonMystery.exe` 로 빌드
+  3. `*_BurstDebugInformation_DoNotShip` 폴더를 빼고 `읽어주세요.txt`를 넣어 zip
+  4. `gh release create v<버전> <zip> --repo Joojihwan/MurderMistery3D-release --prerelease --title "<버전>" --notes-file <노트>`
+- 0.1.0-alpha (2026-10-16): https://github.com/Joojihwan/MurderMistery3D-release/releases/tag/v0.1.0-alpha
