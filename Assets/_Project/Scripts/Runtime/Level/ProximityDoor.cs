@@ -4,29 +4,94 @@ using UnityEngine;
 namespace MurderMystery.Level
 {
     /// <summary>
-    /// A room door leaf that opens (is hidden) while any character stands near it and closes again when
-    /// they leave. Door leaves have no collider (KhsManorBuilder), so this is purely visual: without it
-    /// players would walk through closed paper doors. One shared updater polls every few frames.
+    /// A room door leaf that swings open on its hinge while any character stands near it (away from that
+    /// person) and closes again when they leave. Door leaves have no collider (KhsManorBuilder), so this is
+    /// purely visual: without it players would walk through closed paper doors. One shared updater polls
+    /// every few frames; each leaf animates itself.
     /// </summary>
     public class ProximityDoor : MonoBehaviour
     {
         private const float Radius = 1.3f;
         private const float Interval = 0.15f;
+        private const float OpenAngle = 95f;
+        private const float Speed = 240f;   // degrees per second
 
         private static readonly List<ProximityDoor> Doors = new List<ProximityDoor>();
         private static readonly List<Vector3> Bodies = new List<Vector3>();
         private static float nextPoll;
 
-        private Renderer[] renderers;
         private Vector3 center;
-        private bool open;
+        private Vector3 through;
+        private Vector3 hinge;
+        private Vector3 closedPosition;
+        private Quaternion closedRotation;
+        private float angle;
+        private float target;
 
         private void Awake()
         {
-            renderers = GetComponentsInChildren<Renderer>(true);
+            var renderers = GetComponentsInChildren<Renderer>(true);
             var bounds = renderers.Length > 0 ? renderers[0].bounds : new Bounds(transform.position, Vector3.zero);
             foreach (var r in renderers) bounds.Encapsulate(r.bounds);
             center = bounds.center;
+            closedPosition = transform.position;
+            closedRotation = transform.rotation;
+
+            // The leaf's thin axis is the way through; it is hinged at one end of its width.
+            var filter = GetComponentInChildren<MeshFilter>();
+            through = Vector3.forward;
+            var across = Vector3.right;
+            var half = Mathf.Max(bounds.extents.x, bounds.extents.z);
+            if (filter != null && filter.sharedMesh != null)
+            {
+                var size = filter.sharedMesh.bounds.size;
+                var axis = size.x <= size.y && size.x <= size.z ? Vector3.right : size.y <= size.z ? Vector3.up : Vector3.forward;
+                var t = filter.transform.TransformDirection(axis);
+                t.y = 0f;
+                if (t.sqrMagnitude > 0.01f) through = t.normalized;
+                across = Vector3.Cross(Vector3.up, through);
+                var min = float.MaxValue;
+                var max = float.MinValue;
+                var m = filter.transform.localToWorldMatrix;
+                foreach (var v in filter.sharedMesh.vertices)
+                {
+                    var d = Vector3.Dot(m.MultiplyPoint3x4(v) - center, across);
+                    min = Mathf.Min(min, d);
+                    max = Mathf.Max(max, d);
+                }
+                if (max > min) half = (max - min) / 2f;
+            }
+            hinge = center + across * (HingeSide(across, half) * half);
+            hinge.y = center.y;
+        }
+
+        /// <summary>
+        /// +1 or -1 along <paramref name="across"/>. A leaf of a pair is hinged at its outer end, away from its
+        /// partner; a single leaf at the end nearer its frame post.
+        /// </summary>
+        private float HingeSide(Vector3 across, float half)
+        {
+            foreach (var other in FindObjectsByType<ProximityDoor>(FindObjectsSortMode.None))
+            {
+                if (other == this) continue;
+                var d = OtherCenter(other) - center;
+                d.y = 0f;
+                if (Mathf.Abs(Vector3.Dot(d, through)) < 0.15f && d.magnitude < half * 2.6f && d.magnitude > 0.05f)
+                    return Vector3.Dot(d, across) > 0f ? -1f : 1f;
+            }
+            var plus = Physics.Raycast(center, across, out var a, half + 0.6f, ~0, QueryTriggerInteraction.Ignore) ? a.distance : float.MaxValue;
+            var minus = Physics.Raycast(center, -across, out var b, half + 0.6f, ~0, QueryTriggerInteraction.Ignore) ? b.distance : float.MaxValue;
+            return plus <= minus ? 1f : -1f;
+        }
+
+        private static Vector3 OtherCenter(ProximityDoor other)
+        {
+            if (other.center != Vector3.zero) return other.center;
+            var renderers = other.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0) return other.transform.position;
+            var b = renderers[0].bounds;
+            foreach (var r in renderers) b.Encapsulate(r.bounds);
+            return b.center;
         }
 
         private void OnEnable() => Doors.Add(this);
@@ -35,31 +100,46 @@ namespace MurderMystery.Level
         private void Update()
         {
             // The first door to update each interval polls for everyone.
-            if (Time.unscaledTime < nextPoll || Doors.Count == 0 || Doors[0] != this) return;
-            nextPoll = Time.unscaledTime + Interval;
+            if (Time.unscaledTime >= nextPoll && Doors.Count > 0 && Doors[0] == this)
+            {
+                nextPoll = Time.unscaledTime + Interval;
+                Bodies.Clear();
+                foreach (var cc in FindObjectsByType<CharacterController>(FindObjectsSortMode.None))
+                    Bodies.Add(cc.transform.position + Vector3.up * (cc.height / 2f));
+                foreach (var door in Doors) door.Poll();
+            }
 
-            Bodies.Clear();
-            foreach (var cc in FindObjectsByType<CharacterController>(FindObjectsSortMode.None))
-                Bodies.Add(cc.transform.position + Vector3.up * (cc.height / 2f));
-
-            foreach (var door in Doors) door.SetOpen(door.AnyoneNear());
+            if (Mathf.Approximately(angle, target)) return;
+            angle = Mathf.MoveTowards(angle, target, Speed * Time.deltaTime);
+            var turn = Quaternion.AngleAxis(angle, Vector3.up);
+            transform.SetPositionAndRotation(hinge + turn * (closedPosition - hinge), turn * closedRotation);
         }
 
-        private bool AnyoneNear()
+        private void Poll()
         {
+            Vector3? nearest = null;
+            var best = Radius * Radius;
             foreach (var b in Bodies)
             {
                 var d = b - center;
-                if (Mathf.Abs(d.y) < 1.6f && d.x * d.x + d.z * d.z < Radius * Radius) return true;
+                if (Mathf.Abs(d.y) >= 1.6f) continue;
+                var flat = d.x * d.x + d.z * d.z;
+                if (flat < best)
+                {
+                    best = flat;
+                    nearest = b;
+                }
             }
-            return false;
-        }
-
-        private void SetOpen(bool value)
-        {
-            if (open == value) return;
-            open = value;
-            foreach (var r in renderers) r.enabled = !value;
+            if (nearest == null)
+            {
+                target = 0f;
+                return;
+            }
+            if (target != 0f) return;   // already open: stay put until everyone has gone
+            // Swing away from the person: the way that moves the leaf's middle to their far side.
+            var away = -Mathf.Sign(Vector3.Dot(nearest.Value - center, through));
+            var swung = Quaternion.AngleAxis(OpenAngle, Vector3.up) * (center - hinge) + hinge;
+            target = Vector3.Dot(swung - center, through) * away > 0f ? OpenAngle : -OpenAngle;
         }
     }
 }

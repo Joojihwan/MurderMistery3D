@@ -82,15 +82,6 @@ namespace MurderMystery.EditorTools
             S("18", "별당 툇마루 진신", 11.2f, -26.2f, 0.1f, SpotLayer.Surface, "C8"),
         };
 
-        // Extra stepping stones (centre x, z, width along x, depth along z, top height) where the scan has a
-        // platform edge higher than the body can step and no stone in front of it.
-        private static readonly Vector4[] StepStones =
-        {
-            new Vector4(10.0f, -25.6f, 1.4f, 0.7f), // 허 의원 방 (행랑채), gidan 0.85 m
-            new Vector4(12.4f, -25.6f, 1.4f, 0.7f), // 변 행수 방
-        };
-        private const float StepStoneTop = 0.43f;
-
         private static readonly Vector2 Discussion = new Vector2(8f, -18.5f);
         // 도 검률 keeps to the 툇마루 in front of the 대청 so he is seen from the yard (the hall doors are shut).
         private static readonly Vector2 NpcDaecheong = new Vector2(12.6f, -13.3f);
@@ -113,18 +104,19 @@ namespace MurderMystery.EditorTools
             FixColliders(house);
             Physics.SyncTransforms();
 
-            var footings = FindFootings(house);
+            var ceilings = new List<GroundSample>();
+            var samples = FindGroundSamples(house, ceilings);
             var root = new GameObject("Manor_KHS").transform;
-            BuildGround(Group(root, "Ground"), footings);
-            Debug.Log($"[KhsManorBuilder] ground raised under {footings.Count} footings");
-            BuildStepStones(Group(root, "StepStones"));
+            BuildGround(Group(root, "Ground"), GroundHeights(samples, ceilings, out var outliers));
+            Physics.SyncTransforms();
+            Debug.Log($"[KhsManorBuilder] ground rebuilt from {samples.Count - outliers} samples ({outliers} stones off the ground ignored)");
+            Debug.Log($"[KhsManorBuilder] set {SettleLoosePieces(house)} loose stones/jars on the ground");
+            Debug.Log($"[KhsManorBuilder] {AddMissingPostStones(Group(root, "PostStones"), house)} foundation stones under posts that stopped short");
             Physics.SyncTransforms();
             Debug.Log($"[KhsManorBuilder] {BuildDoorSteps(Group(root, "DoorSteps"), house)} stepping stones in front of high doors");
             BuildBlockers(Group(root, "Blockers"));
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
-            var settled = SettleFloatingPieces(house);
-            Debug.Log($"[KhsManorBuilder] settled {settled} loose stones/jars onto the ground");
             BuildSpots(Group(root, "InvestigationSpots"));
             BuildMarkers(Group(root, "GameplayMarkers"));
             BuildProps(Group(root, "Props"));
@@ -187,83 +179,6 @@ namespace MurderMystery.EditorTools
             }
         }
 
-        // Loose ground pieces. The scan's ground undulates, the yard here is flat, so where it was lower they float.
-        private static readonly string[] LoosePieces =
-            { "SM_Stone", "SM_Jangdokdae", "SM_FoundationStone", "SM_Gamasot", "SM_Gidan", "SM_Seokkalae" };
-
-        /// <summary>
-        /// Drops loose pieces that touch nothing below them onto the nearest surface. Pieces stacked or nested
-        /// together (a jar on its upturned-lid stand) move as one group, so they cannot hold each other up.
-        /// Returns how many pieces moved.
-        /// </summary>
-        public static int SettleFloatingPieces(Transform house)
-        {
-            var loose = new List<(Transform t, Bounds b)>();
-            foreach (Transform piece in house)
-            {
-                if (!LoosePieces.Any(k => piece.name.StartsWith(k)) || piece.name.StartsWith("SM_StoneWall") ||
-                    piece.name.StartsWith("SM_Stonewall")) continue;
-                var renderers = piece.GetComponentsInChildren<Renderer>();
-                if (renderers.Length == 0) continue;
-                var bb = renderers[0].bounds;
-                foreach (var rr in renderers) bb.Encapsulate(rr.bounds);
-                loose.Add((piece, bb));
-            }
-
-            // Union-find over stacked pieces: bounds overlap and one sits over the other's middle. Spline-built
-            // borders and paths are long and only lie beside things, so they never join a stack.
-            bool Stackable(Transform t) => !t.name.Contains("_Splines");
-            bool Over(Bounds a, Bounds c) =>
-                Mathf.Abs(a.center.x - c.center.x) < Mathf.Max(a.extents.x, c.extents.x) * 0.7f &&
-                Mathf.Abs(a.center.z - c.center.z) < Mathf.Max(a.extents.z, c.extents.z) * 0.7f;
-            var parent = Enumerable.Range(0, loose.Count).ToArray();
-            int Find(int i) => parent[i] == i ? i : parent[i] = Find(parent[i]);
-            for (var i = 0; i < loose.Count; i++)
-            for (var j = i + 1; j < loose.Count; j++)
-            {
-                if (!Stackable(loose[i].t) || !Stackable(loose[j].t)) continue;
-                var a = loose[i].b;
-                var c = loose[j].b;
-                a.Expand(0.02f);
-                if (a.Intersects(c) && Over(a, c)) parent[Find(i)] = Find(j);
-            }
-
-            var moved = 0;
-            foreach (var group in Enumerable.Range(0, loose.Count).GroupBy(Find))
-            {
-                var members = group.Select(i => loose[i]).ToList();
-                var bounds = members[0].b;
-                foreach (var m in members) bounds.Encapsulate(m.b);
-                var gap = FloatGap(bounds, members.Select(m => m.t).ToList());
-                if (gap <= 0.05f) continue;
-                foreach (var m in members) m.t.position -= new Vector3(0f, gap, 0f);
-                Physics.SyncTransforms();
-                moved += members.Count;
-            }
-            return moved;
-        }
-
-        /// <summary>Height of the bounds above the nearest outside surface, 0 when resting on or sunk into one.</summary>
-        private static float FloatGap(Bounds b, List<Transform> group)
-        {
-            var e = b.extents * 0.6f;
-            var best = float.MaxValue;
-            foreach (var off in new[] { Vector3.zero, new Vector3(e.x, 0f, e.z), new Vector3(-e.x, 0f, e.z), new Vector3(e.x, 0f, -e.z), new Vector3(-e.x, 0f, -e.z) })
-            {
-                var p = b.center + off;
-                var support = float.MinValue;
-                var touching = false;
-                foreach (var h in Physics.RaycastAll(new Vector3(p.x, b.max.y + 6f, p.z), Vector3.down, 20f, ~0, QueryTriggerInteraction.Ignore))
-                {
-                    if (group.Any(g => h.collider.transform.IsChildOf(g))) continue;
-                    if (h.point.y >= b.min.y - 0.05f && h.point.y <= b.max.y) touching = true;
-                    if (h.point.y < b.min.y && h.point.y > support) support = h.point.y;
-                }
-                best = Mathf.Min(best, touching ? 0f : support == float.MinValue ? 0f : b.min.y - support);
-            }
-            return best == float.MaxValue ? 0f : best;
-        }
-
         // Gates that stay shut (centre x, z): the compound's outer gates and the shrine. Every other door leaf,
         // room door or inner gate, opens for whoever comes near.
         private static readonly Vector2[] LockedGates =
@@ -296,62 +211,469 @@ namespace MurderMystery.EditorTools
         // Ground mesh: 140 x 150 m around the compound, 0.5 m cells.
         private static readonly Rect GroundArea = new Rect(-70f, -81f, 140f, 150f);
         private const float GroundCell = 0.5f;
-        private const float MoundSlope = 0.35f;     // m of drop per m away from a raised footing (~19°)
-        private const float MoundPlateau = 1.0f;    // keeps rows of footings on one level between them
+        // How far a ground sample shapes the land around it; beyond that the yard eases back to y = 0.
+        private const float GroundReach = 5f;
+        // Ground is laid this far above the base of whatever stands on it, so no seam shows.
+        private const float GroundEmbed = 0.02f;
+        // A loose stone this far off the ground the built parts around it imply was not lying on the ground
+        // (it sat on a wall, a platform or a pile) and does not shape it.
+        private const float LooseOutlier = 0.3f;
+        // Relaxation passes over the ground grid (each spreads a lift by about one cell).
+        private const int GroundSmoothing = 12;
 
-        // Parts that stand directly on the ground and so tell where the scanned ground really was.
-        private static readonly string[] Footings =
-            { "SM_Pillar", "SM_FoundationStone", "SM_StoneWall", "SM_Stonewall", "SM_Wall", "SM_Gidan", "SM_Stone_Tile",
-              "SM_chimney", "SM_DoorFrame", "SM_GateDoorFrame", "SM_Stone01C_Splines", "SM_Stone01D_Splines" };
+        // Built parts that stand on the ground: the land must reach up to them (they never move).
+        private static readonly string[] Structures =
+            { "SM_Pillar", "SM_FoundationStone", "SM_StoneWall", "SM_Stonewall", "SM_Wall", "SM_PinkWall", "SM_Gidan",
+              "SM_Stone_Tile", "SM_chimney", "SM_Chimney", "SM_Fireplace", "SM_DoorFrame", "SM_GateDoorFrame",
+              "SM_Stone01C_Splines", "SM_Stone01D_Splines" };
 
-        private struct Footing
+        // Loose things lying on the ground: they show where the scanned ground was, and are set back down on
+        // the rebuilt ground afterwards (stacked pieces move together).
+        private static readonly string[] LoosePieces =
+            { "SM_Stone", "SM_Jangdokdae", "SM_Gamasot", "SM_Seokkalae", "SM_SteppingWood" };
+
+        private static bool IsStructure(string name) => Structures.Any(name.StartsWith);
+
+        // Timber and plaster parts usually stand on something (a sill, a platform) rather than the soil; where
+        // the scan leaves a gap under them they only mark the ground if no stonework nearby sits lower.
+        private static readonly string[] Superstructure = { "SM_Wall", "SM_PinkWall", "SM_DoorFrame", "SM_GateDoorFrame" };
+
+        private static bool IsLoose(string name) => !IsStructure(name) && LoosePieces.Any(name.StartsWith);
+
+        /// <summary>A loose stone with a post standing on it is that post's foundation stone: it stays put.</summary>
+        private static bool CarriesStructure(Transform piece)
         {
-            public Rect Area;
-            public float Height;
+            var renderers = piece.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return false;
+            var b = renderers[0].bounds;
+            foreach (var r in renderers) b.Encapsulate(r.bounds);
+            var half = new Vector3(b.extents.x * 0.6f, 0.12f, b.extents.z * 0.6f);
+            return Physics.OverlapBox(new Vector3(b.center.x, b.max.y, b.center.z), half, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore)
+                .Any(c => !c.transform.IsChildOf(piece) && IsStructure(TopPiece(c.transform).name));
+        }
+
+        private static Transform TopPiece(Transform t)
+        {
+            while (t.parent != null && t.parent.name != "KHS_KimMyeonggwanHouse") t = t.parent;
+            return t;
+        }
+
+        private struct GroundSample
+        {
+            public Vector2 P;
+            public float Y;
+            public bool Firm;
+            public bool Upper;
         }
 
         /// <summary>
-        /// The scan's ground is not flat: under the 행랑채, the gates and parts of the walls it was up to ~0.8 m
-        /// higher than the yards, so on a flat yard those footings float. Every footing that stands above the
-        /// yard on nothing of the house becomes a raised patch, and the ground mesh rises to meet it with a
-        /// gentle slope — recreating the original lie of the land instead of moving the buildings.
-        /// Called before the ground exists, so a ray below a footing only meets house parts.
+        /// The scan was built on rolling ground (up to ~0.8 m above and ~0.4 m below the yards), and that ground
+        /// is not in the asset: on a flat yard, footings float in some places and stones are buried in others.
+        /// The ground is recovered from what stood on it: every part with nothing of the house below it marks the
+        /// ground at its base, in 0.5 m cells. Floors give ceilings instead: the ground must stay under them.
+        /// Called before the yard ground exists.
         /// </summary>
-        private static List<Footing> FindFootings(Transform house)
+        private static List<GroundSample> FindGroundSamples(Transform house, List<GroundSample> ceilings)
         {
-            var list = new List<Footing>();
+            var samples = new List<GroundSample>();
+            var boxes = new List<(Transform t, Bounds b)>();
             foreach (Transform piece in house)
             {
-                if (!Footings.Any(k => piece.name.StartsWith(k))) continue;
                 var renderers = piece.GetComponentsInChildren<Renderer>();
                 if (renderers.Length == 0) continue;
-                var b = renderers[0].bounds;
-                foreach (var rr in renderers) b.Encapsulate(rr.bounds);
-                if (b.min.y < 0.04f || b.min.y > 1.2f) continue;
-                // Standing on another house part (a post on a platform)? Then it is not on the ground.
-                var onHouse = Physics.RaycastAll(new Vector3(b.center.x, b.min.y + 0.02f, b.center.z), Vector3.down, 3f, ~0, QueryTriggerInteraction.Ignore)
-                    .Any(h => !h.collider.transform.IsChildOf(piece) && h.point.y > -0.05f);
-                if (onHouse) continue;
-                list.Add(new Footing { Area = new Rect(b.min.x, b.min.z, b.size.x, b.size.z), Height = b.min.y + 0.03f });
+                var bb = renderers[0].bounds;
+                foreach (var r in renderers) bb.Encapsulate(r.bounds);
+                boxes.Add((piece, bb));
             }
-            return list;
-        }
-
-        private static float GroundHeight(float x, float z, List<Footing> footings)
-        {
-            var h = 0f;
-            foreach (var f in footings)
+            foreach (var (piece, bounds) in boxes)
             {
-                var dx = Mathf.Max(f.Area.xMin - x, 0f, x - f.Area.xMax);
-                var dz = Mathf.Max(f.Area.yMin - z, 0f, z - f.Area.yMax);
-                var d = Mathf.Sqrt(dx * dx + dz * dz);
-                var v = f.Height - MoundSlope * Mathf.Max(0f, d - MoundPlateau);
-                if (v > h) h = v;
+                var floor = piece.name.StartsWith("SM_Floor");
+                var carries = IsLoose(piece.name) && CarriesStructure(piece);
+                var firm = IsStructure(piece.name) || carries;
+                if (!firm && !floor && !IsLoose(piece.name)) continue;
+                // A foundation stone shows above the ground: it may not be buried past the top few centimetres.
+                if (carries) ceilings.Add(new GroundSample { P = new Vector2(bounds.center.x, bounds.center.z), Y = bounds.max.y - 0.04f });
+                if (!floor && StackedOnAnother(piece, bounds, boxes)) continue;
+                foreach (var low in LowestPerCell(piece))
+                {
+                    if (floor)
+                    {
+                        ceilings.Add(new GroundSample { P = new Vector2(low.x, low.z), Y = low.y });
+                        continue;
+                    }
+                    if (low.y < -0.6f || low.y > 1.0f) continue;
+                    // Resting on another part of the house (a post on its stone, a beam on posts)?
+                    var resting = Physics.RaycastAll(low + Vector3.up * 0.03f, Vector3.down, 3f, ~0, QueryTriggerInteraction.Ignore)
+                        .Any(h => !h.collider.transform.IsChildOf(piece) && !h.collider.name.StartsWith("SM_Ground"));
+                    if (resting) continue;
+                    samples.Add(new GroundSample
+                    {
+                        P = new Vector2(low.x, low.z), Y = low.y, Firm = firm,
+                        Upper = Superstructure.Any(piece.name.StartsWith),
+                    });
+                }
             }
-            return h;
+
+            // Drop timber/plaster samples that sit well above stonework or posts close by: they rest on beams.
+            var footing = Bucket(samples.Where(s => s.Firm && !s.Upper));
+            return samples.Where(s => !s.Upper || !LowerNearby(footing, s, 1.2f, 0.2f)).ToList();
         }
 
-        private static void BuildGround(Transform p, List<Footing> footings)
+        /// <summary>
+        /// Laid on top of another piece (a ring of a stone well on the ring below, a stone on a pile)? Then its
+        /// underside does not mark the ground anywhere. Only pieces of a size to carry it count as supports:
+        /// the bounds of a long compound wall cover half the yard.
+        /// </summary>
+        private static bool StackedOnAnother(Transform piece, Bounds b, List<(Transform t, Bounds b)> boxes)
+        {
+            var area = b.size.x * b.size.z;
+            foreach (var (other, ob) in boxes)
+            {
+                if (other == piece || Mathf.Max(ob.size.x, ob.size.z) > 6f) continue;
+                if (ob.min.y > b.min.y - 0.05f || ob.max.y < b.min.y - 0.1f) continue;
+                var ox = Mathf.Min(b.max.x, ob.max.x) - Mathf.Max(b.min.x, ob.min.x);
+                var oz = Mathf.Min(b.max.z, ob.max.z) - Mathf.Max(b.min.z, ob.min.z);
+                if (ox > 0f && oz > 0f && ox * oz > area * 0.3f) return true;
+            }
+            return false;
+        }
+
+        private static bool LowerNearby(Dictionary<Vector2Int, List<GroundSample>> buckets, GroundSample s, float radius, float drop)
+        {
+            var r = Mathf.CeilToInt(radius);
+            for (var bz = Mathf.FloorToInt(s.P.y) - r; bz <= Mathf.FloorToInt(s.P.y) + r; bz++)
+            for (var bx = Mathf.FloorToInt(s.P.x) - r; bx <= Mathf.FloorToInt(s.P.x) + r; bx++)
+            {
+                if (!buckets.TryGetValue(new Vector2Int(bx, bz), out var list)) continue;
+                if (list.Any(o => (o.P - s.P).sqrMagnitude < radius * radius && o.Y < s.Y - drop)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The lowest vertex of a piece's underside in each 0.5 m ground cell it covers. Vertices of upward
+        /// faces are skipped: the top of a hollow terrace wall (화계) is not where it meets the ground.
+        /// </summary>
+        private static IEnumerable<Vector3> LowestPerCell(Transform piece)
+        {
+            var cells = new Dictionary<Vector2Int, Vector3>();
+            var flat = piece.name.StartsWith("SM_Stone_Tile");
+            foreach (var mf in piece.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null) continue;
+                var m = mf.transform.localToWorldMatrix;
+                var vertices = mf.sharedMesh.vertices;
+                var normals = mf.sharedMesh.normals;
+                for (var k = 0; k < vertices.Length; k++)
+                {
+                    if (!flat && k < normals.Length && m.MultiplyVector(normals[k]).normalized.y > 0.5f) continue;
+                    var w = m.MultiplyPoint3x4(vertices[k]);
+                    var key = new Vector2Int(Mathf.FloorToInt(w.x / GroundCell), Mathf.FloorToInt(w.z / GroundCell));
+                    if (!cells.TryGetValue(key, out var low) || w.y < low.y) cells[key] = w;
+                }
+            }
+            return cells.Values;
+        }
+
+        private static Dictionary<Vector2Int, List<GroundSample>> Bucket(IEnumerable<GroundSample> samples)
+        {
+            var buckets = new Dictionary<Vector2Int, List<GroundSample>>();
+            foreach (var s in samples)
+            {
+                var key = new Vector2Int(Mathf.FloorToInt(s.P.x), Mathf.FloorToInt(s.P.y));
+                if (!buckets.TryGetValue(key, out var list)) buckets[key] = list = new List<GroundSample>();
+                list.Add(s);
+            }
+            return buckets;
+        }
+
+        /// <summary>Distance-weighted blend of the samples around a point, fading to y = 0 away from them.</summary>
+        private static float Blend(Dictionary<Vector2Int, List<GroundSample>> buckets, float x, float z, out bool near)
+        {
+            var reach = Mathf.CeilToInt(GroundReach);
+            double sum = 0, weight = 1.0 / (GroundReach * GroundReach);
+            near = false;
+            for (var bz = Mathf.FloorToInt(z) - reach; bz <= Mathf.FloorToInt(z) + reach; bz++)
+            for (var bx = Mathf.FloorToInt(x) - reach; bx <= Mathf.FloorToInt(x) + reach; bx++)
+            {
+                if (!buckets.TryGetValue(new Vector2Int(bx, bz), out var list)) continue;
+                foreach (var s in list)
+                {
+                    var d2 = (s.P.x - x) * (s.P.x - x) + (s.P.y - z) * (s.P.y - z);
+                    if (d2 > GroundReach * GroundReach) continue;
+                    var w = 1.0 / (d2 + 0.1);
+                    sum += w * (s.Y + GroundEmbed);
+                    weight += w;
+                    near = true;
+                }
+            }
+            return (float)(sum / weight);
+        }
+
+        /// <summary>
+        /// Heights for the ground grid: a distance-weighted blend of the samples (loose stones only where they
+        /// agree with the built parts around them), then lifted wherever a built part would otherwise float and
+        /// kept under every floor. Lifting is one-way: a wall foot or a post a little sunk into the ground looks
+        /// planted, a floating one does not.
+        /// </summary>
+        private static float[,] GroundHeights(List<GroundSample> samples, List<GroundSample> ceilings, out int outliers)
+        {
+            var nx = Mathf.RoundToInt(GroundArea.width / GroundCell) + 1;
+            var nz = Mathf.RoundToInt(GroundArea.height / GroundCell) + 1;
+
+            var firmBuckets = Bucket(samples.Where(s => s.Firm));
+            var used = new List<GroundSample>();
+            outliers = 0;
+            foreach (var s in samples)
+            {
+                if (!s.Firm)
+                {
+                    var built = Blend(firmBuckets, s.P.x, s.P.y, out var near);
+                    if (near && Mathf.Abs(s.Y + GroundEmbed - built) > LooseOutlier)
+                    {
+                        outliers++;
+                        continue;
+                    }
+                }
+                used.Add(s);
+            }
+            var buckets = Bucket(used);
+
+            var heights = new float[nx, nz];
+            for (var j = 0; j < nz; j++)
+            for (var i = 0; i < nx; i++)
+                heights[i, j] = Blend(buckets, GroundArea.xMin + i * GroundCell, GroundArea.yMin + j * GroundCell, out _);
+
+            // No built part may float: the grid points around each of its ground cells reach its base.
+            var lower = new float[nx, nz];
+            var upper = new float[nx, nz];
+            for (var j = 0; j < nz; j++)
+            for (var i = 0; i < nx; i++)
+            {
+                lower[i, j] = float.MinValue;
+                upper[i, j] = float.MaxValue;
+            }
+            foreach (var s in samples.Where(s => s.Firm))
+                ForCellCorners(s, nx, nz, (i, j, inner) =>
+                {
+                    // Inner ring: right under the part. Outer ring: a short apron so its edge shows no gap.
+                    lower[i, j] = Mathf.Max(lower[i, j], s.Y + GroundEmbed - (inner ? 0f : 0.05f));
+                });
+            // And none may come up through a floor (the boards over a raised room's sills and joists) or over
+            // the top of a foundation stone.
+            foreach (var c in ceilings)
+                ForCellCorners(c, nx, nz, (i, j, inner) =>
+                {
+                    if (inner) upper[i, j] = Mathf.Min(upper[i, j], c.Y - 0.03f);
+                });
+
+            // Relax the land between those limits, so lifts under footings become slopes rather than steps.
+            var next = new float[nx, nz];
+            for (var pass = 0; pass < GroundSmoothing; pass++)
+            {
+                for (var j = 0; j < nz; j++)
+                for (var i = 0; i < nx; i++)
+                {
+                    var h = heights[i, j];
+                    if (pass > 0 && i > 0 && j > 0 && i < nx - 1 && j < nz - 1)
+                        h = (heights[i - 1, j] + heights[i + 1, j] + heights[i, j - 1] + heights[i, j + 1] + 2f * h) / 6f;
+                    next[i, j] = Mathf.Min(Mathf.Max(h, lower[i, j]), upper[i, j]);
+                }
+                (heights, next) = (next, heights);
+            }
+            return heights;
+        }
+
+        private static void ForCellCorners(GroundSample s, int nx, int nz, System.Action<int, int, bool> visit)
+        {
+            var i0 = Mathf.FloorToInt((s.P.x - GroundArea.xMin) / GroundCell);
+            var j0 = Mathf.FloorToInt((s.P.y - GroundArea.yMin) / GroundCell);
+            for (var dj = -1; dj <= 2; dj++)
+            for (var di = -1; di <= 2; di++)
+            {
+                int i = i0 + di, j = j0 + dj;
+                if (i < 0 || j < 0 || i >= nx || j >= nz) continue;
+                visit(i, j, di >= 0 && di <= 1 && dj >= 0 && dj <= 1);
+            }
+        }
+
+        /// <summary>
+        /// Sets every loose piece (stones, jars, lids) down on what is under it now that the ground is in:
+        /// lowered when floating, raised when the ground buried it, slightly bedded in. Pieces stacked or
+        /// nested together (a lid on its jar) move as one; a stone carrying a post stays. Returns how many
+        /// pieces moved.
+        /// </summary>
+        public static int SettleLoosePieces(Transform house)
+        {
+            var loose = new List<(Transform t, Bounds b)>();
+            foreach (Transform piece in house)
+            {
+                if (!IsLoose(piece.name) || CarriesStructure(piece)) continue;
+                var renderers = piece.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0) continue;
+                var bb = renderers[0].bounds;
+                foreach (var rr in renderers) bb.Encapsulate(rr.bounds);
+                loose.Add((piece, bb));
+            }
+
+            bool Over(Bounds a, Bounds c) =>
+                Mathf.Abs(a.center.x - c.center.x) < Mathf.Max(a.extents.x, c.extents.x) * 0.7f &&
+                Mathf.Abs(a.center.z - c.center.z) < Mathf.Max(a.extents.z, c.extents.z) * 0.7f;
+            bool IsLid(Transform t) => t.name.Contains("Cap") || t.name.Contains("_Top");
+            var parent = Enumerable.Range(0, loose.Count).ToArray();
+            int Find(int i) => parent[i] == i ? i : parent[i] = Find(parent[i]);
+            for (var i = 0; i < loose.Count; i++)
+            for (var j = i + 1; j < loose.Count; j++)
+            {
+                var a = loose[i].b;
+                // A lid may hover a little over its jar or pot in the scan: it still belongs with it.
+                a.Expand(IsLid(loose[i].t) || IsLid(loose[j].t) ? new Vector3(0.02f, 0.4f, 0.02f) : Vector3.one * 0.02f);
+                if (a.Intersects(loose[j].b) && Over(a, loose[j].b)) parent[Find(i)] = Find(j);
+            }
+
+            var moved = 0;
+            foreach (var group in Enumerable.Range(0, loose.Count).GroupBy(Find))
+            {
+                var members = group.Select(i => loose[i]).OrderBy(m => m.b.min.y).ToList();
+                // Lids first come down onto what they cover, then the whole stack onto the ground.
+                for (var k = members.Count - 1; k > 0; k--)
+                {
+                    if (!IsLid(members[k].t)) continue;
+                    var lift = SettleShift(new List<Transform> { members[k].t });
+                    if (lift < -0.02f) members[k].t.position += new Vector3(0f, lift, 0f);
+                }
+                Physics.SyncTransforms();
+                var transforms = members.Select(m => m.t).ToList();
+                var shift = SettleShift(transforms);
+                if (Mathf.Abs(shift) <= 0.02f) continue;
+                foreach (var m in transforms) m.position += new Vector3(0f, shift, 0f);
+                Physics.SyncTransforms();
+                moved += members.Count;
+            }
+            return moved;
+        }
+
+        /// <summary>
+        /// How far to move a group up (+) or down (-) so it rests on the surfaces under its base, measured at
+        /// points of its underside: the ground, or a part of the house it lies on.
+        /// </summary>
+        private static float SettleShift(List<Transform> group)
+        {
+            var points = new List<Vector3>();
+            foreach (var t in group)
+            foreach (var mf in t.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null) continue;
+                var m = mf.transform.localToWorldMatrix;
+                points.AddRange(mf.sharedMesh.vertices.Select(v => m.MultiplyPoint3x4(v)));
+            }
+            if (points.Count == 0) return 0f;
+            var bottom = points.Min(p => p.y);
+            var top = points.Max(p => p.y);
+            var height = top - bottom;
+            var underside = points.Where(p => p.y < bottom + Mathf.Min(0.05f, height * 0.3f)).ToList();
+            var step = Mathf.Max(1, underside.Count / 24);
+
+            var needs = new List<float>();
+            for (var k = 0; k < underside.Count; k += step)
+            {
+                var p = underside[k];
+                // Highest surface under this point the piece could rest on or be buried by: not something above
+                // the piece (a floor over a stone), so the ray starts inside the piece.
+                var from = Mathf.Max(Mathf.Min(p.y + 0.6f, top - 0.01f), p.y + 0.01f);
+                var surface = float.MinValue;
+                foreach (var h in Physics.RaycastAll(new Vector3(p.x, from, p.z), Vector3.down, 3f, ~0, QueryTriggerInteraction.Ignore))
+                    if (!group.Any(g => h.collider.transform.IsChildOf(g)) && h.point.y > surface) surface = h.point.y;
+                // Buried deeper than itself: the ground is above its top.
+                foreach (var h in Physics.RaycastAll(new Vector3(p.x, top + 2f, p.z), Vector3.down, 5f, ~0, QueryTriggerInteraction.Ignore))
+                    if (h.collider.name == "Yard ground" && h.point.y > surface) surface = h.point.y;
+                if (surface > float.MinValue) needs.Add(surface - p.y);
+            }
+            if (needs.Count == 0) return 0f;
+            needs.Sort();
+            var embed = Mathf.Clamp(height * 0.15f, 0.015f, 0.05f);
+            // Rest on the higher contacts (it cannot sink into stone), bedded in a little.
+            return needs[(int)(needs.Count * 0.7f)] - embed;
+        }
+
+        /// <summary>
+        /// Some posts of the scan stop a few centimetres above the platform under them, with no foundation
+        /// stone. Each gets one: a copy of the house's own foundation stone, sized to fill the gap.
+        /// Returns how many were placed.
+        /// </summary>
+        private static int AddMissingPostStones(Transform p, Transform house)
+        {
+            var templateFilter = StoneTemplate(house);
+            if (templateFilter == null) return 0;
+            var count = 0;
+            foreach (Transform post in house)
+            {
+                if (!post.name.StartsWith("SM_Pillar")) continue;
+                var renderers = post.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0) continue;
+                var b = renderers[0].bounds;
+                foreach (var r in renderers) b.Encapsulate(r.bounds);
+                // Upright posts only (horizontal beams are named SM_Pillar too).
+                if (b.size.y < 1.5f || Mathf.Max(b.size.x, b.size.z) > 0.5f) continue;
+                var foot = new Vector3(b.center.x, b.min.y, b.center.z);
+                if (InsideAnother(foot + Vector3.up * 0.01f, post)) continue;
+                if (!Physics.Raycast(foot + Vector3.up * 0.01f, Vector3.down, out var hit, 0.5f, ~0, QueryTriggerInteraction.Ignore)) continue;
+                var gap = foot.y - hit.point.y;
+                if (gap < 0.03f || gap > 0.35f) continue;
+
+                var width = Mathf.Max(b.size.x, b.size.z) * 1.8f;
+                var height = gap + 0.06f;
+                // Bottom 3 cm into the platform, top 3 cm into the post.
+                PlaceStone(p, $"Post stone ({post.name})", templateFilter,
+                    new Vector3(foot.x, hit.point.y - 0.03f + height / 2f, foot.z), new Vector3(width, height, width),
+                    Quaternion.Euler(0f, post.eulerAngles.y, 0f));
+                count++;
+            }
+            Physics.SyncTransforms();
+            return count;
+        }
+
+        /// <summary>The house's own dressed foundation stone, copied for added post stones and door steps.</summary>
+        private static MeshFilter StoneTemplate(Transform house)
+        {
+            var template = house.Cast<Transform>().FirstOrDefault(t => t.name.StartsWith("SM_FoundationStone"));
+            return template != null ? template.GetComponentInChildren<MeshFilter>() : null;
+        }
+
+        /// <summary>
+        /// A copy of the template stone, stretched to the given size (x across, y up, z along the facing) and
+        /// centred on the point. The template's own (import) rotation keeps it upright inside a scaled holder.
+        /// </summary>
+        private static GameObject PlaceStone(Transform parent, string name, MeshFilter template, Vector3 center, Vector3 size, Quaternion facing)
+        {
+            var holder = new GameObject(name);
+            holder.transform.SetParent(parent, false);
+            holder.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            var body = new GameObject("Stone");
+            body.transform.SetParent(holder.transform, false);
+            body.transform.rotation = template.transform.rotation;
+            body.AddComponent<MeshFilter>().sharedMesh = template.sharedMesh;
+            var renderer = body.AddComponent<MeshRenderer>();
+            renderer.sharedMaterials = template.GetComponent<MeshRenderer>().sharedMaterials;
+            var natural = renderer.bounds;
+            var scale = new Vector3(size.x / natural.size.x, size.y / natural.size.y, size.z / natural.size.z);
+            holder.transform.localScale = scale;
+            holder.transform.rotation = facing;
+            holder.transform.position = center - facing * Vector3.Scale(natural.center, scale);
+            body.AddComponent<MeshCollider>().sharedMesh = template.sharedMesh;
+            return holder;
+        }
+
+        /// <summary>Is the point inside a closed collider other than the given piece (rays from above and below both meet it)?</summary>
+        private static bool InsideAnother(Vector3 point, Transform piece)
+        {
+            var above = new HashSet<Collider>(Physics.RaycastAll(point + Vector3.up * 2f, Vector3.down, 2f, ~0, QueryTriggerInteraction.Ignore)
+                .Where(h => !h.collider.transform.IsChildOf(piece)).Select(h => h.collider));
+            return Physics.RaycastAll(point - Vector3.up * 2f, Vector3.up, 2f, ~0, QueryTriggerInteraction.Ignore)
+                .Any(h => above.Contains(h.collider));
+        }
+
+        private static void BuildGround(Transform p, float[,] heights)
         {
             var nx = Mathf.RoundToInt(GroundArea.width / GroundCell) + 1;
             var nz = Mathf.RoundToInt(GroundArea.height / GroundCell) + 1;
@@ -362,7 +684,7 @@ namespace MurderMystery.EditorTools
             {
                 var x = GroundArea.xMin + i * GroundCell;
                 var z = GroundArea.yMin + j * GroundCell;
-                vertices[j * nx + i] = new Vector3(x, GroundHeight(x, z, footings), z);
+                vertices[j * nx + i] = new Vector3(x, heights[i, j], z);
                 uvs[j * nx + i] = new Vector2(x / 4f, z / 4f);
             }
             var triangles = new int[(nx - 1) * (nz - 1) * 6];
@@ -414,24 +736,12 @@ namespace MurderMystery.EditorTools
             renderer.sharedMaterial = tiled;
         }
 
-        private static void BuildStepStones(Transform p)
-        {
-            var mat = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_GidanStone01A.mat");
-            foreach (var s in StepStones)
-            {
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.name = "Step stone (섬돌)";
-                go.transform.SetParent(p, false);
-                go.transform.localScale = new Vector3(s.z, StepStoneTop, s.w);
-                go.transform.position = new Vector3(s.x, StepStoneTop / 2f, s.y);
-                if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
-            }
-        }
-
         // A door whose sill is more than this above the ground in front of it gets a stepping stone.
         private const float DoorStepMin = 0.4f;
         // Higher than two steps: not meant to be entered from that side (a window over a drop).
         private const float DoorStepMax = 1.2f;
+        // A sill this far above the floor on its higher side marks a window, not a door.
+        private const float WindowSill = 0.25f;
 
         /// <summary>
         /// Raised rooms and 툇마루 have their doors 0.5-1 m above the yard, and the scan seldom puts a 섬돌 in
@@ -441,7 +751,7 @@ namespace MurderMystery.EditorTools
         /// </summary>
         private static int BuildDoorSteps(Transform p, Transform house)
         {
-            var mat = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_GidanStone01A.mat");
+            var template = StoneTemplate(house);
             var leaves = house.GetComponentsInChildren<ProximityDoor>().Select(d => d.transform).ToList();
             var count = 0;
             foreach (var leaf in leaves)
@@ -473,6 +783,12 @@ namespace MurderMystery.EditorTools
                     continue;
                 var sill = sillHit.point.y;
 
+                // A leaf whose sill stands well above the floor on both sides is a window over a 머름 panel:
+                // nobody steps through it, so it gets no stone (and looks it).
+                var sideFloors = new[] { 1f, -1f }.Select(sg => WalkableBelow(b.center + through * sg * 0.8f, sill + 0.3f))
+                    .Where(f => f != null).Select(f => f.Value).ToList();
+                if (template == null || sideFloors.Count == 0 || sill - sideFloors.Max() > WindowSill) continue;
+
                 foreach (var sign in new[] { 1f, -1f })
                 {
                     var outward = through * sign;
@@ -485,14 +801,9 @@ namespace MurderMystery.EditorTools
                     const float depth = 0.45f;
                     var top = floor.Value + (sill - floor.Value) / 2f;
                     var bottom = floor.Value - 0.3f;
-                    var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    go.name = $"Door step stone ({leaf.name})";
-                    go.transform.SetParent(p, false);
-                    go.transform.SetPositionAndRotation(
+                    PlaceStone(p, $"Door step stone ({leaf.name})", template,
                         new Vector3(b.center.x, (top + bottom) / 2f, b.center.z) + outward * (0.14f + depth / 2f),
-                        Quaternion.LookRotation(outward));
-                    go.transform.localScale = new Vector3(width + 0.1f, top - bottom, depth);
-                    if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+                        new Vector3(width + 0.1f, top - bottom, depth), Quaternion.LookRotation(outward));
                     Physics.SyncTransforms();
                     count++;
                 }

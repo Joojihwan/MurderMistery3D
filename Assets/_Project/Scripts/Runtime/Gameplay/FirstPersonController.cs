@@ -24,6 +24,8 @@ namespace MurderMystery.Gameplay
         private float assistStep;
         private float eyeHeight;
         private float standHeight;
+        // Camera drop left by a step up: StepAssist lifts the body in one frame, the view follows smoothly.
+        private float stepLag;
 
         // Enough for a stone or a sill, not for the 0.6 m garden walls or anything that seals an area.
         private const float JumpHeight = 0.45f;
@@ -84,7 +86,9 @@ namespace MurderMystery.Gameplay
             {
                 var targetEye = IsSitting ? eyeHeight * SitEyeRatio : eyeHeight * controller.height / standHeight;
                 var p = cameraPivot.localPosition;
-                p.y = Mathf.MoveTowards(p.y, targetEye, 2.5f * Time.deltaTime);
+                var eye = p.y - stepLag;
+                stepLag = Mathf.MoveTowards(stepLag, 0f, 2.2f * Time.deltaTime);
+                p.y = Mathf.MoveTowards(eye, targetEye, 2.5f * Time.deltaTime) + stepLag;
                 cameraPivot.localPosition = p;
             }
 
@@ -110,7 +114,15 @@ namespace MurderMystery.Gameplay
             var rise = (before + verticalVelocity) * 0.5f * dt;
 
             if (controller.isGrounded && !IsSitting) Duck.Update(controller, horizontal, standHeight);
-            if (!jumped) StepAssist.TryStepUp(controller, horizontal, assistStep);
+            var beforeStep = transform.position.y;
+            if (!jumped && StepAssist.TryStepUp(controller, horizontal, assistStep) && cameraPivot != null)
+            {
+                var lifted = transform.position.y - beforeStep;
+                stepLag -= lifted;
+                var p = cameraPivot.localPosition;
+                p.y -= lifted;
+                cameraPivot.localPosition = p;
+            }
             controller.Move(horizontal * dt + Vector3.up * rise);
         }
 
