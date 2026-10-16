@@ -204,12 +204,28 @@ namespace MurderMystery.FrontEnd
             volume.RegisterValueChangedCallback(e => AudioListener.volume = e.newValue);
             Row(box, "소리 크기").Add(volume);
 
+            var music = new Slider(0f, 1f) { value = GameSettings.MusicVolume };
+            music.AddToClassList("slider");
+            music.RegisterValueChangedCallback(e => GameSettings.MusicVolume = e.newValue);
+            Row(box, "음악 크기").Add(music);
+
+            var musicOn = new Toggle { value = !GameSettings.MusicMuted };
+            musicOn.RegisterValueChangedCallback(e => GameSettings.MusicMuted = !e.newValue);
+            Row(box, "배경 음악").Add(musicOn);
+
+            var musicTalk = new Toggle { value = GameSettings.MusicDuringTalk };
+            Row(box, "대화 중 음악").Add(musicTalk);
+            AddLabel(box, "small-note", "대화 중: 토론·밀담·최후 진술 때. 게임 중에는 M으로 지금 음악을 켜고 끕니다.");
+
             var voice = new Toggle { value = GameSettings.VoiceEnabled };
             Row(box, "음성 대화").Add(voice);
 
             var buttons = Add(box, "modal__buttons");
             AddButton(buttons, "닫기", () =>
             {
+                GameSettings.MusicVolume = music.value;
+                GameSettings.MusicMuted = !musicOn.value;
+                GameSettings.MusicDuringTalk = musicTalk.value;
                 GameSettings.PlayerName = name.value;
                 GameSettings.MouseSensitivity = mouse.value;
                 GameSettings.Volume = volume.value;

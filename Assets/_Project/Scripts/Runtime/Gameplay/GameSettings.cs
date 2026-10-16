@@ -9,6 +9,9 @@ namespace MurderMystery.Gameplay
         private const string MouseKey = "settings.mouse";
         private const string VolumeKey = "settings.volume";
         private const string VoiceKey = "settings.voice";
+        private const string MusicVolumeKey = "settings.musicVolume";
+        private const string MusicMutedKey = "settings.musicMuted";
+        private const string MusicTalkKey = "settings.musicDuringTalk";
 
         public const float DefaultMouse = 0.12f;
 
@@ -38,6 +41,27 @@ namespace MurderMystery.Gameplay
         {
             get => PlayerPrefs.GetInt(VoiceKey, 1) == 1;
             set => PlayerPrefs.SetInt(VoiceKey, value ? 1 : 0);
+        }
+
+        /// <summary>Background music level (on top of the overall volume).</summary>
+        public static float MusicVolume
+        {
+            get => PlayerPrefs.GetFloat(MusicVolumeKey, 0.45f);
+            set => PlayerPrefs.SetFloat(MusicVolumeKey, Mathf.Clamp01(value));
+        }
+
+        /// <summary>Music switched off (M in the game, or the settings).</summary>
+        public static bool MusicMuted
+        {
+            get => PlayerPrefs.GetInt(MusicMutedKey, 0) == 1;
+            set => PlayerPrefs.SetInt(MusicMutedKey, value ? 1 : 0);
+        }
+
+        /// <summary>Music while people talk (discussions, the council, final statements, private rooms). Off by default.</summary>
+        public static bool MusicDuringTalk
+        {
+            get => PlayerPrefs.GetInt(MusicTalkKey, 0) == 1;
+            set => PlayerPrefs.SetInt(MusicTalkKey, value ? 1 : 0);
         }
 
         public static void Apply() => AudioListener.volume = Volume;
