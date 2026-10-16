@@ -72,7 +72,7 @@ namespace MurderMystery.EditorTools
             S("08a", "작은사랑 앞 섬돌", 13.5f, -14.6f, 0.1f, SpotLayer.Surface, "C3c"),
             S("08b", "사랑방 앞 섬돌", 8.0f, -14.6f, 0.1f, SpotLayer.Surface, "C3c"),
             S("09", "등잔·빈 기름병", 14.4f, -13.4f, 0.3f, SpotLayer.Surface, "N3"),
-            S("10", "작은사랑 서가", 16.3f, -10.6f, 0.8f, SpotLayer.Deep, "H4", "C7"),
+            S("10", "작은사랑 서가", 16.3f, -11.0f, 0.8f, SpotLayer.Deep, "H4", "C7"),
             S("11", "곳간 쥐약 단지", -11.9f, -1.1f, 0.4f, SpotLayer.Surface, "C2"),
             S("12", "부엌 약탕관", -17.5f, 6.2f, 0.5f, SpotLayer.Surface, "N2"),
             S("13", "부엌 쌀독", -17.5f, 3.0f, 0.4f, SpotLayer.Deep, "H1"),
@@ -84,7 +84,7 @@ namespace MurderMystery.EditorTools
             // v2 (docs/design/story_v2.md): keys, locked places, misleading and meaningless finds.
             // A negative lift measures from the lowest surface (under a raised floor) instead of the top one.
             S("19", "사랑방 의걸이장 (대감 도포)", 8.7f, -9.0f, 1.0f, SpotLayer.Surface, "K1", "T19"),
-            S("20", "사당 앞 제상", 12.6f, 19.8f, 0.5f, SpotLayer.Surface, "S1"),
+            S("20", "사당 앞 제상", 13.1f, 19.45f, 1.0f, SpotLayer.Surface, "S1"),
             S("21", "사당 향로", 11.6f, 19.8f, 0.4f, SpotLayer.Surface, "S2"),
             S("22", "툇마루 끝 마루 밑", 5.0f, -13.7f, -0.15f, SpotLayer.Surface, "X1"),
             S("23", "부엌 뒤 수채", -20.5f, 4.5f, -0.1f, SpotLayer.Surface, "X2"),
@@ -104,10 +104,10 @@ namespace MurderMystery.EditorTools
             S("36", "사랑방 서책 더미", 8.6f, -11.9f, 0.4f, SpotLayer.Surface),
             S("37", "서재 서가", 12.0f, -8.75f, 0.9f, SpotLayer.Surface),
             S("38", "서재 파지 바구니", 10.2f, -9.8f, 0.3f, SpotLayer.Surface),
-            S("39", "대청 찬탁", 12.3f, -10.6f, 0.6f, SpotLayer.Surface),
+            S("39", "대청 찬탁", 12.3f, -10.6f, 0.8f, SpotLayer.Surface),
             S("40", "사랑채 굴뚝 옆", 6.6f, -7.3f, 0.3f, SpotLayer.Surface),
-            S("41", "작은사랑 서안", 16.4f, -12.2f, 0.5f, SpotLayer.Deep),
-            S("42", "작은사랑 이불장", 15.5f, -10.7f, 0.5f, SpotLayer.Deep),
+            S("41", "작은사랑 서안", 16.4f, -12.2f, 0.8f, SpotLayer.Deep),
+            S("42", "작은사랑 이불장", 15.5f, -11.95f, 0.5f, SpotLayer.Deep),
             S("43", "건넌방 보료", -2.2f, 11.2f, 0.3f, SpotLayer.Deep),
             S("44", "건넌방 바느질 상자", 0.3f, 8.1f, 0.3f, SpotLayer.Deep),
             S("45", "안방 장롱", -13.0f, 14.2f, 0.9f, SpotLayer.Surface),
@@ -115,14 +115,14 @@ namespace MurderMystery.EditorTools
             S("47", "부엌 아궁이", -18.6f, 6.9f, 0.4f, SpotLayer.Surface),
             S("48", "부엌 물동이", -16.7f, 0.9f, 0.4f, SpotLayer.Surface),
             S("49", "안마당 진흙", -14.6f, 3.6f, 0.1f, SpotLayer.Surface),
-            S("50", "곳간 선반", -13.3f, -0.7f, 0.8f, SpotLayer.Surface),
+            S("50", "곳간 선반", -13.3f, -0.7f, 1.0f, SpotLayer.Surface),
             S("51", "곳간 쥐덫", -11.6f, -2.6f, 0.2f, SpotLayer.Surface),
             S("52", "허 의원 의관", 9.3f, -29.2f, 0.4f, SpotLayer.Deep),
             S("53", "변 행수 갓", 13.0f, -29.4f, 0.4f, SpotLayer.Deep),
             S("54", "손님 방 툇마루 밑", 12.4f, -26.4f, -0.15f, SpotLayer.Surface),
             S("55", "사랑마당 물확", 4.6f, -20.8f, 0.5f, SpotLayer.Surface),
             S("56", "툇마루 끝 화분", 3.9f, -14.7f, 0.3f, SpotLayer.Surface),
-            S("59", "안대청 상", -6.5f, 15.2f, 0.5f, SpotLayer.Surface),
+            S("59", "안대청 상", -6.5f, 15.2f, 1.0f, SpotLayer.Surface),
         };
 
         private static readonly Vector2 Discussion = new Vector2(8f, -18.5f);
@@ -1366,12 +1366,29 @@ namespace MurderMystery.EditorTools
             }
         }
 
-        /// <summary>The top of whatever is below a point (furniture, floor, ground), ignoring trigger spheres.</summary>
+        /// <summary>
+        /// The top of whatever is below a point (furniture, floor, ground), ignoring trigger spheres. Furniture
+        /// has no colliders, so a table or chest under the point counts by the top of its bounds.
+        /// </summary>
         private static Vector3 SurfaceBelow(Vector3 p)
         {
             var hits = Physics.RaycastAll(p + Vector3.up * 0.05f, Vector3.down, 2.5f, ~0, QueryTriggerInteraction.Ignore)
                 .Where(h => h.normal.y > 0.5f).OrderBy(h => h.distance).ToList();
-            return hits.Count > 0 ? hits[0].point : new Vector3(p.x, FloorY(p.x, p.z), p.z);
+            var below = hits.Count > 0 ? hits[0].point : new Vector3(p.x, FloorY(p.x, p.z), p.z);
+            var props = GameObject.Find("Props");
+            if (props == null) return below;
+            foreach (Transform holder in props.transform)
+            {
+                var rs = holder.GetComponentsInChildren<Renderer>();
+                if (rs.Length == 0) continue;
+                var b = rs[0].bounds;
+                foreach (var r in rs) b.Encapsulate(r.bounds);
+                // Inside the piece's footprint (a little in from its edges) and its top below the point.
+                if (p.x < b.min.x + 0.05f || p.x > b.max.x - 0.05f || p.z < b.min.z + 0.05f || p.z > b.max.z - 0.05f) continue;
+                if (b.max.y > p.y + 0.05f || b.max.y <= below.y) continue;
+                below = new Vector3(p.x, b.max.y, p.z);
+            }
+            return below;
         }
 
         private static readonly Dictionary<string, string> ClueShapes = new Dictionary<string, string>
@@ -1626,9 +1643,7 @@ namespace MurderMystery.EditorTools
         {
             Prop("01 서재 서안", 11.2f, -8.9f, 180f, "SM_Table252"),
             PropOn("01 서안 위 촛대", 11.0f, -8.9f, 0.64f, "SM_Candlestick122"),
-            Prop("02 서재 문갑", 9.9f, -8.82f, 180f, "SM_Secretaries_body", "SM_Secretaries_doorLB", "SM_Secretaries_doorRB",
-                "SM_Secretaries_drawerLB", "SM_Secretaries_drawerLM", "SM_Secretaries_drawerLT", "SM_Secretaries_drawerRB",
-                "SM_Secretaries_drawerRM", "SM_Secretaries_drawerRT"),
+            Prop("02 서재 문갑", 9.9f, -8.82f, 180f, "SM_Cabinet237"),
             Prop("04 사랑방 화로", 7.2f, -10.6f, 0f, "SM_Brazier"),
             Prop("05 사랑방 소반", 6.2f, -10.0f, 0f, "SM_TongyeongTable"),
             PropOn("05 소반 위 탕약 그릇", 6.2f, -10.0f, 0.27f, "SM_WhitePorcelainBowl"),
@@ -1637,9 +1652,8 @@ namespace MurderMystery.EditorTools
             Prop("사랑방 안석", 5.7f, -11.75f, 0f, "SM_BackrestCushion"),
             Prop("09 툇마루 등경", 14.4f, -13.2f, 0f, "SM_FloorLamp"),
             Prop("09 빈 기름병", 14.7f, -13.5f, 0f, "SM_DarkBrownBottle"),
-            Prop("10 작은사랑 서가", 16.3f, -10.3f, 180f, "SM_Board229_body", "SM_Board229_doorL", "SM_Board229_doorR",
-                "SM_Board229_drawerB01", "SM_Board229_drawerB02", "SM_Board229_drawerB03", "SM_Board229_drawerB04",
-                "SM_Board229_drawerS01", "SM_Board229_drawerS02", "SM_Board229_drawerS03"),
+            Prop("10 작은사랑 서가", 16.4f, -10.68f, 180f, "SM_Shelves241"),
+            Prop("42 작은사랑 이불장", 15.35f, -10.7f, 180f, "SM_Cabinet237"),
             Prop("11 곳간 쥐약 단지", -11.9f, -1.3f, 0f, "SM_BlackGlazedJar"),
             Prop("12 부엌 약탕관", -17.5f, 6.2f, 90f, "SM_PotForMedicines"),
             Prop("13 부엌 뒤주(쌀독)", -17.9f, 3.0f, 90f, "SM_GrainChest_body", "SM_GrainChest_cover01", "SM_GrainChest_cover02"),
@@ -1648,8 +1662,8 @@ namespace MurderMystery.EditorTools
             Prop("별당 방석 (허 의원)", 10.4f, -28.3f, 0f, "SM_FloorCusion"),
             Prop("별당 방석 (변 행수)", 12.4f, -28.3f, 0f, "SM_FloorCusion"),
             Prop("19 사랑방 의걸이장", 8.7f, -8.85f, 180f, "SM_Cabinet238"),
-            new PropDef { Label = "20 사당 앞 제상", X = 12.6f, Z = 19.8f, Straddle = true, Parts = new[] { "SM_SquareTable" } },
-            new PropDef { Label = "21 사당 향로", X = 11.6f, Z = 19.8f, Scale = 4f, Straddle = true, Parts = new[] { "SM_CeladonglazedSmall" } },
+            Prop("20 사당 앞 제상", 13.1f, 19.45f, 0f, "SM_SquareTable"),
+            new PropDef { Label = "21 사당 향로", X = 11.7f, Z = 19.45f, Scale = 4f, Parts = new[] { "SM_CeladonglazedSmall" } },
             Prop("23 수채의 사발", -20.5f, 4.5f, 30f, "SM_WhitePorcelainDish"),
             Prop("26 건넌방 경대", -0.25f, 12.6f, 270f, "SM_Cabinet237"),
             Prop("27 우물가 바가지", -17.6f, 20.5f, 0f, "SM_ScoopedWoodenVessel"),
@@ -1663,6 +1677,27 @@ namespace MurderMystery.EditorTools
             Prop("31 안마당 노리개 자리", -6.0f, 4.0f, 0f, "SM_WhitePorcelainDish194"),
             Prop("34 부엌 찬장", -18.5f, 1.4f, 90f, "SM_CupBoard205_Body", "SM_CupBoard205_DoorL", "SM_CupBoard205_DoorR"),
             Prop("35 작은사랑 의걸이장", 15.6f, -13.25f, 0f, "SM_Cabinet238"),
+            // v3 furniture: each searched place has the piece it is named after, and rooms look lived in.
+            Prop("37 서재 서가", 12.0f, -8.75f, 180f, "SM_Shelves241"),
+            Prop("38 파지 바구니", 10.2f, -9.8f, 0f, "SM_Sieve397"),
+            Prop("39 대청 찬탁", 12.3f, -10.6f, 0f, "SM_TableTigersLegs"),
+            Prop("41 작은사랑 서안", 16.4f, -12.2f, 90f, "SM_Table252"),
+            Prop("43 건넌방 보료", -2.2f, 11.2f, 90f, "SM_QuiltedMattress"),
+            Prop("44 건넌방 바느질 상자", 0.3f, 8.1f, 0f, "SM_WoodenTray336"),
+            Prop("45 안방 장롱", -13.0f, 14.3f, 0f, "SM_Cabinet237"),
+            Prop("46 안방 경대", -11.0f, 7.9f, 180f, "SM_Cabinet238"),
+            Prop("47 부엌 아궁이 솥", -18.6f, 6.9f, 0f, "SM_Pot115"),
+            Prop("48 부엌 물동이", -16.7f, 0.9f, 0f, "SM_Pot154"),
+            Prop("50 곳간 선반", -13.3f, -0.6f, 0f, "SM_Shelves241"),
+            Prop("52 허 의원 의관 함", 9.3f, -29.2f, 0f, "SM_Box286"),
+            Prop("59 안대청 상", -6.5f, 15.2f, 0f, "SM_SquareTable"),
+            Prop("사랑방 타구", 5.2f, -12.2f, 0f, "SM_Spittoons"),
+            Prop("사랑방 사방침", 5.2f, -11.5f, 90f, "SM_ArmrestCushion"),
+            Prop("부엌 도마", -17.1f, 4.4f, 20f, "SM_ChoppingBoard"),
+            Prop("부엌 말", -18.3f, 5.0f, 0f, "SM_Mal"),
+            Prop("손님 방 등경", 9.0f, -27.2f, 0f, "SM_FloorLamp"),
+            Prop("작은사랑 등경", 16.7f, -13.4f, 0f, "SM_FloorLamp"),
+            Prop("건넌방 등경", 0.5f, 14.6f, 0f, "SM_FloorLamp"),
         };
 
         private static void BuildProps(Transform p)
@@ -1695,6 +1730,45 @@ namespace MurderMystery.EditorTools
                 var floor = def.Under ? LowestFloorY(def.X, def.Z) + def.Above : !def.Straddle ? FloorY(def.X, def.Z) + def.Above : new[] { new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(-1f, 1f), new Vector2(1f, -1f), new Vector2(-1f, -1f) }
                     .Select(o => FloorY(def.X + o.x * bounds.extents.x * 0.8f, def.Z + o.y * bounds.extents.z * 0.8f)).Max() + def.Above;
                 holder.position = new Vector3(def.X, floor - bounds.min.y, def.Z);
+                Physics.SyncTransforms();
+                PushOutOfWalls(holder);
+            }
+        }
+
+        /// <summary>
+        /// Moves a placed piece sideways out of any wall, pillar or other furniture it cuts into (the floor
+        /// it stands on is ignored). A few passes, since leaving one wall can touch another.
+        /// </summary>
+        private static void PushOutOfWalls(Transform holder)
+        {
+            var renderers = holder.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return;
+            for (var pass = 0; pass < 4; pass++)
+            {
+                var b = renderers[0].bounds;
+                foreach (var r in renderers) b.Encapsulate(r.bounds);
+                var probe = new GameObject("probe").AddComponent<BoxCollider>();
+                // Above the bottom so the floor does not count; a little inside so mere touching does not either.
+                probe.transform.position = new Vector3(b.center.x, b.min.y + 0.06f + (b.size.y - 0.06f) / 2f, b.center.z);
+                probe.size = new Vector3(b.size.x * 0.95f, Mathf.Max(0.02f, b.size.y - 0.08f), b.size.z * 0.95f);
+                Physics.SyncTransforms();
+                var push = Vector3.zero;
+                foreach (var other in Physics.OverlapBox(probe.transform.position, probe.size / 2f, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore))
+                {
+                    if (other == probe || other.transform.IsChildOf(holder) || other.name == "Yard ground" || other.isTrigger) continue;
+                    if (Physics.ComputePenetration(probe, probe.transform.position, Quaternion.identity, other, other.transform.position,
+                            other.transform.rotation, out var dir, out var dist))
+                    {
+                        dir.y = 0f;
+                        if (dir.sqrMagnitude < 0.01f) continue;
+                        var move = dir.normalized * dist;
+                        if (move.magnitude > push.magnitude) push = move;
+                    }
+                }
+                Object.DestroyImmediate(probe.gameObject);
+                if (push.magnitude < 0.01f || push.magnitude > 0.6f) break;
+                holder.position += push * 1.05f;
+                Physics.SyncTransforms();
             }
         }
 
