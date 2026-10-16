@@ -77,3 +77,5 @@
   - 생성기: `Tools > Murder Mystery > Front End > Build Title Scene` / `Render Pictures` (배경·표지·초상은 고택에서 렌더)
   - 시나리오 목록: `Resources/Scenarios/<id>/scenario.json` (공개 정보만). 새 시나리오는 폴더 하나 추가
 - [ ] P8 제안서 8절 결정 사항 (사용자) → 진행자·관전자 모드, 시나리오 패키지 이전
+- [x] P9 알파 0.1.0 배포 (비공개 저장소 MurderMistery3D-release, playtest_guide 6절)
+- [x] P10 뜬 구조물·문 보정 (2026-10-16): 땅 메시가 받침 밑으로 솟음, 자동 숙이기, 문 앞 디딤돌 자동 배치, 바깥마당 차단벽 보강. 조사 지점 주행 21/21, 문 직진 137짝 중 112짝 통과(나머지는 닫힌 문·봉인 구역·측정 오류, map_layout 10절)

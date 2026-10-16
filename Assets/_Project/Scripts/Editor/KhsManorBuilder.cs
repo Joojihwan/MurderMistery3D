@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MurderMystery.Gameplay;
 using MurderMystery.Investigation;
 using MurderMystery.Level;
 using UnityEditor;
@@ -26,8 +27,6 @@ namespace MurderMystery.EditorTools
 
         // KHS yard level. Floors of the halls are ~1.2 m above it, stone platforms (gidan) 0.6 m.
         private const float KhsGroundY = -2.0f;
-        // Door leaves whose bottom is below this (yard level, after lifting) are gates and stay solid.
-        private const float GateBottomMaxY = 0.25f;
 
         // Shorter body than the grey-box: front doors are 1.74 m above a 0.12 m sill, and Unity's stepping
         // needs height + stepOffset + skin under the lintel, so stepOffset only covers sills. The 0.6~0.9 m
@@ -114,14 +113,18 @@ namespace MurderMystery.EditorTools
             FixColliders(house);
             Physics.SyncTransforms();
 
+            var footings = FindFootings(house);
             var root = new GameObject("Manor_KHS").transform;
-            BuildGround(Group(root, "Ground"));
+            BuildGround(Group(root, "Ground"), footings);
+            Debug.Log($"[KhsManorBuilder] ground raised under {footings.Count} footings");
             BuildStepStones(Group(root, "StepStones"));
+            Physics.SyncTransforms();
+            Debug.Log($"[KhsManorBuilder] {BuildDoorSteps(Group(root, "DoorSteps"), house)} stepping stones in front of high doors");
             BuildBlockers(Group(root, "Blockers"));
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
             var settled = SettleFloatingPieces(house);
-            Debug.Log($"[KhsManorBuilder] settled {settled} floating stones/jars onto the flat yard");
+            Debug.Log($"[KhsManorBuilder] settled {settled} loose stones/jars onto the ground");
             BuildSpots(Group(root, "InvestigationSpots"));
             BuildMarkers(Group(root, "GameplayMarkers"));
             BuildProps(Group(root, "Props"));
@@ -162,8 +165,8 @@ namespace MurderMystery.EditorTools
         /// <summary>
         /// The KHS mesh colliders sit on the prefab roots with no mesh (the reference does not survive import),
         /// so they are rebuilt on the child that renders. Room door leaves (raised on a floor) get no collider so
-        /// rooms can be entered (a ProximityDoor hides them while someone is near); leaves standing on the yard
-        /// are gates (outer gates, shrine) and stay shut.
+        /// rooms and inner gates can be passed (a ProximityDoor hides them while someone is near); the gates in
+        /// <see cref="LockedGates"/> stay shut.
         /// </summary>
         private static void FixColliders(Transform house)
         {
@@ -172,7 +175,7 @@ namespace MurderMystery.EditorTools
             foreach (var mf in house.GetComponentsInChildren<MeshFilter>(true))
             {
                 if (mf.sharedMesh == null) continue;
-                if (IsDoorLeaf(mf.transform) && mf.GetComponent<Renderer>().bounds.min.y > GateBottomMaxY)
+                if (IsDoorLeaf(mf.transform) && !IsLockedGate(mf.GetComponent<Renderer>().bounds.center))
                 {
                     // Opens (hides) while someone is near, so nobody is seen walking through a shut door.
                     var leaf = DoorLeafRoot(mf.transform);
@@ -261,6 +264,20 @@ namespace MurderMystery.EditorTools
             return best == float.MaxValue ? 0f : best;
         }
 
+        // Gates that stay shut (centre x, z): the compound's outer gates and the shrine. Every other door leaf,
+        // room door or inner gate, opens for whoever comes near.
+        private static readonly Vector2[] LockedGates =
+        {
+            new Vector2(-38.0f, 0.7f),   // west outer gate
+            new Vector2(11.8f, 14.7f),   // shrine (사당) gate
+            new Vector2(22.6f, 30.1f),   // north-east gates to the barn yard
+            new Vector2(23.4f, 34.0f),
+            new Vector2(-2.05f, -17.4f), // 중문 to the outer yard (also behind a blocker)
+        };
+
+        private static bool IsLockedGate(Vector3 leafCenter) =>
+            LockedGates.Any(g => Vector2.Distance(g, new Vector2(leafCenter.x, leafCenter.z)) < 1.2f);
+
         private static Transform DoorLeafRoot(Transform t)
         {
             Transform root = null;
@@ -276,13 +293,105 @@ namespace MurderMystery.EditorTools
             return false;
         }
 
-        private static void BuildGround(Transform p)
+        // Ground mesh: 140 x 150 m around the compound, 0.5 m cells.
+        private static readonly Rect GroundArea = new Rect(-70f, -81f, 140f, 150f);
+        private const float GroundCell = 0.5f;
+        private const float MoundSlope = 0.35f;     // m of drop per m away from a raised footing (~19°)
+        private const float MoundPlateau = 1.0f;    // keeps rows of footings on one level between them
+
+        // Parts that stand directly on the ground and so tell where the scanned ground really was.
+        private static readonly string[] Footings =
+            { "SM_Pillar", "SM_FoundationStone", "SM_StoneWall", "SM_Stonewall", "SM_Wall", "SM_Gidan", "SM_Stone_Tile",
+              "SM_chimney", "SM_DoorFrame", "SM_GateDoorFrame", "SM_Stone01C_Splines", "SM_Stone01D_Splines" };
+
+        private struct Footing
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            go.name = "Yard ground";
+            public Rect Area;
+            public float Height;
+        }
+
+        /// <summary>
+        /// The scan's ground is not flat: under the 행랑채, the gates and parts of the walls it was up to ~0.8 m
+        /// higher than the yards, so on a flat yard those footings float. Every footing that stands above the
+        /// yard on nothing of the house becomes a raised patch, and the ground mesh rises to meet it with a
+        /// gentle slope — recreating the original lie of the land instead of moving the buildings.
+        /// Called before the ground exists, so a ray below a footing only meets house parts.
+        /// </summary>
+        private static List<Footing> FindFootings(Transform house)
+        {
+            var list = new List<Footing>();
+            foreach (Transform piece in house)
+            {
+                if (!Footings.Any(k => piece.name.StartsWith(k))) continue;
+                var renderers = piece.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0) continue;
+                var b = renderers[0].bounds;
+                foreach (var rr in renderers) b.Encapsulate(rr.bounds);
+                if (b.min.y < 0.04f || b.min.y > 1.2f) continue;
+                // Standing on another house part (a post on a platform)? Then it is not on the ground.
+                var onHouse = Physics.RaycastAll(new Vector3(b.center.x, b.min.y + 0.02f, b.center.z), Vector3.down, 3f, ~0, QueryTriggerInteraction.Ignore)
+                    .Any(h => !h.collider.transform.IsChildOf(piece) && h.point.y > -0.05f);
+                if (onHouse) continue;
+                list.Add(new Footing { Area = new Rect(b.min.x, b.min.z, b.size.x, b.size.z), Height = b.min.y + 0.03f });
+            }
+            return list;
+        }
+
+        private static float GroundHeight(float x, float z, List<Footing> footings)
+        {
+            var h = 0f;
+            foreach (var f in footings)
+            {
+                var dx = Mathf.Max(f.Area.xMin - x, 0f, x - f.Area.xMax);
+                var dz = Mathf.Max(f.Area.yMin - z, 0f, z - f.Area.yMax);
+                var d = Mathf.Sqrt(dx * dx + dz * dz);
+                var v = f.Height - MoundSlope * Mathf.Max(0f, d - MoundPlateau);
+                if (v > h) h = v;
+            }
+            return h;
+        }
+
+        private static void BuildGround(Transform p, List<Footing> footings)
+        {
+            var nx = Mathf.RoundToInt(GroundArea.width / GroundCell) + 1;
+            var nz = Mathf.RoundToInt(GroundArea.height / GroundCell) + 1;
+            var vertices = new Vector3[nx * nz];
+            var uvs = new Vector2[nx * nz];
+            for (var j = 0; j < nz; j++)
+            for (var i = 0; i < nx; i++)
+            {
+                var x = GroundArea.xMin + i * GroundCell;
+                var z = GroundArea.yMin + j * GroundCell;
+                vertices[j * nx + i] = new Vector3(x, GroundHeight(x, z, footings), z);
+                uvs[j * nx + i] = new Vector2(x / 4f, z / 4f);
+            }
+            var triangles = new int[(nx - 1) * (nz - 1) * 6];
+            var t = 0;
+            for (var j = 0; j < nz - 1; j++)
+            for (var i = 0; i < nx - 1; i++)
+            {
+                var a = j * nx + i;
+                triangles[t++] = a; triangles[t++] = a + nx; triangles[t++] = a + 1;
+                triangles[t++] = a + 1; triangles[t++] = a + nx; triangles[t++] = a + nx + 1;
+            }
+            var mesh = new Mesh { name = "Yard ground", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+            mesh.vertices = vertices;
+            mesh.uv = uvs;
+            mesh.triangles = triangles;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            // Saved as an asset so the scene does not carry 85k vertices inline.
+            const string meshPath = "Assets/_Project/Art/Meshes/KhsYardGround.asset";
+            ManorBlockoutBuilder.EnsureFolder("Assets/_Project/Art/Meshes");
+            AssetDatabase.DeleteAsset(meshPath);
+            AssetDatabase.CreateAsset(mesh, meshPath);
+
+            var go = new GameObject("Yard ground");
             go.transform.SetParent(p, false);
-            go.transform.localScale = new Vector3(140f, 0.2f, 150f);
-            go.transform.position = new Vector3(0f, -0.1f, -6f);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            go.AddComponent<MeshCollider>().sharedMesh = mesh;
+
             var source = AssetDatabase.LoadAssetAtPath<Material>(GroundMatPath);
             if (source == null) return;
             // Kept (not recreated) so its GUID, and the scene that references it, stay stable between builds.
@@ -298,11 +407,11 @@ namespace MurderMystery.EditorTools
             {
                 tiled.CopyPropertiesFromMaterial(source);
             }
-            tiled.mainTextureScale = new Vector2(35f, 37f);
+            tiled.mainTextureScale = Vector2.one;
             tiled.SetFloat("_Smoothness", 0.08f);
             tiled.SetFloat("_Metallic", 0f);
             EditorUtility.SetDirty(tiled);
-            go.GetComponent<MeshRenderer>().sharedMaterial = tiled;
+            renderer.sharedMaterial = tiled;
         }
 
         private static void BuildStepStones(Transform p)
@@ -317,6 +426,77 @@ namespace MurderMystery.EditorTools
                 go.transform.position = new Vector3(s.x, StepStoneTop / 2f, s.y);
                 if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
             }
+        }
+
+        // A door whose sill is more than this above the ground in front of it gets a stepping stone.
+        private const float DoorStepMin = 0.4f;
+        // Higher than two steps: not meant to be entered from that side (a window over a drop).
+        private const float DoorStepMax = 1.2f;
+
+        /// <summary>
+        /// Raised rooms and 툇마루 have their doors 0.5-1 m above the yard, and the scan seldom puts a 섬돌 in
+        /// front of them. Every openable door gets one on each side that is too far below its sill, halfway up,
+        /// unless something to step on is already there (a second leaf of the same doorway finds the first one).
+        /// </summary>
+        private static int BuildDoorSteps(Transform p, Transform house)
+        {
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_GidanStone01A.mat");
+            var leaves = house.GetComponentsInChildren<ProximityDoor>().Select(d => d.transform).ToList();
+            var count = 0;
+            foreach (var leaf in leaves)
+            {
+                var mf = leaf.GetComponentInChildren<MeshFilter>();
+                if (mf == null || mf.sharedMesh == null) continue;
+                var rs = leaf.GetComponentsInChildren<Renderer>();
+                var b = rs[0].bounds;
+                foreach (var r in rs) b.Encapsulate(r.bounds);
+
+                // The leaf's thin local axis, flattened, is the way through.
+                var size = mf.sharedMesh.bounds.size;
+                var axis = size.x <= size.y && size.x <= size.z ? Vector3.right : size.y <= size.z ? Vector3.up : Vector3.forward;
+                var through = mf.transform.TransformDirection(axis);
+                through.y = 0f;
+                if (through.sqrMagnitude < 0.01f) continue;
+                through.Normalize();
+                var width = Mathf.Max(Mathf.Abs(Vector3.Dot(b.size, Vector3.Cross(Vector3.up, through))), 0.7f);
+
+                if (!Physics.Raycast(new Vector3(b.center.x, b.min.y + 0.3f, b.center.z), Vector3.down, out var sillHit, 1.5f, ~0, QueryTriggerInteraction.Ignore))
+                    continue;
+                var sill = sillHit.point.y;
+
+                foreach (var sign in new[] { 1f, -1f })
+                {
+                    var outward = through * sign;
+                    var floor = WalkableBelow(b.center + outward * 0.8f, sill + 0.3f);
+                    if (floor == null || sill - floor.Value <= DoorStepMin || sill - floor.Value > DoorStepMax) continue;
+                    // Already something to step on just outside?
+                    var near = WalkableBelow(b.center + outward * 0.45f, sill + 0.05f);
+                    if (near != null && near.Value > floor.Value + 0.2f) continue;
+
+                    const float depth = 0.45f;
+                    var top = floor.Value + (sill - floor.Value) / 2f;
+                    var bottom = floor.Value - 0.3f;
+                    var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    go.name = $"Door step stone ({leaf.name})";
+                    go.transform.SetParent(p, false);
+                    go.transform.SetPositionAndRotation(
+                        new Vector3(b.center.x, (top + bottom) / 2f, b.center.z) + outward * (0.14f + depth / 2f),
+                        Quaternion.LookRotation(outward));
+                    go.transform.localScale = new Vector3(width + 0.1f, top - bottom, depth);
+                    if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+                    Physics.SyncTransforms();
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static float? WalkableBelow(Vector3 p, float fromY)
+        {
+            float? best = null;
+            foreach (var h in Physics.RaycastAll(new Vector3(p.x, fromY, p.z), Vector3.down, 3f, ~0, QueryTriggerInteraction.Ignore))
+                if (h.normal.y > 0.6f && (best == null || h.point.y > best.Value)) best = h.point.y;
+            return best;
         }
 
         // ---------------------------------------------------------------- partitions
@@ -553,7 +733,7 @@ namespace MurderMystery.EditorTools
             NavMeshBuilder.CollectSources(bounds, ~0, NavMeshCollectGeometry.PhysicsColliders, 0, new List<NavMeshBuildMarkup>(), sources);
             sources.RemoveAll(s => s.component != null && s.component.GetComponent<Collider>() is Collider c && c.isTrigger);
             var settings = NavMesh.GetSettingsByID(0);
-            settings.agentHeight = BodyHeight;
+            settings.agentHeight = Duck.DuckHeight;   // players duck under low lintels
             settings.agentRadius = BodyRadius;
             settings.agentClimb = AssistStep;
             settings.agentSlope = 40f;
@@ -611,9 +791,85 @@ namespace MurderMystery.EditorTools
         private static readonly Vector4[] Blockers =
         {
             new Vector4(-2.1f, -17.2f, 0.6f, 2.4f),
-            new Vector4(-13.6f, -16.4f, 5.2f, 2.8f), // gap between the thatched shed and the 행랑채 west arm
+            // Gap between the thatched shed and the 행랑채 west arm. Reaches up to the shed's south edge: the yard
+            // ground now ramps up to the stone footings there, so the old ledge no longer stops anyone.
+            new Vector4(-13.5f, -16.2f, 6.2f, 3.2f),
+            new Vector4(-11.0f, -12.8f, 0.5f, 4.4f), // the shed's open east side, from the yard wall's end down
             new Vector4(18.8f, 27.9f, 1.4f, 2.6f),   // east side gate by the shrine, out to the thatched barn
         };
+
+        /// <summary>
+        /// Every door leaf (room doors and gates): can a player get from one side to the other through it?
+        /// Bakes a temporary NavMesh with the player's body and asks for a short path between points 0.9 m in
+        /// front of and behind the leaf. Returns one line per door: OK, BLOCKED (no path) or AROUND (only a
+        /// long detour, i.e. the doorway itself is shut), with the gates marked.
+        /// </summary>
+        public static string VerifyDoors()
+        {
+            Physics.SyncTransforms();
+            var instance = BakeTempNavMesh();
+            try
+            {
+                var leaves = new List<Transform>();
+                foreach (var mf in Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None))
+                {
+                    if (!IsDoorLeaf(mf.transform)) continue;
+                    var root = DoorLeafRoot(mf.transform);
+                    if (root != null && !leaves.Contains(root)) leaves.Add(root);
+                }
+                var sb = new StringBuilder();
+                int ok = 0, bad = 0;
+                foreach (var leaf in leaves.OrderBy(l => l.position.x))
+                {
+                    var rs = leaf.GetComponentsInChildren<Renderer>(true);
+                    var b = rs[0].bounds;
+                    foreach (var r in rs) b.Encapsulate(r.bounds);
+                    var normal = b.size.x < b.size.z ? Vector3.right : Vector3.forward;
+                    var gate = !leaf.TryGetComponent<ProximityDoor>(out _);
+                    var a = Side(b, normal);
+                    var c = Side(b, -normal);
+                    string result;
+                    if (a == null || c == null) result = "NOFLOOR";
+                    else
+                    {
+                        var path = new NavMeshPath();
+                        var found = NavMesh.CalculatePath(a.Value, c.Value, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete;
+                        var len = found ? PathLength(path) : -1f;
+                        result = !found ? "BLOCKED" : len > 4f ? "AROUND" : "OK";
+                    }
+                    if (result == "OK") ok++; else bad++;
+                    if (result != "OK") sb.AppendLine($"{result,-8} {(gate ? "gate" : "room")} {leaf.name} @({b.center.x:F1},{b.min.y:F2},{b.center.z:F1})");
+                }
+                return $"doors {leaves.Count}: {ok} ok, {bad} not\n" + sb;
+            }
+            finally
+            {
+                NavMesh.RemoveNavMeshData(instance);
+            }
+        }
+
+        private static Vector3? Side(Bounds door, Vector3 normal)
+        {
+            var p = door.center + normal * 0.9f;
+            var floor = Physics.RaycastAll(new Vector3(p.x, door.min.y + 1.0f, p.z), Vector3.down, 3f, ~0, QueryTriggerInteraction.Ignore)
+                .Where(h => h.normal.y > 0.6f).OrderBy(h => h.distance).Select(h => (float?)h.point.y).FirstOrDefault();
+            if (floor == null) return null;
+            return NavMesh.SamplePosition(new Vector3(p.x, floor.Value, p.z), out var hit, 0.6f, NavMesh.AllAreas) ? hit.position : (Vector3?)null;
+        }
+
+        private static NavMeshDataInstance BakeTempNavMesh()
+        {
+            var bounds = new Bounds(new Vector3(0f, 2f, -6f), new Vector3(140f, 12f, 150f));
+            var sources = new List<NavMeshBuildSource>();
+            NavMeshBuilder.CollectSources(bounds, ~0, NavMeshCollectGeometry.PhysicsColliders, 0, new List<NavMeshBuildMarkup>(), sources);
+            var settings = NavMesh.GetSettingsByID(0);
+            settings.agentHeight = Duck.DuckHeight;   // players duck under low lintels
+            settings.agentRadius = BodyRadius;
+            settings.agentClimb = AssistStep;
+            settings.agentSlope = 40f;
+            var data = NavMeshBuilder.BuildNavMeshData(settings, sources, bounds, Vector3.zero, Quaternion.identity);
+            return NavMesh.AddNavMeshData(data);
+        }
 
         private static Vector3? SampleOrNull(Vector3 p) =>
             NavMesh.SamplePosition(p, out var hit, 1.2f, NavMesh.AllAreas) ? hit.position : (Vector3?)null;

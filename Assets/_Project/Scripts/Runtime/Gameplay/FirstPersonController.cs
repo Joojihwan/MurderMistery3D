@@ -23,6 +23,7 @@ namespace MurderMystery.Gameplay
         private float verticalVelocity;
         private float assistStep;
         private float eyeHeight;
+        private float standHeight;
 
         // Enough for a stone or a sill, not for the 0.6 m garden walls or anything that seals an area.
         private const float JumpHeight = 0.45f;
@@ -41,6 +42,7 @@ namespace MurderMystery.Gameplay
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+            standHeight = controller.height;
             var profile = PlayerBodyProfile.Current;
             assistStep = profile != null ? profile.assistStep : 0f;
             lookSensitivity = GameSettings.MouseSensitivity;
@@ -77,7 +79,7 @@ namespace MurderMystery.Gameplay
             if (IsSitting && move != Vector2.zero) IsSitting = false;
             if (cameraPivot != null)
             {
-                var targetEye = IsSitting ? eyeHeight * SitEyeRatio : eyeHeight;
+                var targetEye = IsSitting ? eyeHeight * SitEyeRatio : eyeHeight * controller.height / standHeight;
                 var p = cameraPivot.localPosition;
                 p.y = Mathf.MoveTowards(p.y, targetEye, 2.5f * Time.deltaTime);
                 cameraPivot.localPosition = p;
@@ -104,6 +106,7 @@ namespace MurderMystery.Gameplay
             if (!controller.isGrounded || jumped) verticalVelocity += gravity * dt;
             var rise = (before + verticalVelocity) * 0.5f * dt;
 
+            if (controller.isGrounded && !IsSitting) Duck.Update(controller, horizontal, standHeight);
             if (!jumped) StepAssist.TryStepUp(controller, horizontal, assistStep);
             controller.Move(horizontal * dt + Vector3.up * rise);
         }
