@@ -1,13 +1,13 @@
 # 음원 출처
 
-배경 음악은 모두 Pixabay에서 받았다 (2026-10-17). 라이선스: [Pixabay Content License](https://pixabay.com/service/license-summary/) — 무료, 상업 이용 가능, 출처 표기 불필요. 음원만 따로 재배포·판매하는 것은 금지(게임에 넣어 쓰는 것은 허용).
+배경 음악은 모두 Pixabay에서 받았다 (2026-10-17). 처음의 밝은 타이틀·읽기 곡(Grace in Hanbok, Echoes of hanbok / DreamPixelz)은 어둡고 미스터리한 곡으로 바꿨고, 빌드에 들어가지 않게 `Assets/_Project/Art/Audio/Unused/`로 옮겨 두었다. 라이선스: [Pixabay Content License](https://pixabay.com/service/license-summary/) — 무료, 상업 이용 가능, 출처 표기 불필요. 음원만 따로 재배포·판매하는 것은 금지(게임에 넣어 쓰는 것은 허용).
 
 파일은 `Assets/_Project/Resources/Audio/Music/`, 재생은 `MusicPlayer` (Runtime/Gameplay).
 
 | 파일 | 곡 / 작가 | 원본 | 쓰는 단계 |
 |---|---|---|---|
-| title_grace_in_hanbok | Grace in Hanbok / DreamPixelz (2:01) | https://pixabay.com/music/folk-grace-in-hanbok-321003/ | 타이틀·로비 |
-| reading_echoes_of_hanbok | Echoes of hanbok / DreamPixelz (2:06) | https://pixabay.com/music/folk-echoes-of-hanbok-321006/ | 인물 선택·시나리오 읽기·소개 |
+| title_eastern_temple_ambience | Eastern Temple Ambience Instrumental / UniqueCreativeAudio (3:06) | https://pixabay.com/music/world-eastern-temple-ambience-instrumental-255337/ | 타이틀·로비 |
+| reading_oracle_of_the_mist | 霧の神託 Oracle of the Mist / AiCanvas (3:25) | https://pixabay.com/music/world-%E9%9C%A7%E3%81%AE%E7%A5%9E%E8%A8%97-oracle-of-the-mist-ancient-432705/ | 인물 선택·시나리오 읽기·소개 |
 | autopsy_autumn_evenings | Autumn Evenings (Dark Ambient) / Ashot_Danielyan (6:23) | https://pixabay.com/music/ambient-autumn-evenings-dark-ambient-soundtrack-170371/ | 검시 보고 |
 | search_gayageum_cinematic | Korean traditional-cinematic piece with gayageum / RibhavAgrawal (2:05) | https://pixabay.com/music/orchestral-korean-traditional-cinematic-piece-with-gayageum-589500/ | 1차 조사 |
 | search_drama_mystery | Drama Mystery / The_Mountain (2:06) | https://pixabay.com/music/suspense-drama-mystery-375985/ | 1·2차 조사 (번갈아) |

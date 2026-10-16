@@ -115,3 +115,7 @@
 ### 0.1.6-alpha (2026-10-17)
 - 단계별 배경 음악(Pixabay 8곡, docs/audio_credits.md), 토론·밀담·최후 진술은 기본 무음, M으로 켜고 끄기, 설정에 음악 크기·배경 음악·대화 중 음악
 - 빌드·zip: Builds/Release/JoseonMystery-0.1.6-alpha-win64.zip (릴리스 업로드는 사용자 승인 대기, 0.1.2~0.1.6 미업로드)
+
+### 0.1.7-alpha (2026-10-17)
+- 밀담채(거실 + 작은 방 둘), 타이틀·읽기 BGM을 어둡고 미스터리한 곡으로 교체 (Eastern Temple Ambience, Oracle of the Mist)
+- 빌드·zip: Builds/Release/JoseonMystery-0.1.7-alpha-win64.zip (릴리스 업로드는 사용자 승인 대기)

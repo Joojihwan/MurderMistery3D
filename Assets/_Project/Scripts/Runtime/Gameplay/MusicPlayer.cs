@@ -18,8 +18,8 @@ namespace MurderMystery.Gameplay
 
         private static readonly Dictionary<Cue, string[]> Tracks = new Dictionary<Cue, string[]>
         {
-            [Cue.Title] = new[] { "title_grace_in_hanbok" },
-            [Cue.Reading] = new[] { "reading_echoes_of_hanbok" },
+            [Cue.Title] = new[] { "title_eastern_temple_ambience" },
+            [Cue.Reading] = new[] { "reading_oracle_of_the_mist" },
             [Cue.Autopsy] = new[] { "autopsy_autumn_evenings" },
             [Cue.Search] = new[] { "search_gayageum_cinematic", "search_drama_mystery" },
             [Cue.Search2] = new[] { "search2_mystery_time_loop", "search_drama_mystery" },
