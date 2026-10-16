@@ -22,6 +22,9 @@ namespace MurderMystery.Network
         private readonly NetworkVariable<bool> sitting = new NetworkVariable<bool>(
             false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
+        private readonly NetworkVariable<bool> ducking = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
         private Transform body;
         private FirstPersonController localController;
         private string bodySeat;
@@ -37,6 +40,7 @@ namespace MurderMystery.Network
         {
             seat.OnValueChanged += (_, __) => RefreshBody();
             sitting.OnValueChanged += (_, now) => ApplySitting(now);
+            ducking.OnValueChanged += (_, now) => ApplyDucking(now);
             if (IsOwner)
             {
                 var spawns = FindObjectsByType<GameplayMarker>(FindObjectsSortMode.None)
@@ -71,6 +75,13 @@ namespace MurderMystery.Network
         {
             if (IsOwner && localController != null && sitting.Value != localController.IsSitting)
                 sitting.Value = localController.IsSitting;
+            if (IsOwner && localController != null && ducking.Value != localController.IsDucking)
+                ducking.Value = localController.IsDucking;
+        }
+
+        private void ApplyDucking(bool now)
+        {
+            if (body != null && body.TryGetComponent<CharacterAnimator>(out var animator)) animator.Ducking = now;
         }
 
         private void ApplySitting(bool now)
@@ -91,6 +102,7 @@ namespace MurderMystery.Network
                 body = Instantiate(outfit, transform, false).transform;
                 body.name = "Body";
                 ApplySitting(sitting.Value);
+                ApplyDucking(ducking.Value);
                 return;
             }
 

@@ -74,37 +74,58 @@ namespace MurderMystery.Gameplay
     /// </summary>
     public static class Duck
     {
-        public const float DuckHeight = 1.1f;
+        public const float DuckHeight = 1.0f;
 
-        /// <summary>Returns the controller height to use this frame (call before Move).</summary>
+        /// <summary>Shrinks or restores the controller for this frame (call before Move).</summary>
         public static void Update(CharacterController cc, Vector3 horizontalMove, float standHeight)
         {
             if (standHeight <= DuckHeight) return;
             var feet = cc.transform.position + cc.center - Vector3.up * (cc.height / 2f);
             var ducked = cc.height < standHeight - 0.01f;
             horizontalMove.y = 0f;
+            var moving = horizontalMove.sqrMagnitude > 1e-6f;
 
             if (!ducked)
             {
-                if (horizontalMove.sqrMagnitude < 1e-6f) return;
-                var dir = horizontalMove.normalized;
-                // Something at head height (between the ducked top and the standing top) right ahead?
-                var head = feet + Vector3.up * (standHeight - cc.radius);
-                var low = feet + Vector3.up * (DuckHeight + 0.02f + cc.radius * 0.5f);
-                if (!Physics.CapsuleCast(low, head, cc.radius * 0.9f, dir, out var hit, 0.35f, ~0, QueryTriggerInteraction.Ignore))
-                    return;
-                if (hit.collider == cc) return;
-                SetHeight(cc, DuckHeight);
+                if (moving && LintelAhead(cc, feet, horizontalMove.normalized, standHeight)) SetHeight(cc, DuckHeight);
+                return;
             }
-            else
-            {
-                // Stand up when the standing body fits here.
-                var bottom = feet + Vector3.up * (cc.radius + 0.05f);
-                var top = feet + Vector3.up * (standHeight - cc.radius);
-                foreach (var c in Physics.OverlapCapsule(bottom, top, cc.radius * 0.95f, ~0, QueryTriggerInteraction.Ignore))
-                    if (c != cc) return;
-                SetHeight(cc, standHeight);
-            }
+
+            // Stand up when the standing body fits here and, while walking on, no lintel is still just ahead
+            // (otherwise the body would bob up and down under a run of low beams or against a wall).
+            var bottom = feet + Vector3.up * (cc.radius + 0.05f);
+            var top = feet + Vector3.up * (standHeight - cc.radius);
+            foreach (var c in Physics.OverlapCapsule(bottom, top, cc.radius * 0.95f, ~0, QueryTriggerInteraction.Ignore))
+                if (c != cc) return;
+            if (moving && HeadBlocked(cc, feet, horizontalMove.normalized, standHeight)) return;
+            SetHeight(cc, standHeight);
+        }
+
+        /// <summary>Something at head height right ahead, with room below it for a lowered body: a low lintel.</summary>
+        private static bool LintelAhead(CharacterController cc, Vector3 feet, Vector3 dir, float standHeight)
+        {
+            if (!HeadBlocked(cc, feet, dir, standHeight)) return false;
+            // A wall reaches down to the waist too; ducking would not help there. (Sills above knee height
+            // are left to StepAssist.)
+            var back = dir * CastBack;
+            var waistLow = feet - back + Vector3.up * 0.7f;
+            var waistHigh = feet - back + Vector3.up * (DuckHeight - cc.radius - 0.05f);
+            return !Physics.CapsuleCast(waistLow, waistHigh, cc.radius * 0.9f, dir, out var hit, Reach + CastBack, ~0, QueryTriggerInteraction.Ignore) ||
+                   hit.collider == cc;
+        }
+
+        // Casts start a little behind the body: one that starts already touching the lintel (the body pressed
+        // into the doorway) would not report it.
+        private const float CastBack = 0.2f;
+        private const float Reach = 0.35f;
+
+        private static bool HeadBlocked(CharacterController cc, Vector3 feet, Vector3 dir, float standHeight)
+        {
+            var back = dir * CastBack;
+            var head = feet - back + Vector3.up * (standHeight - cc.radius);
+            var low = feet - back + Vector3.up * (DuckHeight + 0.02f + cc.radius * 0.5f);
+            return Physics.CapsuleCast(low, head, cc.radius * 0.9f, dir, out var hit, Reach + CastBack, ~0, QueryTriggerInteraction.Ignore) &&
+                   hit.collider != cc;
         }
 
         internal static void SetHeight(CharacterController cc, float height)

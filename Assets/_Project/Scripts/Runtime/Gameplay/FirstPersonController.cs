@@ -31,6 +31,9 @@ namespace MurderMystery.Gameplay
 
         public bool IsSitting { get; private set; }
 
+        /// <summary>Ducked under a low lintel (see <see cref="Duck"/>).</summary>
+        public bool IsDucking => controller != null && controller.height < standHeight - 0.01f;
+
         public bool InputEnabled { get; set; } = true;
 
         public void Init(Transform pivot)

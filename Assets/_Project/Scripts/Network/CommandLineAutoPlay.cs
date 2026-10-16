@@ -12,6 +12,7 @@ namespace MurderMystery.Network
     /// (or an online session by code) claims a seat and optionally investigates a spot, logging what it receives:
     ///   -mmJoin 127.0.0.1 -mmSeat buni [-mmName 분이] [-mmInvestigate 02] [-mmAcceptTalk] [-mmVote heo] [-mmWalk 30] [-mmQuitAfter 60]
     ///   -mmCode ABC123 ... joins an online session (Sessions + Relay) instead of -mmJoin.
+    ///   -mmWatch logs other players' bodies (position, sitting, ducking) whenever their pose changes.
     /// Does nothing when neither -mmJoin nor -mmCode is given.
     /// </summary>
     public class CommandLineAutoPlay : MonoBehaviour
@@ -98,6 +99,7 @@ namespace MurderMystery.Network
                 Debug.Log($"[AutoPlay] investigate {spot} sent");
             }
 
+            if (Array.IndexOf(Environment.GetCommandLineArgs(), "-mmWatch") >= 0) StartCoroutine(Watch());
             if (walkFor > 0f) yield return Walk(walkFor);
 
             if (quitAfter > 0f)
@@ -152,6 +154,23 @@ namespace MurderMystery.Network
                 }
                 yield return new WaitForSecondsRealtime(1f);
                 dir = -dir;
+            }
+        }
+
+        private static IEnumerator Watch()
+        {
+            var last = new System.Collections.Generic.Dictionary<ulong, string>();
+            while (true)
+            {
+                foreach (var p in FindObjectsByType<NetPlayer>(FindObjectsSortMode.None).Where(p => !p.IsOwner))
+                {
+                    var anim = p.GetComponentInChildren<CharacterAnimator>();
+                    var pose = anim == null ? "no body" : $"sitting={anim.Sitting} ducking={anim.Ducking}";
+                    if (last.TryGetValue(p.OwnerClientId, out var was) && was == pose) continue;
+                    last[p.OwnerClientId] = pose;
+                    Debug.Log($"[AutoPlay] remote {p.OwnerClientId} ({p.SeatId}) at {p.transform.position:F1}: {pose}");
+                }
+                yield return new WaitForSecondsRealtime(0.2f);
             }
         }
 

@@ -28,6 +28,18 @@ namespace MurderMystery.Gameplay
 
         private bool sitting;
 
+        /// <summary>Stoops under a low lintel (synced by NetPlayer): the body bends forward at the spine.</summary>
+        public bool Ducking { get; set; }
+
+        // Bend (degrees forward) at each of the spine and chest at full stoop; the head is turned back up so
+        // the face still looks ahead. 2 x 32 degrees brings the head down to about the 1 m ducked body.
+        private const float StoopDegrees = 32f;
+        private float stoop;
+        private Transform spine;
+        private Transform chest;
+        private Quaternion spineApplied;
+        private Quaternion chestApplied;
+
         [SerializeField] private float smoothing = 8f;
         // Pitch corrections (degrees, + = forward) for rigs whose neck/head bones came out tilted
         // (set by CharacterRigBuilder; e.g. a long braid pulled 분이's neck bones back).
@@ -83,6 +95,8 @@ namespace MurderMystery.Gameplay
             {
                 neck = animator.GetBoneTransform(HumanBodyBones.Neck);
                 head = animator.GetBoneTransform(HumanBodyBones.Head);
+                spine = animator.GetBoneTransform(HumanBodyBones.Spine);
+                chest = animator.GetBoneTransform(HumanBodyBones.Chest);
                 leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
                 rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
                 skins = GetComponentsInChildren<SkinnedMeshRenderer>(true);
@@ -112,8 +126,14 @@ namespace MurderMystery.Gameplay
         {
             Ground();
             var right = transform.right;
+            stoop = Mathf.MoveTowards(stoop, Ducking && !sitting ? 1f : 0f, 4f * Time.deltaTime);
+            if (stoop > 0f)
+            {
+                Fix(spine, StoopDegrees * stoop, right, ref spineApplied);
+                Fix(chest, StoopDegrees * stoop, right, ref chestApplied);
+            }
             Fix(neck, neckPitchFix, right, ref neckApplied);
-            Fix(head, headPitchFix, right, ref headApplied);
+            Fix(head, headPitchFix - 1.5f * StoopDegrees * stoop, right, ref headApplied);
         }
 
         private void Ground()

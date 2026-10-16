@@ -437,6 +437,7 @@ namespace MurderMystery.EditorTools
         /// Raised rooms and 툇마루 have their doors 0.5-1 m above the yard, and the scan seldom puts a 섬돌 in
         /// front of them. Every openable door gets one on each side that is too far below its sill, halfway up,
         /// unless something to step on is already there (a second leaf of the same doorway finds the first one).
+        /// Each leaf also gets a sill cap (below).
         /// </summary>
         private static int BuildDoorSteps(Transform p, Transform house)
         {
@@ -459,6 +460,14 @@ namespace MurderMystery.EditorTools
                 if (through.sqrMagnitude < 0.01f) continue;
                 through.Normalize();
                 var width = Mathf.Max(Mathf.Abs(Vector3.Dot(b.size, Vector3.Cross(Vector3.up, through))), 0.7f);
+
+                // The wall under many leaves is an open shell with no top face, so nothing can stand on the sill:
+                // cap it with an invisible slab level with the bottom of the leaf.
+                var cap = new GameObject($"Sill cap ({leaf.name})");
+                cap.transform.SetParent(p, false);
+                cap.transform.SetPositionAndRotation(new Vector3(b.center.x, b.min.y - 0.155f, b.center.z), Quaternion.LookRotation(through));
+                cap.AddComponent<BoxCollider>().size = new Vector3(width, 0.3f, 0.2f);
+                Physics.SyncTransforms();
 
                 if (!Physics.Raycast(new Vector3(b.center.x, b.min.y + 0.3f, b.center.z), Vector3.down, out var sillHit, 1.5f, ~0, QueryTriggerInteraction.Ignore))
                     continue;
@@ -855,6 +864,67 @@ namespace MurderMystery.EditorTools
                 .Where(h => h.normal.y > 0.6f).OrderBy(h => h.distance).Select(h => (float?)h.point.y).FirstOrDefault();
             if (floor == null) return null;
             return NavMesh.SamplePosition(new Vector3(p.x, floor.Value, p.z), out var hit, 0.6f, NavMesh.AllAreas) ? hit.position : (Vector3?)null;
+        }
+
+        /// <summary>
+        /// Places a player can reach only ducked. Doorways are expected (a cell or two); a large patch means a
+        /// crawl space (under a raised floor or 툇마루) that players would slip into by walking at its edge.
+        /// </summary>
+        public static string VerifyDuckOnly()
+        {
+            Physics.SyncTransforms();
+            var instance = BakeTempNavMesh();
+            try
+            {
+                var tri = NavMesh.CalculateTriangulation();
+                var start = SampleOrNull(new Vector3(Discussion.x, 0.5f, Discussion.y));
+                var cells = new Dictionary<Vector2Int, Vector3>();
+                for (var i = 0; i < tri.indices.Length; i += 3)
+                {
+                    var a = tri.vertices[tri.indices[i]];
+                    var b = tri.vertices[tri.indices[i + 1]];
+                    var c = tri.vertices[tri.indices[i + 2]];
+                    for (var u = 0.1f; u < 1f; u += 0.2f)
+                    for (var v = 0.1f; u + v < 1f; v += 0.2f)
+                    {
+                        var p = a + (b - a) * u + (c - a) * v;
+                        var key = new Vector2Int(Mathf.FloorToInt(p.x / 0.5f), Mathf.FloorToInt(p.z / 0.5f));
+                        if (cells.ContainsKey(key)) continue;
+                        var bottom = p + Vector3.up * (BodyRadius + 0.2f);
+                        var top = p + Vector3.up * (BodyHeight - BodyRadius);
+                        if (Physics.CheckCapsule(bottom, top, BodyRadius * 0.95f, ~0, QueryTriggerInteraction.Ignore)) cells[key] = p;
+                    }
+                }
+
+                // Flood-fill neighbouring cells into patches.
+                var seen = new HashSet<Vector2Int>();
+                var report = new List<string>();
+                foreach (var cell in cells.Keys)
+                {
+                    if (!seen.Add(cell)) continue;
+                    var patch = new List<Vector2Int> { cell };
+                    for (var k = 0; k < patch.Count; k++)
+                        foreach (var d in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right })
+                        {
+                            var n = patch[k] + d;
+                            if (cells.ContainsKey(n) && seen.Add(n)) patch.Add(n);
+                        }
+                    if (patch.Count < 6) continue;
+                    var at = cells[patch[patch.Count / 2]];
+                    var reachable = false;
+                    if (start != null)
+                    {
+                        var path = new NavMeshPath();
+                        reachable = NavMesh.CalculatePath(start.Value, at, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete;
+                    }
+                    report.Add($"{(reachable ? "REACH" : "sealed")} {patch.Count * 0.25f:F1} m² around ({at.x:F1}, {at.y:F2}, {at.z:F1})");
+                }
+                return $"duck-only patches ≥ 1.5 m²: {report.Count}\n" + string.Join("\n", report);
+            }
+            finally
+            {
+                NavMesh.RemoveNavMeshData(instance);
+            }
         }
 
         private static NavMeshDataInstance BakeTempNavMesh()

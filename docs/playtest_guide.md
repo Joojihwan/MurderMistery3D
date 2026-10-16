@@ -85,3 +85,4 @@
   3. `*_BurstDebugInformation_DoNotShip` 폴더를 빼고 `읽어주세요.txt`를 넣어 zip
   4. `gh release create v<버전> <zip> --repo Joojihwan/MurderMistery3D-release --prerelease --title "<버전>" --notes-file <노트>`
 - 0.1.0-alpha (2026-10-16): https://github.com/Joojihwan/MurderMistery3D-release/releases/tag/v0.1.0-alpha
+- 0.1.1-alpha (2026-10-16): 맵 접지·문 출입 보정, 낮은 문 자동 숙이기 (빌드 완료)
