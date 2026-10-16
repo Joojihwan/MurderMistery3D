@@ -737,7 +737,7 @@ namespace MurderMystery.EditorTools
         }
 
         // A door whose sill is more than this above the ground in front of it gets a stepping stone.
-        private const float DoorStepMin = 0.4f;
+        private const float DoorStepMin = 0.25f;
         // Higher than two steps: not meant to be entered from that side (a window over a drop).
         private const float DoorStepMax = 1.2f;
         // A sill this far above the floor on its higher side marks a window, not a door.
@@ -792,18 +792,24 @@ namespace MurderMystery.EditorTools
                 foreach (var sign in new[] { 1f, -1f })
                 {
                     var outward = through * sign;
-                    var floor = WalkableBelow(b.center + outward * 0.8f, sill + 0.3f);
+                    var floor = WalkableBelow(b.center + outward * 1.1f, sill + 0.3f);
                     if (floor == null || sill - floor.Value <= DoorStepMin || sill - floor.Value > DoorStepMax) continue;
                     // Already something to step on just outside?
                     var near = WalkableBelow(b.center + outward * 0.45f, sill + 0.05f);
-                    if (near != null && near.Value > floor.Value + 0.2f) continue;
+                    if (near != null && near.Value > floor.Value + 0.15f) continue;
 
-                    const float depth = 0.45f;
-                    var top = floor.Value + (sill - floor.Value) / 2f;
+                    // One stone per 0.3 m of rise, like a short flight of 섬돌: the highest against the sill.
+                    const float depth = 0.4f;
+                    var rise = sill - floor.Value;
+                    var steps = Mathf.Max(1, Mathf.CeilToInt(rise / 0.3f) - 1);
                     var bottom = floor.Value - 0.3f;
-                    PlaceStone(p, $"Door step stone ({leaf.name})", template,
-                        new Vector3(b.center.x, (top + bottom) / 2f, b.center.z) + outward * (0.14f + depth / 2f),
-                        new Vector3(width + 0.1f, top - bottom, depth), Quaternion.LookRotation(outward));
+                    for (var k = 1; k <= steps; k++)
+                    {
+                        var top = sill - rise * k / (steps + 1);
+                        PlaceStone(p, $"Door step stone ({leaf.name})", template,
+                            new Vector3(b.center.x, (top + bottom) / 2f, b.center.z) + outward * (0.14f + depth * (k - 0.5f)),
+                            new Vector3(width + 0.1f, top - bottom, depth), Quaternion.LookRotation(outward));
+                    }
                     Physics.SyncTransforms();
                     count++;
                 }

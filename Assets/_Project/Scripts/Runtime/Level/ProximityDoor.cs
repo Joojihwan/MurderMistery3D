@@ -37,11 +37,9 @@ namespace MurderMystery.Level
             closedPosition = transform.position;
             closedRotation = transform.rotation;
 
-            // The leaf's thin axis is the way through; it is hinged at one end of its width.
+            // The leaf's thin axis is the way through.
             var filter = GetComponentInChildren<MeshFilter>();
             through = Vector3.forward;
-            var across = Vector3.right;
-            var half = Mathf.Max(bounds.extents.x, bounds.extents.z);
             if (filter != null && filter.sharedMesh != null)
             {
                 var size = filter.sharedMesh.bounds.size;
@@ -49,49 +47,10 @@ namespace MurderMystery.Level
                 var t = filter.transform.TransformDirection(axis);
                 t.y = 0f;
                 if (t.sqrMagnitude > 0.01f) through = t.normalized;
-                across = Vector3.Cross(Vector3.up, through);
-                var min = float.MaxValue;
-                var max = float.MinValue;
-                var m = filter.transform.localToWorldMatrix;
-                foreach (var v in filter.sharedMesh.vertices)
-                {
-                    var d = Vector3.Dot(m.MultiplyPoint3x4(v) - center, across);
-                    min = Mathf.Min(min, d);
-                    max = Mathf.Max(max, d);
-                }
-                if (max > min) half = (max - min) / 2f;
             }
-            hinge = center + across * (HingeSide(across, half) * half);
+            // The scanned leaves have their origin on the hinge edge.
+            hinge = transform.position;
             hinge.y = center.y;
-        }
-
-        /// <summary>
-        /// +1 or -1 along <paramref name="across"/>. A leaf of a pair is hinged at its outer end, away from its
-        /// partner; a single leaf at the end nearer its frame post.
-        /// </summary>
-        private float HingeSide(Vector3 across, float half)
-        {
-            foreach (var other in FindObjectsByType<ProximityDoor>(FindObjectsSortMode.None))
-            {
-                if (other == this) continue;
-                var d = OtherCenter(other) - center;
-                d.y = 0f;
-                if (Mathf.Abs(Vector3.Dot(d, through)) < 0.15f && d.magnitude < half * 2.6f && d.magnitude > 0.05f)
-                    return Vector3.Dot(d, across) > 0f ? -1f : 1f;
-            }
-            var plus = Physics.Raycast(center, across, out var a, half + 0.6f, ~0, QueryTriggerInteraction.Ignore) ? a.distance : float.MaxValue;
-            var minus = Physics.Raycast(center, -across, out var b, half + 0.6f, ~0, QueryTriggerInteraction.Ignore) ? b.distance : float.MaxValue;
-            return plus <= minus ? 1f : -1f;
-        }
-
-        private static Vector3 OtherCenter(ProximityDoor other)
-        {
-            if (other.center != Vector3.zero) return other.center;
-            var renderers = other.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0) return other.transform.position;
-            var b = renderers[0].bounds;
-            foreach (var r in renderers) b.Encapsulate(r.bounds);
-            return b.center;
         }
 
         private void OnEnable() => Doors.Add(this);
