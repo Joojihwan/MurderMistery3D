@@ -2,63 +2,242 @@
   "culpritId": "jaeha",
   "characters": [
     {
-      "id": "jeong", "name": "큰며느리 정씨", "isCulprit": false, "canRead": true,
+      "id": "jeong",
+      "name": "큰며느리 정씨",
+      "isCulprit": false,
+      "canRead": true,
       "startItems": [],
-      "startFacts": ["P_DECLARATION", "P_BUNI_BREWS", "F_JEONG_BARRED_GATE", "F_JEONG_GAVE_LETTER", "F_JEONG_SAW_BUNI_2250", "F_JEONG_BURNT_SMELL", "F_JEONG_SAW_DRINK", "F_JEONG_HEARD_TOMORROW", "F_JEONG_RATPOISON_KNOWN"],
+      "startFacts": [
+        "P_DECLARATION",
+        "P_BUNI_BREWS",
+        "F_JEONG_BARRED_GATE",
+        "F_JEONG_GAVE_LETTER",
+        "F_JEONG_SAW_BUNI_2250",
+        "F_JEONG_BURNT_SMELL",
+        "F_JEONG_SAW_DRINK",
+        "F_JEONG_HEARD_TOMORROW",
+        "F_JEONG_RATPOISON_KNOWN",
+        "F_JEONG_SLEEP_DRUG"
+      ],
       "goals": [
-        { "id": "jeong.vote", "type": "VoteCulprit", "points": 3, "itemIds": [] },
-        { "id": "jeong.secret", "type": "Secret", "points": 2, "itemIds": [] },
-        { "id": "jeong.possess", "type": "Possess", "points": 1, "itemIds": ["D1"] },
-        { "id": "jeong.bonus", "type": "BonusIntent", "points": 1, "itemIds": [] }
+        {
+          "id": "jeong.vote",
+          "type": "VoteCulprit",
+          "points": 3,
+          "itemIds": []
+        },
+        {
+          "id": "jeong.secret",
+          "type": "Secret",
+          "points": 2,
+          "itemIds": []
+        },
+        {
+          "id": "jeong.possess",
+          "type": "Possess",
+          "points": 1,
+          "itemIds": [
+            "D1"
+          ]
+        },
+        {
+          "id": "jeong.bonus",
+          "type": "BonusIntent",
+          "points": 1,
+          "itemIds": []
+        }
       ]
     },
     {
-      "id": "jaeha", "name": "윤재하", "isCulprit": true, "canRead": true,
+      "id": "jaeha",
+      "name": "윤재하",
+      "isCulprit": true,
+      "canRead": true,
       "startItems": [],
-      "startFacts": ["P_DECLARATION", "P_BUNI_BREWS", "F_JAEHA_SAW_BYEON_2010", "F_JAEHA_TOOK_POISON", "F_JAEHA_TOLD_LEDGER", "F_JAEHA_POISONED", "F_JAEHA_HEARD_TOMORROW", "F_JAEHA_HEARD_THUD", "F_JAEHA_SAW_SKIRT_0048", "F_JAEHA_TOOK_YEJO", "F_JAEHA_HEARD_HEAVY_0130"],
+      "startFacts": [
+        "P_DECLARATION",
+        "P_BUNI_BREWS",
+        "F_JAEHA_SAW_BYEON_2010",
+        "F_JAEHA_TOOK_POISON",
+        "F_JAEHA_TOLD_LEDGER",
+        "F_JAEHA_POISONED",
+        "F_JAEHA_HEARD_TOMORROW",
+        "F_JAEHA_HEARD_THUD",
+        "F_JAEHA_SAW_SKIRT_0048",
+        "F_JAEHA_TOOK_YEJO",
+        "F_JAEHA_HEARD_HEAVY_0130",
+        "F_JAEHA_BEOSEON"
+      ],
       "goals": [
-        { "id": "jaeha.vote", "type": "VoteNotAccused", "points": 5, "itemIds": [] },
-        { "id": "jaeha.possess", "type": "Possess", "points": 1, "itemIds": ["H4"] },
-        { "id": "jaeha.secret", "type": "Secret", "points": 1, "itemIds": [] }
+        {
+          "id": "jaeha.vote",
+          "type": "VoteNotAccused",
+          "points": 5,
+          "itemIds": []
+        },
+        {
+          "id": "jaeha.possess",
+          "type": "Possess",
+          "points": 1,
+          "itemIds": [
+            "H4"
+          ]
+        },
+        {
+          "id": "jaeha.secret",
+          "type": "Secret",
+          "points": 1,
+          "itemIds": []
+        }
       ]
     },
     {
-      "id": "buni", "name": "분이", "isCulprit": false, "canRead": false,
-      "startItems": ["H2"],
-      "startFacts": ["P_DECLARATION", "P_BUNI_BREWS", "F_BUNI_GOT_PACKET", "F_BUNI_SAW_JAEHA_OIL", "F_BUNI_DELIVERED_2245", "F_BUNI_ALIVE_0045", "F_BUNI_TOOK_ENVELOPE", "F_JEONG_RATPOISON_KNOWN"],
+      "id": "buni",
+      "name": "분이",
+      "isCulprit": false,
+      "canRead": false,
+      "startItems": [
+        "H2"
+      ],
+      "startFacts": [
+        "P_DECLARATION",
+        "P_BUNI_BREWS",
+        "F_BUNI_GOT_PACKET",
+        "F_BUNI_SAW_JAEHA_OIL",
+        "F_BUNI_DELIVERED_2245",
+        "F_BUNI_ALIVE_0045",
+        "F_BUNI_TOOK_ENVELOPE",
+        "F_JEONG_RATPOISON_KNOWN",
+        "F_BUNI_BROKE_BOWL",
+        "F_BUNI_FLOUR"
+      ],
       "goals": [
-        { "id": "buni.vote", "type": "VoteCulprit", "points": 3, "itemIds": [] },
-        { "id": "buni.possess", "type": "Possess", "points": 2, "itemIds": ["H1"] },
-        { "id": "buni.secret", "type": "Secret", "points": 1, "itemIds": [] },
-        { "id": "buni.bonus", "type": "BonusIntent", "points": 1, "itemIds": [] }
+        {
+          "id": "buni.vote",
+          "type": "VoteCulprit",
+          "points": 3,
+          "itemIds": []
+        },
+        {
+          "id": "buni.possess",
+          "type": "Possess",
+          "points": 2,
+          "itemIds": [
+            "H1"
+          ]
+        },
+        {
+          "id": "buni.secret",
+          "type": "Secret",
+          "points": 1,
+          "itemIds": []
+        },
+        {
+          "id": "buni.bonus",
+          "type": "BonusIntent",
+          "points": 1,
+          "itemIds": []
+        }
       ]
     },
     {
-      "id": "heo", "name": "허 의원", "isCulprit": false, "canRead": true,
+      "id": "heo",
+      "name": "허 의원",
+      "isCulprit": false,
+      "canRead": true,
       "startItems": [],
-      "startFacts": ["P_DECLARATION", "P_BUNI_BREWS", "F_HEO_TERMINAL", "F_HEO_CHANGED_PRESCRIPTION", "F_HEO_SAW_BYEON_0145", "F_HEO_FAINT_MEANS_SMALL", "F_HEO_OWN_ARSENIC"],
+      "startFacts": [
+        "P_DECLARATION",
+        "P_BUNI_BREWS",
+        "F_HEO_TERMINAL",
+        "F_HEO_CHANGED_PRESCRIPTION",
+        "F_HEO_SAW_BYEON_0145",
+        "F_HEO_FAINT_MEANS_SMALL",
+        "F_HEO_OWN_ARSENIC",
+        "F_HEO_0015_VISIT",
+        "F_HEO_BUJA"
+      ],
       "goals": [
-        { "id": "heo.vote", "type": "VoteCulprit", "points": 3, "itemIds": [] },
-        { "id": "heo.possess", "type": "Possess", "points": 2, "itemIds": ["D2"] },
-        { "id": "heo.secret", "type": "Secret", "points": 1, "itemIds": [] },
-        { "id": "heo.bonus", "type": "BonusIntent", "points": 1, "itemIds": [] }
+        {
+          "id": "heo.vote",
+          "type": "VoteCulprit",
+          "points": 3,
+          "itemIds": []
+        },
+        {
+          "id": "heo.possess",
+          "type": "Possess",
+          "points": 2,
+          "itemIds": [
+            "D2"
+          ]
+        },
+        {
+          "id": "heo.secret",
+          "type": "Secret",
+          "points": 1,
+          "itemIds": []
+        },
+        {
+          "id": "heo.bonus",
+          "type": "BonusIntent",
+          "points": 1,
+          "itemIds": []
+        }
       ]
     },
     {
-      "id": "byeon", "name": "변 행수", "isCulprit": false, "canRead": true,
+      "id": "byeon",
+      "name": "변 행수",
+      "isCulprit": false,
+      "canRead": true,
       "startItems": [],
-      "startFacts": ["P_DECLARATION", "P_BUNI_BREWS", "F_BYEON_REFUSED_2000", "F_BYEON_ASKED_LEDGER", "F_BYEON_SHADOW_2305", "F_BYEON_DEAD_0130", "F_BYEON_TOOK_LEDGER"],
+      "startFacts": [
+        "P_DECLARATION",
+        "P_BUNI_BREWS",
+        "F_BYEON_REFUSED_2000",
+        "F_BYEON_ASKED_LEDGER",
+        "F_BYEON_SHADOW_2305",
+        "F_BYEON_DEAD_0130",
+        "F_BYEON_TOOK_LEDGER",
+        "F_BYEON_SAMPLE"
+      ],
       "goals": [
-        { "id": "byeon.vote", "type": "VoteCulprit", "points": 3, "itemIds": [] },
-        { "id": "byeon.secret", "type": "Secret", "points": 2, "itemIds": [] },
-        { "id": "byeon.notaccused", "type": "VoteNotAccused", "points": 1, "itemIds": [] },
-        { "id": "byeon.bonus", "type": "BonusIntent", "points": 1, "itemIds": [] }
+        {
+          "id": "byeon.vote",
+          "type": "VoteCulprit",
+          "points": 3,
+          "itemIds": []
+        },
+        {
+          "id": "byeon.secret",
+          "type": "Secret",
+          "points": 2,
+          "itemIds": []
+        },
+        {
+          "id": "byeon.notaccused",
+          "type": "VoteNotAccused",
+          "points": 1,
+          "itemIds": []
+        },
+        {
+          "id": "byeon.bonus",
+          "type": "BonusIntent",
+          "points": 1,
+          "itemIds": []
+        }
       ]
     }
   ],
   "bonusQuestion": {
     "text": "범인은 무엇을 하려 했는가?",
-    "choices": ["대감을 죽이려 했다", "대감을 앓게 해서 무언가를 미루려 했다", "대감의 문서를 빼앗으려 했다", "실수로 독이 들어갔다"],
+    "choices": [
+      "대감을 죽이려 했다",
+      "대감을 앓게 해서 무언가를 미루려 했다",
+      "대감의 문서를 빼앗으려 했다",
+      "실수로 독이 들어갔다"
+    ],
     "answerIndex": 1
   }
 }

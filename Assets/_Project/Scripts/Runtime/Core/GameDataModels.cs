@@ -21,6 +21,8 @@ namespace MurderMystery.Core
         public string text;
         public string sealedText;
         public string[] exposes = Array.Empty<string>();
+        /// <summary>For a key: the lock it opens ("none" for a key that fits nothing).</summary>
+        public string unlocks;
 
         public ClueKind Kind => (ClueKind)Enum.Parse(typeof(ClueKind), kind);
         public bool IsDeep => layer == "Deep";
@@ -38,11 +40,30 @@ namespace MurderMystery.Core
         public string text;
     }
 
+    /// <summary>
+    /// A locked door or container. With a key it opens for everyone once someone holding the key uses it;
+    /// without one (empty keyId) it never opens and only explains why. Spots behind it cannot be searched
+    /// until it is open.
+    /// </summary>
+    [Serializable]
+    public class LockData
+    {
+        public string id;
+        public string title;
+        public string keyId;
+        public string[] spotIds = Array.Empty<string>();
+        public string lockedText;
+        public string openedText;
+
+        public bool Openable => !string.IsNullOrEmpty(keyId);
+    }
+
     [Serializable]
     public class CluesFile
     {
         public ClueData[] clues = Array.Empty<ClueData>();
         public RetrievedTraceData[] retrievedTraces = Array.Empty<RetrievedTraceData>();
+        public LockData[] locks = Array.Empty<LockData>();
     }
 
     [Serializable]

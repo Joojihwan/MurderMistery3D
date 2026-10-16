@@ -123,6 +123,18 @@ namespace MurderMystery.Core
             foreach (var s in deepSpots.Where(s => data.RetrievedTraceText(s) == null))
                 issues.Add($"spot {s}: deep spot without a retrieved-trace text");
 
+            // Locks: a key must be an item that names its lock; spots behind a lock must exist.
+            var spotIds = new HashSet<string>(data.Clues.clues.SelectMany(c => c.SpotIds));
+            foreach (var l in data.Clues.locks ?? new LockData[0])
+            {
+                if (string.IsNullOrEmpty(l.lockedText)) issues.Add($"lock {l.id}: no lockedText");
+                if (l.Openable && (!data.ClueById.TryGetValue(l.keyId, out var key) || key.Kind != ClueKind.Item || key.unlocks != l.id))
+                    issues.Add($"lock {l.id}: key '{l.keyId}' is not an item that unlocks it");
+                foreach (var sp in l.spotIds.Where(sp => !spotIds.Contains(sp))) issues.Add($"lock {l.id}: unknown spot '{sp}'");
+            }
+            foreach (var key in data.Clues.clues.Where(c => !string.IsNullOrEmpty(c.unlocks) && c.unlocks != "none"))
+                if (!data.LockById.ContainsKey(key.unlocks)) issues.Add($"clue {key.id}: unlocks unknown lock '{key.unlocks}'");
+
             return issues;
         }
     }

@@ -56,9 +56,21 @@ namespace MurderMystery.Gameplay
             else if (interactor.Focused != null)
             {
                 var spot = interactor.Focused;
-                var deep = spot.Layer == Investigation.SpotLayer.Deep ? " (2차 조사부터)" : "";
-                prompt = $"E: {spot.DisplayName} 살펴보기 ({GameRules.SpotCost}점){deep}";
-                if (snap.retrievableSpots.Contains(spot.SpotId)) prompt += $"   R: 숨긴 물건 회수 ({GameRules.RetrieveCost}점)";
+                var lockData = c.Data.LockOfSpot(spot.SpotId);
+                if (lockData != null && !PlayerInteractor.IsUnlocked(c, lockData.id))
+                {
+                    prompt = $"{lockData.lockedText}  E: 열쇠를 써 본다";
+                }
+                else
+                {
+                    var deep = spot.Layer == Investigation.SpotLayer.Deep ? " (2차 조사부터)" : "";
+                    prompt = $"E: {spot.DisplayName} 살펴보기 ({GameRules.SpotCost}점){deep}";
+                    if (snap.retrievableSpots.Contains(spot.SpotId)) prompt += $"   R: 숨긴 물건 회수 ({GameRules.RetrieveCost}점)";
+                }
+            }
+            else if (interactor.FocusedDoor != null && c.Data.LockById.TryGetValue(interactor.FocusedDoor.LockId, out var door))
+            {
+                prompt = door.Openable ? $"{door.lockedText}  E: 열쇠를 써 본다" : door.lockedText;
             }
             if (prompt != null)
                 GUI.Label(new Rect(Screen.width / 2f - 220, Screen.height / 2f + 20, 440, 30), prompt, wrap);
@@ -70,6 +82,16 @@ namespace MurderMystery.Gameplay
                 y += 24;
             }
 
+            // The reading phase opens the book; it can be reopened from the notebook at any time.
+            if (phase != lastPhase)
+            {
+                if (phase == GamePhase.Reading)
+                {
+                    showBook = true;
+                    interactor.SetNotebook(true);
+                }
+                lastPhase = phase;
+            }
             if (phase == GamePhase.Vote) DrawVote(c, snap);
             if (interactor.NotebookOpen) DrawNotebook(c, snap);
             if (interactor.NpcMenuOpen) DrawNpcMenu(c, snap);
@@ -131,11 +153,40 @@ namespace MurderMystery.Gameplay
             GUILayout.EndArea();
         }
 
+        private bool showBook;
+        private Vector2 bookScroll;
+        private GamePhase lastPhase = GamePhase.CharacterSelect;
+        private GUIStyle bookStyle;
+
+        private void DrawBook(IGameClient c, PlayerSnapshot snap, Rect rect)
+        {
+            bookStyle ??= new GUIStyle(GUI.skin.label) { wordWrap = true, fontSize = 15, richText = true };
+            GUILayout.BeginArea(new Rect(rect.x + 10, rect.y + 56, rect.width - 20, rect.height - 66));
+            bookScroll = GUILayout.BeginScrollView(bookScroll);
+            var mine = c.Data.Book(snap.characterId);
+            var common = c.Data.Book("common");
+            if (mine == null && common == null) GUILayout.Label("시나리오북이 없습니다.", wrap);
+            if (mine != null) GUILayout.Label(mine, bookStyle);
+            if (common != null)
+            {
+                GUILayout.Space(16);
+                GUILayout.Label(common, bookStyle);
+            }
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
         private void DrawNotebook(IGameClient c, PlayerSnapshot snap)
         {
-            var rect = new Rect(Screen.width - 470, 10, 460, Screen.height - 20);
-            GUI.Box(rect, "수첩");
-            GUILayout.BeginArea(new Rect(rect.x + 10, rect.y + 26, rect.width - 20, rect.height - 36));
+            var rect = new Rect(Screen.width - 520, 10, 510, Screen.height - 20);
+            GUI.Box(rect, showBook ? "시나리오북 (나만 본다)" : "수첩");
+            if (GUI.Button(new Rect(rect.x + 10, rect.y + 24, 120, 26), showBook ? "수첩 보기" : "시나리오북")) showBook = !showBook;
+            if (showBook)
+            {
+                DrawBook(c, snap, rect);
+                return;
+            }
+            GUILayout.BeginArea(new Rect(rect.x + 10, rect.y + 56, rect.width - 20, rect.height - 66));
             notebookScroll = GUILayout.BeginScrollView(notebookScroll);
 
             if (snap.timed && GUILayout.Button(snap.ready ? "준비 완료 취소" : "준비 완료 (모두 누르면 다음 단계)")) c.SetReady(!snap.ready);

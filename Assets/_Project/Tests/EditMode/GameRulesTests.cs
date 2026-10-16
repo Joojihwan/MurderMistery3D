@@ -41,13 +41,13 @@ namespace MurderMystery.Tests
         public void Points_ResetPerRoundAndDoNotCarryOver()
         {
             var s = NewSession(GamePhase.Investigation1);
-            Assert.AreEqual(3, s.Players["heo"].InvestigationPoints);
+            Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints);
             s.Investigate("heo", "04");
-            Assert.AreEqual(2, s.Players["heo"].InvestigationPoints);
+            Assert.AreEqual(GameRules.InvestigationPointsPerRound - 1, s.Players["heo"].InvestigationPoints);
             s.AdvancePhase(); // discussion
             Assert.AreEqual(0, s.Players["heo"].InvestigationPoints);
             s.AdvancePhase(); // investigation 2
-            Assert.AreEqual(3, s.Players["heo"].InvestigationPoints);
+            Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints);
         }
 
         [Test]
@@ -59,7 +59,7 @@ namespace MurderMystery.Tests
             var r = s.RetrieveHidden("buni", "13");
             Assert.IsTrue(r.Success, r.Error);
             CollectionAssert.Contains(r.GainedItems, "H1");
-            Assert.AreEqual(1, s.Players["buni"].InvestigationPoints);
+            Assert.AreEqual(GameRules.InvestigationPointsPerRound - GameRules.RetrieveCost, s.Players["buni"].InvestigationPoints);
 
             s.SetPhase(GamePhase.Investigation2);
             var later = s.Investigate("jeong", "13");
@@ -89,7 +89,7 @@ namespace MurderMystery.Tests
         {
             var s = NewSession(GamePhase.Investigation1);
             s.Investigate("heo", "05");
-            Assert.AreEqual(3, s.Players["heo"].InvestigationPoints, "public bowl costs nothing");
+            Assert.AreEqual(GameRules.InvestigationPointsPerRound, s.Players["heo"].InvestigationPoints, "public bowl costs nothing");
 
             s.Investigate("jaeha", "04");                       // culprit pockets the burnt paper
             var later = s.Investigate("jeong", "04");
@@ -101,11 +101,41 @@ namespace MurderMystery.Tests
         public void NotEnoughPoints_IsRejected()
         {
             var s = NewSession(GamePhase.Investigation1);
-            s.Investigate("byeon", "01");
-            s.Investigate("byeon", "03");
+            // Spend down to one point.
+            var spots = new[] { "01", "03", "07", "11", "12", "09" };
+            var i = 0;
+            while (s.Players["byeon"].InvestigationPoints > 1) s.Investigate("byeon", spots[i++]);
             Assert.IsFalse(s.RetrieveHidden("byeon", "17").Success, "1 point left, retrieve costs 2");
-            Assert.IsTrue(s.Investigate("byeon", "07").Success);
-            Assert.IsFalse(s.Investigate("byeon", "11").Success);
+            Assert.IsTrue(s.Investigate("byeon", spots[i++]).Success);
+            Assert.IsFalse(s.Investigate("byeon", spots[i]).Success);
+        }
+
+        [Test]
+        public void LockedSpot_NeedsTheRightKey_ThenOpensForEveryone()
+        {
+            var s = NewSession(GamePhase.Investigation1);
+            Assert.IsFalse(s.Investigate("jeong", "20").Success, "shrine is locked");
+            Assert.IsFalse(s.TryUnlock("jeong", "shrine").Success, "no key");
+
+            s.Investigate("jeong", "27");                                   // the rusty key fits nothing
+            CollectionAssert.Contains(s.Players["jeong"].Inventory, "M1");
+            var wrong = s.TryUnlock("jeong", "shrine");
+            Assert.IsFalse(wrong.Success);
+            StringAssert.Contains("맞지 않는다", wrong.Error);
+
+            s.Investigate("heo", "19", "K1");                               // the shrine key, from the master's robe
+            Assert.IsTrue(s.TryUnlock("heo", "shrine").Success);
+            Assert.IsTrue(s.IsUnlocked("shrine"));
+            Assert.IsTrue(s.Investigate("jeong", "20").Success, "open for everyone once unlocked");
+        }
+
+        [Test]
+        public void GateWithoutKey_NeverOpens()
+        {
+            var s = NewSession(GamePhase.Investigation1);
+            var r = s.TryUnlock("byeon", "outer");
+            Assert.IsFalse(r.Success);
+            StringAssert.Contains("열 수 없다", r.Error);
         }
 
         [Test]

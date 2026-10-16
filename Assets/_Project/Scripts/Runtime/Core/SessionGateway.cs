@@ -12,6 +12,7 @@ namespace MurderMystery.Core
         PlayerSnapshot GetSnapshot(string playerId);
         ActionResult Investigate(string playerId, string spotId, string preferredItem = null);
         ActionResult RetrieveHidden(string playerId, string spotId);
+        ActionResult TryUnlock(string playerId, string lockId);
         ActionResult OpenEnvelope(string playerId, string clueId);
         ActionResult Disclose(string playerId, string clueId);
         ActionResult Give(string fromId, string toId, string itemId);
@@ -85,6 +86,7 @@ namespace MurderMystery.Core
         public ActionResult Investigate(string playerId, string spotId, string preferredItem = null) =>
             Session.Investigate(playerId, spotId, preferredItem);
         public ActionResult RetrieveHidden(string playerId, string spotId) => Session.RetrieveHidden(playerId, spotId);
+        public ActionResult TryUnlock(string playerId, string lockId) => Session.TryUnlock(playerId, lockId);
         public ActionResult OpenEnvelope(string playerId, string clueId) => Session.OpenEnvelope(playerId, clueId);
         public ActionResult Disclose(string playerId, string clueId) => Session.Disclose(playerId, clueId);
 

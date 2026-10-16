@@ -19,7 +19,7 @@ namespace MurderMystery.Core
 
     public static class GameRules
     {
-        public const int InvestigationPointsPerRound = 3;
+        public const int InvestigationPointsPerRound = 4;
         public const int SpotCost = 1;
         public const int RetrieveCost = 2;
         public const int QuestionsPerRound = 2;

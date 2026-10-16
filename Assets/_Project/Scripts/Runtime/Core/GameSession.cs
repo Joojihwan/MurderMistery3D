@@ -28,11 +28,14 @@ namespace MurderMystery.Core
         public IReadOnlyDictionary<string, PlayerState> Players => players;
         public IReadOnlyCollection<string> PublicBoard => publicBoard;
         public IReadOnlyDictionary<string, SpotState> Spots => spots;
+        /// <summary>Locks someone has opened (open for everyone from then on).</summary>
+        public IReadOnlyCollection<string> UnlockedLocks => unlocked;
 
         private readonly Dictionary<string, PlayerState> players = new Dictionary<string, PlayerState>();
         private readonly Dictionary<string, SpotState> spots = new Dictionary<string, SpotState>();
         private readonly HashSet<string> publicBoard = new HashSet<string>();   // clue IDs disclosed to all
         private readonly HashSet<string> openedEnvelopes = new HashSet<string>();
+        private readonly HashSet<string> unlocked = new HashSet<string>();
         private readonly NpcResponder npc;
 
         public GameSession(GameData data, int seed = 0)
@@ -116,6 +119,8 @@ namespace MurderMystery.Core
             if (InvestigationRound == 0) return ActionResult.Fail("조사 단계가 아닙니다.");
             if (!spots.TryGetValue(spotId, out var spot)) return ActionResult.Fail("조사할 것이 없는 곳입니다.");
             if (spot.Deep && InvestigationRound < 2) return ActionResult.Fail("이곳은 2차 조사부터 살필 수 있습니다.");
+            var lockData = Data.LockOfSpot(spotId);
+            if (lockData != null && !unlocked.Contains(lockData.id)) return ActionResult.Fail(lockData.lockedText);
             // Looking again at something everyone already knows (e.g. the public tangyak bowl) is free.
             var cost = spot.RemainingItems.Count == 0 && !spot.Disturbed && spot.Traces.All(Data.PublicFacts.Contains)
                 ? 0
@@ -179,6 +184,32 @@ namespace MurderMystery.Core
             var clue = Data.ClueById[clueId];
             p.Notebook.Add(new NotebookEntry { Source = source, Text = $"{clue.title}: {ReadableText(p, clue, clue.text)}" });
         }
+
+        // ------------------------------------------------------------------ locks
+
+        /// <summary>Tries a lock with whatever key the player holds. Allowed in any phase (it is not a search).</summary>
+        public ActionResult TryUnlock(string playerId, string lockId)
+        {
+            if (!players.TryGetValue(playerId, out var p)) return ActionResult.Fail("unknown player");
+            if (!Data.LockById.TryGetValue(lockId, out var lockData)) return ActionResult.Fail("잠긴 곳이 아닙니다.");
+            if (unlocked.Contains(lockId)) return new ActionResult { Success = true };
+            if (!lockData.Openable) return ActionResult.Fail(lockData.lockedText);
+            if (!p.Inventory.Contains(lockData.keyId))
+            {
+                var keys = p.Inventory.Where(id => !string.IsNullOrEmpty(Data.ClueById[id].unlocks)).ToList();
+                return ActionResult.Fail(keys.Count == 0
+                    ? lockData.lockedText
+                    : $"가진 열쇠({string.Join(", ", keys.Select(k => Data.ClueById[k].title))})가 맞지 않는다.");
+            }
+
+            unlocked.Add(lockId);
+            var result = new ActionResult { Success = true };
+            result.Messages.Add(lockData.openedText);
+            p.Notebook.Add(new NotebookEntry { Source = $"lock:{lockId}", Text = lockData.openedText });
+            return result;
+        }
+
+        public bool IsUnlocked(string lockId) => unlocked.Contains(lockId);
 
         // ------------------------------------------------------------------ documents & sharing
 

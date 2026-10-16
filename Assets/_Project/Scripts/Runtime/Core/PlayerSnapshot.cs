@@ -64,6 +64,8 @@ namespace MurderMystery.Core
         public string[] notebook = Array.Empty<string>();
         public TopicView[] topics = Array.Empty<TopicView>();
         public string[] retrievableSpots = Array.Empty<string>();
+        /// <summary>Locks that are open (shared by everyone).</summary>
+        public string[] unlockedLocks = Array.Empty<string>();
 
         // Secret talks (only the ones involving this player).
         public TalkRequestView[] incomingTalks = Array.Empty<TalkRequestView>();
@@ -117,7 +119,8 @@ namespace MurderMystery.Core
                     .Select(t => new TopicView { id = t.id, category = t.category, label = t.label }).ToArray(),
                 retrievableSpots = s.Spots.Values
                     .Where(sp => sp.RemainingItems.Any(i => s.Data.ClueById[i].owner == playerId))
-                    .Select(sp => sp.SpotId).ToArray()
+                    .Select(sp => sp.SpotId).ToArray(),
+                unlockedLocks = s.UnlockedLocks.OrderBy(i => i).ToArray()
             };
         }
 

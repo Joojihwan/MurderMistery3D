@@ -21,6 +21,8 @@ namespace MurderMystery.Gameplay
         private Transform npc;
 
         public InvestigationSpot Focused { get; private set; }
+        /// <summary>A shut gate or blocked passage in front of the player.</summary>
+        public LockedDoor FocusedDoor { get; private set; }
         public bool NpcFocused { get; private set; }
         public bool NotebookOpen { get; private set; }
         public bool NpcMenuOpen { get; set; }
@@ -71,17 +73,31 @@ namespace MurderMystery.Gameplay
                 }
                 else if (Focused != null)
                 {
-                    client.Investigate(Focused.SpotId);
+                    // A spot behind a lock (a locked chest): the first E tries the keys.
+                    var lockData = client.Data.LockOfSpot(Focused.SpotId);
+                    if (lockData != null && !IsUnlocked(client, lockData.id)) client.TryUnlock(lockData.id);
+                    else client.Investigate(Focused.SpotId);
+                }
+                else if (FocusedDoor != null)
+                {
+                    client.TryUnlock(FocusedDoor.LockId);
                 }
             }
 
             if (keyboard.rKey.wasPressedThisFrame && Focused != null) client.Retrieve(Focused.SpotId);
         }
 
+        public static bool IsUnlocked(IGameClient client, string lockId) =>
+            client.Snapshot?.unlockedLocks != null && System.Array.IndexOf(client.Snapshot.unlockedLocks, lockId) >= 0;
+
         private void UpdateFocus()
         {
             var origin = view.transform.position;
             var forward = view.transform.forward;
+
+            FocusedDoor = Physics.Raycast(origin, forward, out var hit, maxDistance, ~0, QueryTriggerInteraction.Ignore)
+                ? LockedDoor.Find(hit.collider)
+                : null;
 
             NpcFocused = npc != null && Vector3.Distance(origin, npc.position) < npcDistance &&
                          Vector3.Angle(forward, npc.position + Vector3.up * 1.2f - origin) < 25f;

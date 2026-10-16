@@ -19,8 +19,11 @@ namespace MurderMystery.Core
         public IReadOnlyDictionary<string, ClueData> ClueById { get; }
         public IReadOnlyDictionary<string, CharacterData> CharacterById { get; }
         public IReadOnlyDictionary<string, TopicData> TopicById { get; }
+        public IReadOnlyDictionary<string, LockData> LockById { get; }
         public HashSet<string> PublicFacts { get; }
         public HashSet<string> AllFactIds { get; }
+        /// <summary>Resources folder the data came from (books live in its "books" subfolder).</summary>
+        public string Folder { get; private set; } = "Data";
 
         public GameData(string cluesJson, string charactersJson, string factsJson, string dialogueJson,
             string flowJson = null, string endingsJson = null)
@@ -47,6 +50,7 @@ namespace MurderMystery.Core
             ClueById = Clues.clues.ToDictionary(c => c.id);
             CharacterById = Characters.characters.ToDictionary(c => c.id);
             TopicById = Dialogue.topics.ToDictionary(t => t.id);
+            LockById = (Clues.locks ?? new LockData[0]).ToDictionary(l => l.id);
 
             PublicFacts = new HashSet<string>(Facts.facts.Where(f => f.scope == "Public").Select(f => f.id));
             PublicFacts.UnionWith(Clues.clues.Where(c => c.Kind == ClueKind.Public).Select(c => c.id));
@@ -60,11 +64,21 @@ namespace MurderMystery.Core
         {
             string Load(string name) => Resources.Load<TextAsset>($"{folder}/{name}").text;
             return new GameData(Load("clues"), Load("characters"), Load("facts"), Load("npc_dialogue"),
-                Load("flow"), Load("endings"));
+                Load("flow"), Load("endings")) { Folder = folder };
         }
+
+        /// <summary>
+        /// A scenario book as rich text: "common" for the shared introduction, or a character id. Each
+        /// client shows only its own seat's book (ScenarioBookExporter copies them from docs/scenario_books).
+        /// </summary>
+        public string Book(string id) => Resources.Load<TextAsset>($"{Folder}/books/{id}")?.text;
 
         public IEnumerable<ClueData> CluesAtSpot(string spotId) =>
             Clues.clues.Where(c => c.SpotIds.Contains(spotId));
+
+        /// <summary>The lock in front of a spot, if any.</summary>
+        public LockData LockOfSpot(string spotId) =>
+            (Clues.locks ?? new LockData[0]).FirstOrDefault(l => l.spotIds.Contains(spotId));
 
         public string RetrievedTraceText(string spotId) =>
             Clues.retrievedTraces.FirstOrDefault(t => t.spotId == spotId)?.text;

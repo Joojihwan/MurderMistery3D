@@ -11,7 +11,8 @@
       "title": "반쯤 남은 한약 사발",
       "text": "사랑방 작은 상 위의 한약 사발. 반쯤 남아 있다. 은비녀를 넣어 보니 검게 변했지만, 색이 아주 옅다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "E2",
@@ -24,7 +25,8 @@
       "title": "대감의 자세",
       "text": "대감은 서재 책상에 엎드린 채 숨져 있었다. 손에서 떨어진 붓이 바닥에 있다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "E3",
@@ -37,7 +39,8 @@
       "title": "다 타 버린 초",
       "text": "서재 촛대의 초가 끝까지 타서 꺼져 있다. 대감은 밤늦게까지 깨어 있었던 것 같다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "E4",
@@ -50,7 +53,8 @@
       "title": "검시 추정 사망 시각",
       "text": "도 검률의 검시에 따르면 대감이 숨진 때는 새벽 1시에서 3시 사이로 보인다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "E5",
@@ -63,7 +67,8 @@
       "title": "잠긴 중문",
       "text": "중문 빗장은 안쪽에서 걸려 있었다. 문지기는 밤새 중문을 연 사람이 없다고 했다. 도 검률은 밤 9시 반쯤 도착해 바깥채에서 잤다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "N1",
@@ -76,7 +81,8 @@
       "title": "많이 간 먹",
       "text": "책상 위 벼루에 먹이 잔뜩 갈려 있고, 구겨진 종이가 여러 장 있다. 대감은 밤새 무언가를 많이 쓴 것 같다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C4",
@@ -89,7 +95,8 @@
       "title": "문서함 속 목록",
       "text": "문서함 안에 대감 글씨의 목록이 있다. '다섯 통: 禮曹(예조) / 官衙(관아) / 査頓宅(사돈댁) / 粉伊(분이) / 許醫員(허 의원)'. 그런데 남아 있는 봉투는 두 통뿐이다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "D1",
@@ -102,7 +109,8 @@
       "title": "봉투: 査頓宅 (사돈댁)",
       "text": "대감의 도장으로 봉한 봉투. 겉봉에 '査頓宅'이라고 쓰여 있다.",
       "sealedText": "사돈어른께. 제 아들이 떠난 지 3년, 며느리는 한 번도 이 집을 원망하는 말을 입에 올린 적이 없습니다. 그래서 저는 그 아이가 괜찮은 줄 알았습니다. 오늘에야 그것이 제 눈이 어두워서였다는 것을 압니다. 낮에 열녀 표창을 청하겠다고 한 말은 거두겠습니다. 스물여덟 살 사람의 남은 날을 돌에 새기는 것은 효도도 예법도 아닙니다. 삼년상이 끝나는 대로 며느리를 친정으로 돌려보내 드리겠습니다. 그 뒤 그 아이가 새 길을 찾는다 해도, 이 집은 막지 않겠습니다. 시집올 때 가져온 재물은 모두 그 아이 몫으로 돌려드립니다. 부디 너그러이 받아 주십시오.",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "D2",
@@ -115,7 +123,8 @@
       "title": "봉투: 許醫員 (허 의원)",
       "text": "대감의 도장으로 봉한 봉투. 겉봉에 '許醫員'이라고 쓰여 있다.",
       "sealedText": "이 글은 내가 직접 쓴다. 올봄 허 의원이 내 병이 깊다고 알렸다. 집안과 친척들에게 숨기라고 한 것은 나다. 체면 때문이었다. 허 의원은 의원으로서 해야 할 말을 다 했고, 끝까지 내 부탁을 지켰을 뿐이다. 훗날 누가 허 의원을 탓한다면 이 글을 보여라. 아울러, 허 의원 아들의 약값은 내 장례가 끝난 뒤 우리 집 재산에서 갚아 주어라.",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C3b",
@@ -128,7 +137,8 @@
       "title": "서재 문턱의 진흙",
       "text": "서재 문턱에 진흙이 묻어 있다. 큰 신발 자국 일부가 보인다. 누군가 마당을 건너와 신을 신은 채 서재 안까지 들어왔다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C1",
@@ -141,7 +151,8 @@
       "title": "화로 속 타다 남은 종이",
       "text": "사랑방 화로 재 속에서 반쯤 탄 종이 조각이 나왔다. 단정한 붓글씨로 '…첩의 자식도 같은 임금의 백성이니…'라는 구절이 보인다. 무언가를 쌌던 것처럼 접힌 자국이 있고, 하얀 가루가 조금 묻어 있다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C5",
@@ -154,7 +165,8 @@
       "title": "바뀐 처방전",
       "text": "허 의원이 쓴 처방전. 어제 날짜다. 기존 처방에 기운을 북돋는 약재가 몇 가지 더해져 있다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C3a",
@@ -167,7 +179,8 @@
       "title": "마루 위 진흙 신발 자국",
       "text": "대청 계단에서 툇마루를 따라 서재 문까지, 큰 가죽신 자국이 한 줄로 이어져 있다. 마루에 오를 땐 디딤돌에 신을 벗는 게 예법인데, 이 사람은 신을 신은 채 올라갔다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C3c",
@@ -178,9 +191,10 @@
       "readable": false,
       "sealed": false,
       "title": "디딤돌의 진흙",
-      "text": "작은사랑 앞 디딤돌: 큰 가죽신(진신)에서 떨어진 진흙, 그리고 마른 진흙이 묻은 남자 신 한 켤레(재하의 신). 사랑방 앞 디딤돌: 여자 가죽신(당혜)의 진흙과 작은 짚신의 진흙.",
+      "text": "작은사랑 앞 디딤돌: 큰 가죽신(진신)에서 떨어진 진흙, 그리고 마른 진흙이 묻은 남자 신 한 켤레(재하의 신). 사랑방 앞 디딤돌: 여자 가죽신(당혜)의 진흙과 작은 짚신의 진흙. 사랑방 앞 섬돌에는 작은 짚신 자국보다 한결 큰 짚신 자국도 하나 찍혀 있고, 한쪽이 길게 미끄러져 있다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "N3",
@@ -193,7 +207,8 @@
       "title": "새로 채운 등잔 기름",
       "text": "사랑채 등잔들에 기름이 새로 채워져 있다. 빈 기름병은 작은사랑 문 앞에 놓여 있다. 어젯밤 누군가 창고에서 기름을 가져왔다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C2",
@@ -206,7 +221,8 @@
       "title": "건드린 쥐약 단지",
       "text": "창고 구석 쥐약(비상) 단지의 뚜껑이 비뚤게 닫혀 있고, 하얀 가루가 조금 흘러 있다. 바로 옆 바닥에 등잔 기름이 몇 방울 떨어져 있다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "N2",
@@ -219,7 +235,8 @@
       "title": "약탕관의 찌꺼기",
       "text": "부엌 약탕관에 어젯밤 한약 찌꺼기가 남아 있다. 은비녀를 넣어 봐도 색이 변하지 않는다. 달일 때는 독이 없었다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C6",
@@ -232,7 +249,8 @@
       "title": "의원의 약상자",
       "text": "허 의원의 약상자. 약재로 쓰는 비상이 조금 들어 있다. 줄었는지는 허 의원만 알 수 있다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C8",
@@ -245,7 +263,8 @@
       "title": "진흙투성이 진신",
       "text": "별당 툇마루에 진흙투성이 진신(비 오는 날 신는 기름 먹인 가죽신) 한 켤레가 벗어져 있다. 변 행수의 신이다.",
       "sealedText": "",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "H1",
@@ -258,7 +277,8 @@
       "title": "봉투: 粉伊 (분이)",
       "text": "대감의 도장으로 봉한 봉투. 겉봉에 '粉伊'라고 쓰여 있고, 한쪽에 한글로 작게 '분이'라고 적혀 있다.",
       "sealedText": "노비 분이를 오늘부로 노비 신분에서 풀어 평민이 되게 한다. 분이가 낳을 자식 또한 이 집과 상관없다. 몸값은 받지 않는다. 이 문서를 증거로 삼는다. — 덧붙임: 분이야. 너는 글을 모르니 누가 대신 읽어 주겠지. 미안하다. 너무 오래 기다리게 했다.",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "H2",
@@ -274,7 +294,8 @@
       "exposes": [
         "jeong.secret",
         "buni.secret"
-      ]
+      ],
+      "unlocks": ""
     },
     {
       "id": "H3",
@@ -289,7 +310,8 @@
       "sealedText": "",
       "exposes": [
         "jeong.secret"
-      ]
+      ],
+      "unlocks": ""
     },
     {
       "id": "H4",
@@ -302,7 +324,8 @@
       "title": "봉투: 禮曹 (예조)",
       "text": "대감의 도장으로 봉한 봉투. 겉봉에 '禮曹'라고 쓰여 있다. 봉인은 뜯기지 않았다.",
       "sealedText": "예조에 아룁니다. 저에게는 첩에게서 얻은 아들 재하가 있습니다. 장남이 죽어 대가 끊기게 되었으나, 먼 일가에서 양자를 들이는 대신 재하를 정식 아들로 올려 집안을 잇게 해 주시기를 청합니다. 재하는 어려서부터 글을 깨치고 행실이 바릅니다. 제가 그 아이를 자식이라 부르지 못한 것은 그 아이의 허물이 아니라 저의 허물입니다. 낮에 문중 앞에서 한 양자 이야기는, 이 청원이 받아들여지면 거두겠습니다. — (작은 쪽지) 재하야. 내일 아침 문중 회의에서 이 글을 먼저 읽을 생각이다. 너를 놀라게 하고 싶었다. 아비 노릇을 이렇게 늦게 하는구나.",
-      "exposes": []
+      "exposes": [],
+      "unlocks": ""
     },
     {
       "id": "C7",
@@ -317,7 +340,8 @@
       "sealedText": "",
       "exposes": [
         "jaeha.secret"
-      ]
+      ],
+      "unlocks": ""
     },
     {
       "id": "H5a",
@@ -328,11 +352,12 @@
       "readable": true,
       "sealed": false,
       "title": "대감의 거래 장부",
-      "text": "대감이 호조에 있던 10년 동안 나라에 바칠 물건을 변 행수에게 맡기고, 그 대가로 받은 돈이 날짜별로 적힌 장부.",
+      "text": "대감이 호조에 있던 10년 동안 나라에 바칠 물건을 변 행수에게 맡기고, 그 대가로 받은 돈이 날짜별로 적힌 장부. 납품 목록 가운데 '쥐약(비상) 열 근' 매매가 여러 번 적혀 있다.",
       "sealedText": "",
       "exposes": [
         "byeon.secret"
-      ]
+      ],
+      "unlocks": ""
     },
     {
       "id": "H5b",
@@ -347,7 +372,8 @@
       "sealedText": "고을 원님께. 제가 호조에 있던 10년 동안, 나라에 바칠 물건을 대는 일을 객주 변 아무개에게 맡기고 그 대가로 뇌물을 받았습니다. 장부는 따로 보냅니다. 변 아무개의 죄를 묻는다면, 먼저 제 죄를 물어 주십시오. 일을 주고 돈을 받은 것은 저입니다. 저는 깨끗한 관리가 아니었습니다. 제게 남은 날이 많지 않습니다. 이름을 지키려 거짓으로 살다 가는 것보다, 이름을 잃고 바르게 가는 쪽을 택합니다.",
       "exposes": [
         "byeon.secret"
-      ]
+      ],
+      "unlocks": ""
     },
     {
       "id": "H6",
@@ -362,7 +388,344 @@
       "sealedText": "",
       "exposes": [
         "heo.secret"
-      ]
+      ],
+      "unlocks": ""
+    },
+    {
+      "id": "E6",
+      "kind": "Public",
+      "spotId": "",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "검시: 이마의 멍",
+      "text": "대감의 이마 한가운데 멍이 들어 있다. 입가와 옷깃은 깨끗하고 토한 흔적이 없으며, 손발이 뒤틀린 흔적도 없다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "K1",
+      "kind": "Item",
+      "spotId": "19",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "사당 열쇠",
+      "text": "대감의 도포 소매 속에 있던 묵직한 놋쇠 열쇠. 손잡이에 '祠堂'(사당)이라 새겨져 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": "shrine"
+    },
+    {
+      "id": "T19",
+      "kind": "Trace",
+      "spotId": "19",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "도포 소매의 향내",
+      "text": "횃대에 걸린 대감의 도포 소매에서 향 냄새가 짙게 난다. 소매 끝이 빗물에 조금 젖었다 마른 자국이 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "S1",
+      "kind": "Item",
+      "spotId": "20",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "사당의 축문",
+      "text": "위패 앞에 놓인 축문. 먹이 채 마르기 전에 접은 듯 번졌다. \"…가문의 이름을 지킨다며 산 사람들을 묶어 두었나이다. 남은 날이 많지 않으니 오늘 밤 그 매듭을 풀고자 하옵니다. 부디 이 못난 자손을 꾸짖으시되, 아이들은 놓아주소서.\"",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "S2",
+      "kind": "Trace",
+      "spotId": "21",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "다 탄 향",
+      "text": "향로의 향이 끝까지 타서 재만 남았다. 향 길이로 보아 어젯밤 술시 무렵 피운 것이다. 마루에는 젖은 버선 자국이 한 줄, 들어오고 나간 것뿐이다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "X1",
+      "kind": "Item",
+      "spotId": "22",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "마루 밑의 침통",
+      "text": "툇마루 서쪽 끝 마루 밑에 떨어져 있던 침통. 은침이 가지런히 들어 있고 뚜껑 안쪽에 '許'라고 새겨져 있다. 겉에 진흙이 말라 붙었다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "X2",
+      "kind": "Item",
+      "spotId": "23",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "깨진 사발 조각",
+      "text": "부엌 뒤 수채에 버려진 백자 사발 조각. 탕약 사발과 같은 그릇이고, 안쪽에 탕약이 마른 얼룩이 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "X3",
+      "kind": "Item",
+      "spotId": "24",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "흰 가루 묻은 앞치마",
+      "text": "부엌 횃대에 걸린 분이의 앞치마. 앞자락과 소매 끝에 흰 가루가 잔뜩 묻어 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "X4",
+      "kind": "Item",
+      "spotId": "25",
+      "owner": "jaeha",
+      "layer": "Deep",
+      "readable": false,
+      "sealed": false,
+      "title": "마루 밑의 버선 한 짝",
+      "text": "대청 마루 밑 깊숙이 밀어 넣은 남자 버선 한 짝. 발이 큰 사람의 것이다. 깨끗하고 젖은 데가 없으며, 엄지 쪽에 흰 가루가 몇 알 붙어 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "X5",
+      "kind": "Item",
+      "spotId": "26",
+      "owner": "jeong",
+      "layer": "Deep",
+      "readable": true,
+      "sealed": false,
+      "title": "경대 속 약봉지",
+      "text": "건넌방 경대 서랍 깊은 곳의 약봉지. 겉에 정씨 오라비의 필체로 '한 숟갈이면 아침까지 깨지 않는다. 그날 밤 문지기에게.' 끈을 풀었다가 다시 묶은 흔적이 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "X6",
+      "kind": "Item",
+      "spotId": "15",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "부자 봉지",
+      "text": "허 의원 약상자 속 '附子'(부자) 봉지. 검게 법제한 덩이가 들었는데 절반쯤 비어 있다. 부자는 많이 쓰면 사람을 죽이는 약재다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "H5c",
+      "kind": "Item",
+      "spotId": "17",
+      "owner": "byeon",
+      "layer": "Deep",
+      "readable": true,
+      "sealed": false,
+      "title": "비상 견본 봉지",
+      "text": "변 행수 짐 속 작은 봉지. 겉에 '砒霜 見本'(비상 견본). 입구를 실로 감아 봉했다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "N4",
+      "kind": "Trace",
+      "spotId": "12",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "부엌 바닥의 흰 가루",
+      "text": "부엌 바닥과 쌀독 둘레에 흰 가루가 흩어져 있다. 누군가 쌀독을 깊이 헤집은 듯하다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M1",
+      "kind": "Item",
+      "spotId": "27",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "녹슨 열쇠",
+      "text": "우물가 돌 틈에 떨어져 있던 녹슨 열쇠. 손잡이에 새긴 글씨는 닳아서 읽을 수 없다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": "none"
+    },
+    {
+      "id": "M2",
+      "kind": "Trace",
+      "spotId": "28",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "비스듬한 독 뚜껑",
+      "text": "장독대 독 하나의 뚜껑이 비스듬히 열려 있다. 둘레에 고양이 발자국이 어지럽다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M3",
+      "kind": "Trace",
+      "spotId": "29",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "뒷간 앞 발자국",
+      "text": "뒷간 앞 진흙에 큰 진신 자국. 들어갔다 나온 자국이 한 번뿐이다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M4",
+      "kind": "Item",
+      "spotId": "30",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "부러진 합죽선",
+      "text": "대청 구석에 놓인 부러진 합죽선. 잔치 손님이 두고 간 것인 듯하다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M5",
+      "kind": "Item",
+      "spotId": "31",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "노리개 한 짝",
+      "text": "안마당 디딤돌 옆에 떨어진 노리개 한 짝. 매듭이 풀려 있다. 누구 것인지 알 수 없다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M6",
+      "kind": "Trace",
+      "spotId": "32",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "창호지의 구멍",
+      "text": "서재 뒤 창 창호지에 손가락 하나 들어갈 만한 구멍이 있다. 구멍 가장자리가 누렇게 바래 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "L1",
+      "kind": "Item",
+      "spotId": "33",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "대감의 일록 한 장",
+      "text": "궤짝 속 대감의 일록에서 떨어진 한 장. \"삼월. 허 의원이 이르기를 길어야 여름이라 한다. 남은 날에 할 일을 적는다. 하나, 아이들에게 지운 짐을 벗긴다. 하나, 내 허물을 감추지 않는다. 하나, 그 아이에게 끝내 하지 못한 말을 글로 남긴다.\"",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "L2",
+      "kind": "Item",
+      "spotId": "33",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "족보와 땅문서",
+      "text": "궤짝 맨 아래의 족보 한 권과 땅문서 꾸러미. 오래 손대지 않아 먼지가 앉았다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "K2",
+      "kind": "Item",
+      "spotId": "34",
+      "owner": "",
+      "layer": "Surface",
+      "readable": true,
+      "sealed": false,
+      "title": "곳간 궤짝 열쇠",
+      "text": "부엌 찬장 안쪽 못에 걸린 작은 열쇠. 꼬리표에 '庫 櫃'(곳간 궤짝).",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": "chest"
+    },
+    {
+      "id": "M7",
+      "kind": "Trace",
+      "spotId": "34",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "잔치 음식 목록",
+      "text": "찬장 문 안쪽에 붙은 잔치 음식 목록. 떡과 전, 술 몇 동이가 적혀 있다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
+    },
+    {
+      "id": "M8",
+      "kind": "Trace",
+      "spotId": "35",
+      "owner": "",
+      "layer": "Surface",
+      "readable": false,
+      "sealed": false,
+      "title": "작은사랑 횃대의 도포",
+      "text": "작은사랑 횃대에 걸린 재하의 도포. 바짝 말라 있고 빗물 자국이 없다.",
+      "sealedText": "",
+      "exposes": [],
+      "unlocks": ""
     }
   ],
   "retrievedTraces": [
@@ -397,6 +760,93 @@
     {
       "spotId": "06",
       "text": "서랍이 반쯤 열려 있고, 종이 한 장이 있던 자리가 비어 있다."
+    },
+    {
+      "spotId": "19",
+      "text": "도포 소매가 뒤집혀 있다. 누군가 소매 속을 뒤졌다."
+    },
+    {
+      "spotId": "22",
+      "text": "마루 밑 흙에 무언가 놓였던 자국이 남아 있다."
+    },
+    {
+      "spotId": "23",
+      "text": "수채 바닥에 사기 부스러기만 남아 있다."
+    },
+    {
+      "spotId": "24",
+      "text": "빈 횃대에 흰 가루가 조금 떨어져 있다."
+    },
+    {
+      "spotId": "25",
+      "text": "마루 밑 흙에 손을 넣어 휘저은 자국이 있다."
+    },
+    {
+      "spotId": "26",
+      "text": "경대 서랍이 반쯤 열려 있고 맨 안쪽이 비었다."
+    },
+    {
+      "spotId": "33",
+      "text": "궤짝 속 물건이 한쪽으로 쏠려 있고 빈자리가 있다."
+    },
+    {
+      "spotId": "34",
+      "text": "찬장 안쪽 못이 비어 있다."
+    }
+  ],
+  "locks": [
+    {
+      "id": "shrine",
+      "title": "사당 문",
+      "keyId": "K1",
+      "spotIds": [
+        "20",
+        "21"
+      ],
+      "lockedText": "사당 문이 잠겨 있다. 열쇠가 필요하다.",
+      "openedText": "사당 문의 자물쇠가 열렸다."
+    },
+    {
+      "id": "chest",
+      "title": "곳간 궤짝",
+      "keyId": "K2",
+      "spotIds": [
+        "33"
+      ],
+      "lockedText": "궤짝에 자물쇠가 채워져 있다. 열쇠가 필요하다.",
+      "openedText": "궤짝 자물쇠가 열렸다."
+    },
+    {
+      "id": "outer",
+      "title": "바깥마당",
+      "keyId": "",
+      "spotIds": [],
+      "lockedText": "열 수 없다. 도 검률이 바깥마당을 막아 두었다.",
+      "openedText": ""
+    },
+    {
+      "id": "westgate",
+      "title": "서쪽 대문",
+      "keyId": "",
+      "spotIds": [],
+      "lockedText": "열 수 없다. 대문이 밖에서 걸려 있다.",
+      "openedText": ""
+    },
+    {
+      "id": "barn",
+      "title": "헛간 마당 문",
+      "keyId": "",
+      "spotIds": [],
+      "lockedText": "열 수 없다. 헛간 마당 문은 대못으로 박혀 있다.",
+      "openedText": ""
+    },
+    {
+      "id": "eastgate",
+      "title": "동쪽 협문",
+      "keyId": "",
+      "spotIds": [],
+      "lockedText": "열 수 없다. 협문은 밖에서 빗장이 걸려 있다.",
+      "openedText": ""
     }
   ]
 }

@@ -1,43 +1,322 @@
 {
   "note": "Clue IDs in clues.json are facts too (knowing a clue = knowing its fact). This file lists the remaining facts: public knowledge and per-character memories from the scenario books.",
   "facts": [
-    { "id": "P_DECLARATION", "scope": "Public", "holders": [], "description": "환갑잔치에서 대감이 양자 입적(내일 아침 날인), 열녀 표창 청원, 장부 관청 이관, 분이 속량 보류를 선언함" },
-    { "id": "P_BUNI_BREWS", "scope": "Public", "holders": [], "description": "대감의 한약은 분이가 부엌에서 달여 사랑방으로 가져간다" },
-
-    { "id": "F_JEONG_BARRED_GATE", "scope": "Character", "holders": ["jeong"], "description": "저녁 7시 분이에게 중문 빗장을 걸게 함" },
-    { "id": "F_JEONG_GAVE_LETTER", "scope": "Character", "holders": ["jeong"], "description": "밤 10시 분이에게 친정 오빠 앞 편지를 맡김" },
-    { "id": "F_JEONG_SAW_BUNI_2250", "scope": "Character", "holders": ["jeong"], "description": "밤 10시 50분 빈손으로 안마당을 건너는 분이를 봄" },
-    { "id": "F_JEONG_BURNT_SMELL", "scope": "Character", "holders": ["jeong"], "description": "밤 11시 20분 사랑방에서 종이 탄 냄새, 한약은 손대지 않은 상태" },
-    { "id": "F_JEONG_SAW_DRINK", "scope": "Character", "holders": ["jeong"], "description": "밤 11시 30분 대감이 한약을 반쯤 마심 (정씨가 권함)" },
-    { "id": "F_JEONG_HEARD_TOMORROW", "scope": "Character", "holders": ["jeong"], "description": "대감: '네 일은 이미 정해 두었다. 내일 아침이면 알게 될 거다'" },
-    { "id": "F_JEONG_RATPOISON_KNOWN", "scope": "Character", "holders": ["jeong", "buni"], "description": "창고 구석에 쥐약(비상) 단지가 있다" },
-
-    { "id": "F_JAEHA_SAW_BYEON_2010", "scope": "Character", "holders": ["jaeha"], "description": "저녁 8시 10분 대청을 서성이는 변 행수를 봄" },
-    { "id": "F_JAEHA_TOOK_POISON", "scope": "Character", "holders": ["jaeha"], "description": "저녁 8시 30분 창고에서 비상을 덜어 청원서 초안 한 장에 쌈" },
-    { "id": "F_JAEHA_TOLD_LEDGER", "scope": "Character", "holders": ["jaeha"], "description": "밤 10시 변 행수에게 장부가 서재 문서함 아래 칸에 있다고 알려 줌" },
-    { "id": "F_JAEHA_POISONED", "scope": "Character", "holders": ["jaeha"], "description": "밤 11시 사랑방 한약에 비상을 타고 종이를 화로에 던짐" },
-    { "id": "F_JAEHA_HEARD_TOMORROW", "scope": "Character", "holders": ["jaeha"], "description": "벽 너머로 '내일 아침이면 알게 될 거다'를 들음" },
-    { "id": "F_JAEHA_HEARD_THUD", "scope": "Character", "holders": ["jaeha"], "description": "밤 12시 30분 서재에서 쿵 소리" },
-    { "id": "F_JAEHA_SAW_SKIRT_0048", "scope": "Character", "holders": ["jaeha"], "description": "밤 12시 48분 대청을 지나는 치맛자락 소리와 작은 그림자" },
-    { "id": "F_JAEHA_TOOK_YEJO", "scope": "Character", "holders": ["jaeha"], "description": "새벽 1시 서재에서 禮曹 봉투를 가져옴 (대감 숨 확인 안 함)" },
-    { "id": "F_JAEHA_HEARD_HEAVY_0130", "scope": "Character", "holders": ["jaeha"], "description": "새벽 1시 30분 무거운 발소리와 문서함 여닫는 소리" },
-
-    { "id": "F_BUNI_GOT_PACKET", "scope": "Character", "holders": ["buni"], "description": "저녁 8시 허 의원에게 새 약 봉지를 받음" },
-    { "id": "F_BUNI_SAW_JAEHA_OIL", "scope": "Character", "holders": ["buni"], "description": "저녁 8시 35분 창고에서 기름병을 들고 나오는 재하를 봄" },
-    { "id": "F_BUNI_DELIVERED_2245", "scope": "Character", "holders": ["buni"], "description": "밤 10시 45분 한약을 사랑방 상에 둠, 대감은 서재에서 글을 씀" },
-    { "id": "F_BUNI_ALIVE_0045", "scope": "Character", "holders": ["buni"], "description": "밤 12시 45분 서재에서 대감이 거친 숨을 쉬며 엎드려 있었음" },
-    { "id": "F_BUNI_TOOK_ENVELOPE", "scope": "Character", "holders": ["buni"], "description": "밤 12시 45분 문서함에서 '분이' 봉투를 가져와 쌀독에 숨김" },
-
-    { "id": "F_HEO_TERMINAL", "scope": "Character", "holders": ["heo"], "description": "대감은 속병으로 길어야 두어 달이었고, 봄부터 대감의 부탁으로 숨겨 옴" },
-    { "id": "F_HEO_CHANGED_PRESCRIPTION", "scope": "Character", "holders": ["heo"], "description": "저녁 7시 50분 기운을 돋우는 약재를 더해 처방을 바꿈" },
-    { "id": "F_HEO_SAW_BYEON_0145", "scope": "Character", "holders": ["heo"], "description": "새벽 1시 45분 비에 젖은 채 숨을 몰아쉬며 돌아온 변 행수, '화장실에 다녀왔소'" },
-    { "id": "F_HEO_FAINT_MEANS_SMALL", "scope": "Character", "holders": ["heo"], "description": "은비녀가 옅게 변하면 독의 양이 적다. 쇠약한 몸이면 적은 양으로도 죽을 수 있다" },
-    { "id": "F_HEO_OWN_ARSENIC", "scope": "Character", "holders": ["heo"], "description": "자기 약상자의 비상은 줄지 않았다" },
-
-    { "id": "F_BYEON_REFUSED_2000", "scope": "Character", "holders": ["byeon"], "description": "저녁 8시 대감에게 면담을 거절당함" },
-    { "id": "F_BYEON_ASKED_LEDGER", "scope": "Character", "holders": ["byeon"], "description": "밤 10시 재하에게 장부 위치를 들음" },
-    { "id": "F_BYEON_SHADOW_2305", "scope": "Character", "holders": ["byeon"], "description": "밤 11시 5분 사랑방 불빛 앞을 지나는 키 큰 남자 그림자, 갓을 안 씀" },
-    { "id": "F_BYEON_DEAD_0130", "scope": "Character", "holders": ["byeon"], "description": "새벽 1시 30분 서재에서 대감이 이미 숨이 없고 손이 차가웠음" },
-    { "id": "F_BYEON_TOOK_LEDGER", "scope": "Character", "holders": ["byeon"], "description": "새벽 1시 30분 장부와 官衙 봉투를 가져와 짐 보따리에 넣음" }
+    {
+      "id": "P_DECLARATION",
+      "scope": "Public",
+      "holders": [],
+      "description": "환갑잔치에서 대감이 양자 입적(내일 아침 날인), 열녀 표창 청원, 장부 관청 이관, 분이 속량 보류를 선언함"
+    },
+    {
+      "id": "P_BUNI_BREWS",
+      "scope": "Public",
+      "holders": [],
+      "description": "대감의 한약은 분이가 부엌에서 달여 사랑방으로 가져간다"
+    },
+    {
+      "id": "F_JEONG_BARRED_GATE",
+      "scope": "Character",
+      "holders": [
+        "jeong"
+      ],
+      "description": "저녁 7시 분이에게 중문 빗장을 걸게 함"
+    },
+    {
+      "id": "F_JEONG_GAVE_LETTER",
+      "scope": "Character",
+      "holders": [
+        "jeong"
+      ],
+      "description": "밤 10시 분이에게 친정 오빠 앞 편지를 맡김"
+    },
+    {
+      "id": "F_JEONG_SAW_BUNI_2250",
+      "scope": "Character",
+      "holders": [
+        "jeong"
+      ],
+      "description": "밤 10시 50분 빈손으로 안마당을 건너는 분이를 봄"
+    },
+    {
+      "id": "F_JEONG_BURNT_SMELL",
+      "scope": "Character",
+      "holders": [
+        "jeong"
+      ],
+      "description": "밤 11시 20분 사랑방에서 종이 탄 냄새, 한약은 손대지 않은 상태"
+    },
+    {
+      "id": "F_JEONG_SAW_DRINK",
+      "scope": "Character",
+      "holders": [
+        "jeong"
+      ],
+      "description": "밤 11시 30분 대감이 한약을 반쯤 마심 (정씨가 권함)"
+    },
+    {
+      "id": "F_JEONG_HEARD_TOMORROW",
+      "scope": "Character",
+      "holders": [
+        "jeong"
+      ],
+      "description": "대감: '네 일은 이미 정해 두었다. 내일 아침이면 알게 될 거다'"
+    },
+    {
+      "id": "F_JEONG_RATPOISON_KNOWN",
+      "scope": "Character",
+      "holders": [
+        "jeong",
+        "buni"
+      ],
+      "description": "창고 구석에 쥐약(비상) 단지가 있다"
+    },
+    {
+      "id": "F_JAEHA_SAW_BYEON_2010",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "저녁 8시 10분 대청을 서성이는 변 행수를 봄"
+    },
+    {
+      "id": "F_JAEHA_TOOK_POISON",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "저녁 8시 30분 창고에서 비상을 덜어 청원서 초안 한 장에 쌈"
+    },
+    {
+      "id": "F_JAEHA_TOLD_LEDGER",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "밤 10시 변 행수에게 장부가 서재 문서함 아래 칸에 있다고 알려 줌"
+    },
+    {
+      "id": "F_JAEHA_POISONED",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "밤 11시 사랑방 한약에 비상을 타고 종이를 화로에 던짐"
+    },
+    {
+      "id": "F_JAEHA_HEARD_TOMORROW",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "벽 너머로 '내일 아침이면 알게 될 거다'를 들음"
+    },
+    {
+      "id": "F_JAEHA_HEARD_THUD",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "밤 12시 30분 서재에서 쿵 소리"
+    },
+    {
+      "id": "F_JAEHA_SAW_SKIRT_0048",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "밤 12시 48분 대청을 지나는 치맛자락 소리와 작은 그림자"
+    },
+    {
+      "id": "F_JAEHA_TOOK_YEJO",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "새벽 1시 서재에서 禮曹 봉투를 가져옴 (대감 숨 확인 안 함)"
+    },
+    {
+      "id": "F_JAEHA_HEARD_HEAVY_0130",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "새벽 1시 30분 무거운 발소리와 문서함 여닫는 소리"
+    },
+    {
+      "id": "F_BUNI_GOT_PACKET",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "저녁 8시 허 의원에게 새 약 봉지를 받음"
+    },
+    {
+      "id": "F_BUNI_SAW_JAEHA_OIL",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "저녁 8시 35분 창고에서 기름병을 들고 나오는 재하를 봄"
+    },
+    {
+      "id": "F_BUNI_DELIVERED_2245",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "밤 10시 45분 한약을 사랑방 상에 둠, 대감은 서재에서 글을 씀"
+    },
+    {
+      "id": "F_BUNI_ALIVE_0045",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "밤 12시 45분 서재에서 대감이 거친 숨을 쉬며 엎드려 있었음"
+    },
+    {
+      "id": "F_BUNI_TOOK_ENVELOPE",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "밤 12시 45분 문서함에서 '분이' 봉투를 가져와 쌀독에 숨김"
+    },
+    {
+      "id": "F_HEO_TERMINAL",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "대감은 속병으로 길어야 두어 달이었고, 봄부터 대감의 부탁으로 숨겨 옴"
+    },
+    {
+      "id": "F_HEO_CHANGED_PRESCRIPTION",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "저녁 7시 50분 기운을 돋우는 약재를 더해 처방을 바꿈"
+    },
+    {
+      "id": "F_HEO_SAW_BYEON_0145",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "새벽 1시 45분 비에 젖은 채 숨을 몰아쉬며 돌아온 변 행수, '화장실에 다녀왔소'"
+    },
+    {
+      "id": "F_HEO_FAINT_MEANS_SMALL",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "은비녀가 옅게 변하면 독의 양이 적다. 쇠약한 몸이면 적은 양으로도 죽을 수 있다"
+    },
+    {
+      "id": "F_HEO_OWN_ARSENIC",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "자기 약상자의 비상은 줄지 않았다"
+    },
+    {
+      "id": "F_BYEON_REFUSED_2000",
+      "scope": "Character",
+      "holders": [
+        "byeon"
+      ],
+      "description": "저녁 8시 대감에게 면담을 거절당함"
+    },
+    {
+      "id": "F_BYEON_ASKED_LEDGER",
+      "scope": "Character",
+      "holders": [
+        "byeon"
+      ],
+      "description": "밤 10시 재하에게 장부 위치를 들음"
+    },
+    {
+      "id": "F_BYEON_SHADOW_2305",
+      "scope": "Character",
+      "holders": [
+        "byeon"
+      ],
+      "description": "밤 11시 5분 사랑방 불빛 앞을 지나는 키 큰 남자 그림자, 갓을 안 씀"
+    },
+    {
+      "id": "F_BYEON_DEAD_0130",
+      "scope": "Character",
+      "holders": [
+        "byeon"
+      ],
+      "description": "새벽 1시 30분 서재에서 대감이 이미 숨이 없고 손이 차가웠음"
+    },
+    {
+      "id": "F_BYEON_TOOK_LEDGER",
+      "scope": "Character",
+      "holders": [
+        "byeon"
+      ],
+      "description": "새벽 1시 30분 장부와 官衙 봉투를 가져와 짐 보따리에 넣음"
+    },
+    {
+      "id": "F_JEONG_SLEEP_DRUG",
+      "scope": "Character",
+      "holders": [
+        "jeong"
+      ],
+      "description": "경대 서랍의 약봉지는 오라비가 보낸 잠 오는 약. 집을 빠져나가는 날 문지기에게 먹이라고 했다. 밤 9시 40분쯤 꺼내 보다가 쓰지 않고 도로 넣음"
+    },
+    {
+      "id": "F_BUNI_BROKE_BOWL",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "밤 10시 30분쯤 탕약을 붓다가 첫 사발을 깨뜨려 조각을 부엌 뒤 수채에 버리고, 새 사발에 다시 부음"
+    },
+    {
+      "id": "F_BUNI_FLOUR",
+      "scope": "Character",
+      "holders": [
+        "buni"
+      ],
+      "description": "봉투를 쌀독에 숨길 때 앞치마와 부엌 바닥에 쌀가루가 묻음"
+    },
+    {
+      "id": "F_HEO_0015_VISIT",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "밤 12시 15분쯤 대감이 걱정되어 사랑채로 건너감. 사랑방 앞 섬돌에서 미끄러짐. 서재 문 너머 대감이 기침하며 '의원인가? 오늘은 그만 가 보게'. 들어가지 않고 돌아옴. 침통이 없어진 건 아침에야 앎"
+    },
+    {
+      "id": "F_HEO_BUJA",
+      "scope": "Character",
+      "holders": [
+        "heo"
+      ],
+      "description": "봄부터 대감 처방에 법제한 부자를 세 푼씩 써 왔다. 약이 되는 양이다. 부자에 중독되면 입이 저리고 토한다"
+    },
+    {
+      "id": "F_BYEON_SAMPLE",
+      "scope": "Character",
+      "holders": [
+        "byeon"
+      ],
+      "description": "객주 일로 쥐약용 비상을 사고판다. 견본 한 봉지를 늘 짐에 지닌다. 어젯밤 연 적 없다"
+    },
+    {
+      "id": "F_JAEHA_BEOSEON",
+      "scope": "Character",
+      "holders": [
+        "jaeha"
+      ],
+      "description": "새벽 1시 10분쯤 버선 엄지 쪽에 흰 가루가 묻은 것을 보고 한 짝을 벗어 대청 마루 밑에 밀어 넣음"
+    }
   ]
 }

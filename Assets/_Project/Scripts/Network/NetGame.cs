@@ -203,6 +203,7 @@ namespace MurderMystery.Network
 
         [Rpc(SendTo.Server)] private void InvestigateRpc(string spotId, RpcParams p = default) => Handle(p, id => gateway.Investigate(id, spotId));
         [Rpc(SendTo.Server)] private void RetrieveRpc(string spotId, RpcParams p = default) => Handle(p, id => gateway.RetrieveHidden(id, spotId));
+        [Rpc(SendTo.Server)] private void UnlockRpc(string lockId, RpcParams p = default) => Handle(p, id => gateway.TryUnlock(id, lockId));
         [Rpc(SendTo.Server)] private void OpenRpc(string clueId, RpcParams p = default) => Handle(p, id => gateway.OpenEnvelope(id, clueId));
         [Rpc(SendTo.Server)] private void DiscloseRpc(string clueId, RpcParams p = default) => Handle(p, id => gateway.Disclose(id, clueId));
         [Rpc(SendTo.Server)] private void GiveRpc(string toId, string itemId, RpcParams p = default) => Handle(p, id => gateway.Give(id, toId, itemId));
@@ -281,6 +282,7 @@ namespace MurderMystery.Network
 
         public void Investigate(string spotId) => InvestigateRpc(spotId);
         public void Retrieve(string spotId) => RetrieveRpc(spotId);
+        public void TryUnlock(string lockId) => UnlockRpc(lockId);
         public void Open(string clueId) => OpenRpc(clueId);
         public void Disclose(string clueId) => DiscloseRpc(clueId);
         public void Give(string toId, string itemId) => GiveRpc(toId, itemId);

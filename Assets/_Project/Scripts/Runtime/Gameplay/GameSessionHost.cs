@@ -79,6 +79,7 @@ namespace MurderMystery.Gameplay
 
         public void Investigate(string spotId) => Report(Gateway.Investigate(LocalId, spotId));
         public void Retrieve(string spotId) => Report(Gateway.RetrieveHidden(LocalId, spotId));
+        public void TryUnlock(string lockId) => Report(Gateway.TryUnlock(LocalId, lockId));
         public void Open(string clueId) => Report(Gateway.OpenEnvelope(LocalId, clueId));
         public void Disclose(string clueId) => Report(Gateway.Disclose(LocalId, clueId));
         public void Give(string toId, string itemId) => Report(Gateway.Give(LocalId, toId, itemId));

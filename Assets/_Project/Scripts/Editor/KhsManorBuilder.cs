@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MurderMystery.Core;
 using MurderMystery.Gameplay;
 using MurderMystery.Investigation;
 using MurderMystery.Level;
@@ -80,6 +81,25 @@ namespace MurderMystery.EditorTools
             S("16", "허 의원 봇짐", 10.3f, -28.9f, 0.4f, SpotLayer.Deep, "H6"),
             S("17", "변 행수 짐 보따리", 12.6f, -28.6f, 0.4f, SpotLayer.Deep, "H5a", "H5b"),
             S("18", "별당 툇마루 진신", 11.2f, -26.2f, 0.1f, SpotLayer.Surface, "C8"),
+            // v2 (docs/design/story_v2.md): keys, locked places, misleading and meaningless finds.
+            // A negative lift measures from the lowest surface (under a raised floor) instead of the top one.
+            S("19", "사랑방 의걸이장 (대감 도포)", 8.7f, -9.0f, 1.0f, SpotLayer.Surface, "K1", "T19"),
+            S("20", "사당 앞 제상", 12.6f, 19.8f, 0.5f, SpotLayer.Surface, "S1"),
+            S("21", "사당 향로", 11.6f, 19.8f, 0.4f, SpotLayer.Surface, "S2"),
+            S("22", "툇마루 끝 마루 밑", 5.0f, -13.7f, -0.15f, SpotLayer.Surface, "X1"),
+            S("23", "부엌 뒤 수채", -20.5f, 4.5f, -0.1f, SpotLayer.Surface, "X2"),
+            S("24", "부엌 횃대", -16.6f, 5.6f, 1.2f, SpotLayer.Surface, "X3"),
+            S("25", "대청 앞 마루 밑", 9.8f, -13.9f, -0.15f, SpotLayer.Deep, "X4"),
+            S("26", "건넌방 경대", -0.2f, 12.5f, 0.6f, SpotLayer.Deep, "X5"),
+            S("27", "우물가", -17.4f, 20.4f, 0.2f, SpotLayer.Surface, "M1"),
+            S("28", "장독대", -14.3f, 21.8f, 0.6f, SpotLayer.Surface, "M2"),
+            S("29", "뒷간 앞", 19.0f, -28.4f, 0.1f, SpotLayer.Surface, "M3"),
+            S("30", "대청 구석", 14.0f, -10.8f, 0.2f, SpotLayer.Surface, "M4"),
+            S("31", "안마당 디딤돌", -6.0f, 4.0f, 0.1f, SpotLayer.Surface, "M5"),
+            S("32", "서재 뒤 창", 10.9f, -7.6f, 1.1f, SpotLayer.Surface, "M6"),
+            S("33", "곳간 궤짝", -13.0f, -2.2f, 0.5f, SpotLayer.Surface, "L1", "L2"),
+            S("34", "부엌 찬장", -18.4f, 1.4f, 1.0f, SpotLayer.Surface, "K2", "M7"),
+            S("35", "작은사랑 의걸이장 (재하 도포)", 15.6f, -13.0f, 1.0f, SpotLayer.Surface, "M8"),
         };
 
         private static readonly Vector2 Discussion = new Vector2(8f, -18.5f);
@@ -115,6 +135,7 @@ namespace MurderMystery.EditorTools
             Physics.SyncTransforms();
             Debug.Log($"[KhsManorBuilder] {BuildDoorSteps(Group(root, "DoorSteps"), house)} stepping stones in front of high doors");
             BuildBlockers(Group(root, "Blockers"));
+            BuildLockedGates(Group(root, "Locks"), house);
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
             BuildSpots(Group(root, "InvestigationSpots"));
@@ -179,19 +200,42 @@ namespace MurderMystery.EditorTools
             }
         }
 
-        // Gates that stay shut (centre x, z): the compound's outer gates and the shrine. Every other door leaf,
-        // room door or inner gate, opens for whoever comes near.
-        private static readonly Vector2[] LockedGates =
+        // Gates that stay shut (centre x, z, lock in clues.json "locks"): the compound's outer gates and the
+        // shrine, which its key opens. Every other door leaf, room door or inner gate, opens for whoever comes near.
+        private static readonly (Vector2 at, string lockId)[] LockedGates =
         {
-            new Vector2(-38.0f, 0.7f),   // west outer gate
-            new Vector2(11.8f, 14.7f),   // shrine (사당) gate
-            new Vector2(22.6f, 30.1f),   // north-east gates to the barn yard
-            new Vector2(23.4f, 34.0f),
-            new Vector2(-2.05f, -17.4f), // 중문 to the outer yard (also behind a blocker)
+            (new Vector2(-38.0f, 0.7f), "westgate"),
+            (new Vector2(11.8f, 14.7f), "shrine"),     // 사당: 사당 열쇠
+            (new Vector2(22.6f, 30.1f), "barn"),       // north-east gates to the barn yard
+            (new Vector2(23.4f, 34.0f), "barn"),
+            (new Vector2(-2.05f, -17.4f), "outer"),    // 중문 to the outer yard (also behind a blocker)
         };
 
-        private static bool IsLockedGate(Vector3 leafCenter) =>
-            LockedGates.Any(g => Vector2.Distance(g, new Vector2(leafCenter.x, leafCenter.z)) < 1.2f);
+        private static bool IsLockedGate(Vector3 leafCenter) => LockedGateAt(leafCenter) != null;
+
+        private static string LockedGateAt(Vector3 leafCenter) =>
+            LockedGates.FirstOrDefault(g => Vector2.Distance(g.at, new Vector2(leafCenter.x, leafCenter.z)) < 1.2f).lockId;
+
+        /// <summary>One <see cref="LockedDoor"/> per lock, holding the leaves of its gates (they keep their colliders).</summary>
+        private static void BuildLockedGates(Transform p, Transform house)
+        {
+            var leaves = new Dictionary<string, List<Transform>>();
+            foreach (var mf in house.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (!IsDoorLeaf(mf.transform)) continue;
+                var id = LockedGateAt(mf.GetComponent<Renderer>().bounds.center);
+                if (id == null) continue;
+                var leaf = DoorLeafRoot(mf.transform);
+                if (!leaves.TryGetValue(id, out var list)) leaves[id] = list = new List<Transform>();
+                if (!list.Contains(leaf)) list.Add(leaf);
+            }
+            foreach (var pair in leaves)
+            {
+                var go = new GameObject($"Lock ({pair.Key})");
+                go.transform.SetParent(p, false);
+                go.AddComponent<LockedDoor>().Configure(pair.Key, pair.Value.ToArray());
+            }
+        }
 
         private static Transform DoorLeafRoot(Transform t)
         {
@@ -918,12 +962,14 @@ namespace MurderMystery.EditorTools
 
         private static void BuildBlockers(Transform p)
         {
-            foreach (var b in Blockers)
+            foreach (var (b, lockId) in Blockers)
             {
-                var go = new GameObject("Blocker");
+                var go = new GameObject($"Blocker ({lockId})");
                 go.transform.SetParent(p, false);
                 go.transform.position = new Vector3(b.x, 1.5f, b.y);
                 go.AddComponent<BoxCollider>().size = new Vector3(b.z, 3f, b.w);
+                // Looking at the invisible wall tells the player why they cannot go on.
+                go.AddComponent<LockedDoor>().Configure(lockId, null);
             }
         }
 
@@ -935,7 +981,8 @@ namespace MurderMystery.EditorTools
             {
                 var go = new GameObject($"Spot_{s.Id} ({s.Name})");
                 go.transform.SetParent(p, false);
-                go.transform.position = new Vector3(s.X, FloorY(s.X, s.Z) + s.Lift, s.Z);
+                var floor = s.Lift >= 0f ? FloorY(s.X, s.Z) : LowestFloorY(s.X, s.Z);
+                go.transform.position = new Vector3(s.X, floor + Mathf.Abs(s.Lift), s.Z);
                 go.AddComponent<InvestigationSpot>().Configure(s.Id, s.Name, s.Layer, s.Clues);
                 var col = go.AddComponent<SphereCollider>();
                 col.isTrigger = true;
@@ -951,6 +998,9 @@ namespace MurderMystery.EditorTools
         {
             public string Label;
             public float X, Z, Yaw, Above;   // Above: stand on top of another prop of this height
+            public float Scale;              // 0 = the asset's own size
+            public bool Under;               // on the ground under a raised floor, not on the floor
+            public bool Straddle;            // across a platform edge: stands on the highest floor under it
             public string[] Parts;           // multi-part furniture shares one origin
         }
 
@@ -987,6 +1037,23 @@ namespace MurderMystery.EditorTools
             Prop("15 허 의원 약상자", 9.6f, -28.0f, 0f, "SM_Chest_body", "SM_Chest_door", "SM_Chest_lock"),
             Prop("별당 방석 (허 의원)", 10.4f, -28.3f, 0f, "SM_FloorCusion"),
             Prop("별당 방석 (변 행수)", 12.4f, -28.3f, 0f, "SM_FloorCusion"),
+            Prop("19 사랑방 의걸이장", 8.7f, -8.85f, 180f, "SM_Cabinet238"),
+            new PropDef { Label = "20 사당 앞 제상", X = 12.6f, Z = 19.8f, Straddle = true, Parts = new[] { "SM_SquareTable" } },
+            PropOn("20 제상 위 촛대", 12.8f, 19.8f, 0.84f, "SM_Candlestick128"),
+            new PropDef { Label = "21 사당 향로", X = 11.6f, Z = 19.8f, Scale = 4f, Straddle = true, Parts = new[] { "SM_CeladonglazedSmall" } },
+            Prop("23 수채의 사발", -20.5f, 4.5f, 30f, "SM_WhitePorcelainDish"),
+            Prop("26 건넌방 경대", -0.25f, 12.6f, 270f, "SM_Cabinet237"),
+            Prop("27 우물가 바가지", -17.6f, 20.5f, 0f, "SM_ScoopedWoodenVessel"),
+            Prop("33 곳간 궤짝", -13.0f, -2.3f, 0f, "SM_Chest_body", "SM_Chest_door", "SM_Chest_lock"),
+            // Markers for finds lying about, so each spot shows something to look at.
+            new PropDef { Label = "22 마루 밑 침통", X = 5.0f, Z = -13.7f, Yaw = 20f, Under = true, Scale = 0.5f, Parts = new[] { "SM_WoodenSmoothingRollerw" } },
+            Prop("24 부엌 체와 앞치마", -16.6f, 5.6f, 0f, "SM_Sieve397"),
+            new PropDef { Label = "25 마루 밑 버선 자리", X = 9.8f, Z = -13.9f, Under = true, Parts = new[] { "SM_WoodenBowl_B" } },
+            Prop("28 장독대 뚜껑", -14.3f, 21.8f, 25f, "SM_WhitePorcelainLid"),
+            Prop("30 대청 구석 부채 자리", 14.0f, -10.8f, 0f, "SM_WoodenTray322"),
+            Prop("31 안마당 노리개 자리", -6.0f, 4.0f, 0f, "SM_WhitePorcelainDish194"),
+            Prop("34 부엌 찬장", -18.5f, 1.4f, 90f, "SM_CupBoard205_Body", "SM_CupBoard205_DoorL", "SM_CupBoard205_DoorR"),
+            Prop("35 작은사랑 의걸이장", 15.6f, -13.25f, 0f, "SM_Cabinet238"),
         };
 
         private static void BuildProps(Transform p)
@@ -1007,13 +1074,17 @@ namespace MurderMystery.EditorTools
                     PrefabUtility.InstantiatePrefab(prefab, holder);
                 }
                 holder.rotation = Quaternion.Euler(0f, def.Yaw, 0f);
+                if (def.Scale > 0f) holder.localScale = Vector3.one * def.Scale;
 
-                // Sit the lowest point of the piece on the floor (or on the prop it stands on).
-                var renderers = holder.GetComponentsInChildren<Renderer>();
+                // Sit the lowest point of the piece on the floor (or on the prop it stands on). Measured on the
+                // first part (the body): some door and drawer meshes have their pivot well below the body.
+                var renderers = holder.childCount > 0 ? holder.GetChild(0).GetComponentsInChildren<Renderer>() : new Renderer[0];
                 if (renderers.Length == 0) continue;
                 var bounds = renderers[0].bounds;
                 foreach (var rr in renderers) bounds.Encapsulate(rr.bounds);
-                var floor = FloorY(def.X, def.Z) + def.Above;
+                // The highest floor under any part of its footprint: a piece straddling a platform edge stands on it.
+                var floor = def.Under ? LowestFloorY(def.X, def.Z) + def.Above : !def.Straddle ? FloorY(def.X, def.Z) + def.Above : new[] { new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(-1f, 1f), new Vector2(1f, -1f), new Vector2(-1f, -1f) }
+                    .Select(o => FloorY(def.X + o.x * bounds.extents.x * 0.8f, def.Z + o.y * bounds.extents.z * 0.8f)).Max() + def.Above;
                 holder.position = new Vector3(def.X, floor - bounds.min.y, def.Z);
             }
         }
@@ -1059,6 +1130,14 @@ namespace MurderMystery.EditorTools
         }
 
         /// <summary>Highest walkable surface under a point, searched below ceiling height.</summary>
+        /// <summary>The lowest walkable surface at a point: the ground under a raised floor.</summary>
+        private static float LowestFloorY(float x, float z)
+        {
+            var hits = Physics.RaycastAll(new Vector3(x, 2.6f, z), Vector3.down, 5f, ~0, QueryTriggerInteraction.Ignore);
+            var floor = hits.Where(h => h.normal.y > 0.7f).OrderByDescending(h => h.distance).FirstOrDefault();
+            return floor.collider != null ? floor.point.y : 0f;
+        }
+
         private static float FloorY(float x, float z)
         {
             var hits = Physics.RaycastAll(new Vector3(x, 2.6f, z), Vector3.down, 5f, ~0, QueryTriggerInteraction.Ignore);
@@ -1083,6 +1162,27 @@ namespace MurderMystery.EditorTools
         public static string VerifyWalkability() => VerifyWalkability(0f, -4f, 42f);
 
         public static string VerifyWalkability(float mapX, float mapZ, float mapHalf)
+        {
+            // Checked with every lock that has a key opened (the shrine): what is behind it must be reachable
+            // then, and nothing beyond it may leak out.
+            var openable = new HashSet<string>(GameData.LoadFromResources().Clues.locks.Where(l => l.Openable).Select(l => l.id));
+            var opened = Object.FindObjectsByType<LockedDoor>(FindObjectsSortMode.None)
+                .Where(d => openable.Contains(d.LockId))
+                .SelectMany(d => d.Leaves.Where(l => l != null).SelectMany(l => l.GetComponentsInChildren<Collider>()))
+                .Where(c => c.enabled).ToList();
+            foreach (var c in opened) c.enabled = false;
+            try
+            {
+                return VerifyWalkabilityNow(mapX, mapZ, mapHalf);
+            }
+            finally
+            {
+                foreach (var c in opened) c.enabled = true;
+                Physics.SyncTransforms();
+            }
+        }
+
+        private static string VerifyWalkabilityNow(float mapX, float mapZ, float mapHalf)
         {
             Physics.SyncTransforms();
             var bounds = new Bounds(new Vector3(0f, 2f, -6f), new Vector3(120f, 12f, 140f));
@@ -1140,19 +1240,19 @@ namespace MurderMystery.EditorTools
             ("outside east", new Vector2(40f, 0f)),
             ("outside north", new Vector2(0f, 45f)),
             ("바깥마당 (outside the 중문)", new Vector2(-9f, -18f)),
-            ("사당", new Vector2(12f, 22f)),
+            ("헛간 마당", new Vector2(27f, 31.5f)),
         };
 
         // Invisible walls (centre x, z, size x, size z): the outer yard (바깥마당), which 도 검률 has closed
         // (the 중문 and the gap beside the thatched shed), and a side gate with no door leaf.
-        private static readonly Vector4[] Blockers =
+        private static readonly (Vector4 box, string lockId)[] Blockers =
         {
-            new Vector4(-2.1f, -17.2f, 0.6f, 2.4f),
+            (new Vector4(-2.1f, -17.2f, 0.6f, 2.4f), "outer"),
             // Gap between the thatched shed and the 행랑채 west arm. Reaches up to the shed's south edge: the yard
             // ground now ramps up to the stone footings there, so the old ledge no longer stops anyone.
-            new Vector4(-13.5f, -16.2f, 6.2f, 3.2f),
-            new Vector4(-11.0f, -12.8f, 0.5f, 4.4f), // the shed's open east side, from the yard wall's end down
-            new Vector4(18.8f, 27.9f, 1.4f, 2.6f),   // east side gate by the shrine, out to the thatched barn
+            (new Vector4(-13.5f, -16.2f, 6.2f, 3.2f), "outer"),
+            (new Vector4(-11.0f, -12.8f, 0.5f, 4.4f), "outer"),     // the shed's open east side, from the yard wall's end down
+            (new Vector4(18.8f, 27.9f, 1.4f, 2.6f), "eastgate"),    // east side gate by the shrine, out to the thatched barn
         };
 
         /// <summary>

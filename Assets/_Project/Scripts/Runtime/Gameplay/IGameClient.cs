@@ -22,6 +22,8 @@ namespace MurderMystery.Gameplay
 
         void Investigate(string spotId);
         void Retrieve(string spotId);
+        /// <summary>Try a locked door or container with the keys the player holds.</summary>
+        void TryUnlock(string lockId);
         void Open(string clueId);
         void Disclose(string clueId);
         void Give(string toId, string itemId);
