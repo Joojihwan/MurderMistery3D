@@ -145,6 +145,7 @@ namespace MurderMystery.EditorTools
             var house = ImportHouse(scene);
             house.position = new Vector3(0f, -KhsGroundY, 0f);
             FixColliders(house);
+            Debug.Log($"[KhsManorBuilder] {MirrorLatticeDoors(house)} lattice door leaves given their lattice on the inside too");
             Physics.SyncTransforms();
 
             var ceilings = new List<GroundSample>();
@@ -287,6 +288,47 @@ namespace MurderMystery.EditorTools
                 if (t.name.StartsWith("SM_Door") && !t.name.StartsWith("SM_DoorFrame")) root = t;
             return root;
         }
+
+        /// <summary>
+        /// The scanned lattice doors (창호, MI_Door01A) carry their lattice only on the outer face; seen from
+        /// inside they are a blank sheet of paper. Each gets a mirrored copy of its mesh behind the paper, so
+        /// both faces show the lattice. The paper side is the thin side with fewer vertices.
+        /// </summary>
+        private static int MirrorLatticeDoors(Transform root)
+        {
+            var count = 0;
+            foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true).ToList())
+            {
+                if (mf.sharedMesh == null || mf.name.StartsWith(LatticeCopy) || !IsDoorLeaf(mf.transform)) continue;
+                if (mf.transform.Find(LatticeCopy) != null) continue;
+                var renderer = mf.GetComponent<MeshRenderer>();
+                if (renderer == null || !renderer.sharedMaterials.Any(m => m != null && m.name.StartsWith("MI_Door01A"))) continue;
+
+                var mesh = mf.sharedMesh;
+                var b = mesh.bounds;
+                var k = b.size.x <= b.size.y && b.size.x <= b.size.z ? 0 : b.size.y <= b.size.z ? 1 : 2;
+                var low = mesh.vertices.Count(v => v[k] < b.center[k]);
+                var paperLow = low < mesh.vertexCount - low;
+                var plane = paperLow ? b.min[k] - 0.002f : b.max[k] + 0.002f;
+
+                var copy = new GameObject(LatticeCopy);
+                copy.transform.SetParent(mf.transform, false);
+                var scale = Vector3.one;
+                scale[k] = -1f;
+                var offset = Vector3.zero;
+                offset[k] = 2f * plane;
+                copy.transform.localScale = scale;
+                copy.transform.localPosition = offset;
+                copy.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var r = copy.AddComponent<MeshRenderer>();
+                r.sharedMaterials = renderer.sharedMaterials;
+                r.shadowCastingMode = renderer.shadowCastingMode;
+                count++;
+            }
+            return count;
+        }
+
+        private const string LatticeCopy = "Lattice (inner face)";
 
         private static bool IsDoorLeaf(Transform t)
         {
@@ -1375,6 +1417,7 @@ namespace MurderMystery.EditorTools
                 bounds = LocalBounds(holder, leaf.transform);
                 leaf.transform.localPosition += new Vector3(HallWall, HallFloor, door) - new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
                 foreach (var d in leaf.GetComponentsInChildren<ProximityDoor>()) Object.DestroyImmediate(d);
+                MirrorLatticeDoors(leaf.transform);
                 var colliders = new List<Collider>();
                 foreach (var f in leaf.GetComponentsInChildren<MeshFilter>())
                 {
