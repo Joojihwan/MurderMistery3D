@@ -57,8 +57,8 @@ namespace MurderMystery.Core
         public RoomManager(GameSession session)
         {
             this.session = session;
-            rooms.Add(new TalkRoom { Id = "small1", Name = "작은 방 (동)", Capacity = 3 });
-            rooms.Add(new TalkRoom { Id = "small2", Name = "작은 방 (서)", Capacity = 3 });
+            rooms.Add(new TalkRoom { Id = "small1", Name = "작은 방 (북)", Capacity = 3 });
+            rooms.Add(new TalkRoom { Id = "small2", Name = "작은 방 (남)", Capacity = 3 });
             rooms.Add(new TalkRoom { Id = "council", Name = "큰 방", Capacity = 5, Council = true });
             lastPhase = session.Phase;
             ApplyPhase();

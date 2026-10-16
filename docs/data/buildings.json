@@ -2087,7 +2087,5 @@
   {"group": "SealedRooms", "name": "Sealed (sealed_jaeha)", "center": [16.04, 1.89, -12.63], "size": [2.52, 1.14, 3.83], "bottom": 1.32},
   {"group": "SealedRooms", "name": "Sealed (sealed_jeong)", "center": [-1.61, 2.28, 12.65], "size": [4.98, 2.27, 8.41], "bottom": 1.14},
   {"group": "SealedRooms", "name": "Sealed (sealed_guests)", "center": [10.99, 2.86, -28.52], "size": [5.44, 1.35, 3.63], "bottom": 2.19},
-  {"group": "TalkRooms", "name": "Talk room (small2)", "center": [-25.04, 2.62, 33.19], "size": [5.18, 5.29, 5.55], "bottom": -0.03},
-  {"group": "TalkRooms", "name": "Talk room (small1)", "center": [-18.04, 2.62, 33.19], "size": [5.18, 5.29, 5.55], "bottom": -0.03},
-  {"group": "TalkRooms", "name": "Talk room (council)", "center": [-9.56, 3.94, 33.78], "size": [7.77, 7.94, 8.33], "bottom": -0.03}
+  {"group": "TalkRooms", "name": "밀담채 (talk house)", "center": [-17.02, 3.68, 32.84], "size": [19.34, 8.02, 10.92], "bottom": -0.33}
 ]

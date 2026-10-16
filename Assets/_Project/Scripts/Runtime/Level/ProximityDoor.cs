@@ -53,6 +53,13 @@ namespace MurderMystery.Level
             hinge.y = center.y;
         }
 
+        /// <summary>Back to closed at once (a gate shutting it while someone stands in the doorway).</summary>
+        public void CloseNow()
+        {
+            angle = target = 0f;
+            transform.SetPositionAndRotation(closedPosition, closedRotation);
+        }
+
         private void OnEnable() => Doors.Add(this);
         private void OnDisable() => Doors.Remove(this);
 

@@ -161,7 +161,7 @@ namespace MurderMystery.EditorTools
             BuildBarricades(Group(root, "Barricades"));
             BuildLockedGates(Group(root, "Locks"), house);
             Physics.SyncTransforms();
-            BuildTalkRooms(Group(root, "TalkRooms"), house);
+            BuildTalkHouse(Group(root, "TalkRooms"), house);
             BuildSealedRooms(Group(root, "SealedRooms"), house);
             BuildPartitions(Group(root, "Partitions"));
             Physics.SyncTransforms();
@@ -1199,110 +1199,296 @@ namespace MurderMystery.EditorTools
 
         // ---------------------------------------------------------------- private rooms (밀담 방)
 
-        // The 사당 building (its platform, walls, roof and four door leaves), copied for the private rooms.
-        private static readonly Rect ShrineArea = new Rect(9.6f, 18.5f, 5.4f, 5.9f);
-        // Template points (x, z in the 사당 as scanned): the room behind the doors and the porch outside them.
-        private static readonly Vector2 ShrineOrigin = new Vector2(12.25f, 21.35f);
-        private const float ShrineInteriorZ = 22.05f;
-        private const float ShrinePorchZ = 20.55f;
+        // The 밀담 house: a copy of the thatched house outside the south wall (a closed house with a 툇마루,
+        // a kitchen bay and one long room), half again as large, in the empty back yard north of the 안채.
+        // The long room becomes the hall (the council's big room, entered from the 툇마루); the kitchen bay is
+        // split into two small rooms whose doors open off the hall. Every door to the outside but the hall's
+        // is walled up.
+        //
+        // Positions below are in the template's own frame, unscaled: u along the house (west to east), v across
+        // it (front, the 툇마루 side, is -v), y the scanned height.
+        private static readonly Vector2 TemplateOrigin = new Vector2(10.89f, -49.36f);
+        private const float TemplateYaw = 11.2f;           // the template's long axis is turned this far from east
+        private const float TemplateGround = 0.07f;
+        private const float HouseScale = 1.5f;
+        private static readonly Vector2 HouseAt = new Vector2(-17f, 33f);
 
-        // The rooms, side by side in the empty back yard north of the 안채 (centre x, z; scale).
-        private static readonly (string id, Vector2 at, float scale, Vector2[] seats)[] TalkRooms =
+        private const float HallFloor = 0.99f;              // the 툇마루 boards; the rooms are floored level with them
+        private const float HouseCeiling = 2.95f;
+        private const float WestEnd = -4.64f, HallWall = -1.6f, EastEnd = 4.47f;   // post lines along u
+        private const float Front = -1.8f, HallFront = -0.87f, RoomSplit = 0.04f, Back = 1.87f;   // along v
+        private const float DoorWidth = 0.7f, DoorHeight = 1.52f;
+
+        // Small rooms: id, centre, door centre (along v on the partition); the hall seats the council.
+        private static readonly (string id, Vector2 centre, float door)[] SmallRooms =
         {
-            ("small2", new Vector2(-25.0f, 33.0f), 1.0f, new[] { new Vector2(-0.85f, 0f), new Vector2(0f, 0.35f), new Vector2(0.85f, 0f) }),
-            ("small1", new Vector2(-18.0f, 33.0f), 1.0f, new[] { new Vector2(-0.85f, 0f), new Vector2(0f, 0.35f), new Vector2(0.85f, 0f) }),
-            ("council", new Vector2(-9.5f, 33.5f), 1.5f, new[] { new Vector2(-0.95f, -0.15f), new Vector2(-0.5f, 0.35f), new Vector2(0.5f, 0.35f),
-                                                                  new Vector2(0.95f, -0.15f), new Vector2(0f, -0.4f) }),
+            ("small1", new Vector2(-3.12f, 0.95f), 0.95f),     // north (back) room
+            ("small2", new Vector2(-3.12f, -0.88f), -0.42f),   // south (front) room
         };
+        private static readonly Vector2 HallCentre = new Vector2(1.43f, 0.5f);
 
-        /// <summary>
-        /// Builds the private rooms (RoomManager): copies of the 사당 building, the council room half again as
-        /// large. Their doors are solid (no ProximityDoor): people go in and out only by the room rules and are
-        /// moved by RoomPresence to a seat inside or to the porch. The scan leaves the room behind the doors
-        /// without boards, so the porch floor is copied in there too.
-        /// </summary>
-        private static void BuildTalkRooms(Transform p, Transform house)
+        private static void BuildTalkHouse(Transform p, Transform house)
         {
-            var parts = new List<Transform>();
-            Transform porch = null;
+            var a = new Vector2(Mathf.Cos(TemplateYaw * Mathf.Deg2Rad), -Mathf.Sin(TemplateYaw * Mathf.Deg2Rad));
+            var n = new Vector2(-a.y, a.x);
+            Vector2 Local(Vector3 w)
+            {
+                var d = new Vector2(w.x - TemplateOrigin.x, w.z - TemplateOrigin.y);
+                return new Vector2(Vector2.Dot(d, a), Vector2.Dot(d, n));
+            }
+
+            var holder = new GameObject("밀담채 (talk house)").transform;
+            holder.SetParent(p, false);
+            holder.SetPositionAndRotation(new Vector3(TemplateOrigin.x, 0f, TemplateOrigin.y), Quaternion.Euler(0f, TemplateYaw, 0f));
+
+            // Copy the template's pieces (not the hedges or the chimney standing off its back).
+            var leaves = new List<Transform>();
             foreach (Transform piece in house)
             {
                 var renderers = piece.GetComponentsInChildren<Renderer>();
-                if (renderers.Length == 0) continue;
+                if (renderers.Length == 0 || piece.name.StartsWith("SM_Plant")) continue;
                 var b = renderers[0].bounds;
                 foreach (var r in renderers) b.Encapsulate(r.bounds);
-                if (!ShrineArea.Contains(new Vector2(b.center.x, b.center.z)) || Mathf.Max(b.size.x, b.size.z) > 7f) continue;
-                if (piece.name.StartsWith("SM_StoneWall") || piece.name.StartsWith("SM_Stonewall")) continue;
-                parts.Add(piece);
-                if (piece.name.StartsWith("SM_Floor") && b.center.z < ShrineOrigin.y) porch = piece;
+                var at = Local(b.center);
+                if (Mathf.Abs(at.x) > 6.2f || Mathf.Abs(at.y) > 3.2f || b.center.y > 6f) continue;
+                var copy = Object.Instantiate(piece.gameObject, piece.position, piece.rotation);
+                copy.name = piece.name;
+                copy.transform.SetParent(holder, true);
+                if (copy.GetComponentInChildren<ProximityDoor>() != null) leaves.Add(copy.transform);
             }
-            if (parts.Count == 0) return;
-            var baseY = parts.Min(t => t.GetComponentsInChildren<Renderer>().Min(r => r.bounds.min.y));
-            var origin = new Vector3(ShrineOrigin.x, baseY, ShrineOrigin.y);
 
-            foreach (var (id, at, scale, seatOffsets) in TalkRooms)
+            var wall = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_WhiteWall01A.mat");
+            var wood = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_Wood01A.mat");
+            var boards = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_Floor01A.mat");
+            var stone = AssetDatabase.LoadAssetAtPath<Material>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Material/MI_GidanStone01A.mat");
+
+            GameObject Box(string name, Vector3 min, Vector3 max, Material mat, bool solid = true)
             {
-                var holder = new GameObject($"Talk room ({id})").transform;
-                holder.SetParent(p, false);
-                holder.SetPositionAndRotation(origin, Quaternion.identity);
-                foreach (var part in parts)
-                {
-                    var copy = Object.Instantiate(part.gameObject, part.position, part.rotation);
-                    copy.name = part.name;
-                    copy.transform.SetParent(holder, true);
-                }
-                if (porch != null)
-                {
-                    var inside = Object.Instantiate(porch.gameObject, porch.position + new Vector3(0f, 0f, 1.42f), porch.rotation);
-                    inside.name = "Room floor";
-                    inside.transform.SetParent(holder, true);
-                }
-
-                // Solid doors: no opening when someone comes near.
-                var doors = new List<Collider>();
-                foreach (var door in holder.GetComponentsInChildren<ProximityDoor>(true).ToList())
-                {
-                    foreach (var mf in door.GetComponentsInChildren<MeshFilter>())
-                    {
-                        if (mf.sharedMesh == null) continue;
-                        if (!mf.TryGetComponent<MeshCollider>(out var mc)) mc = mf.gameObject.AddComponent<MeshCollider>();
-                        mc.sharedMesh = mf.sharedMesh;
-                        doors.Add(mc);
-                    }
-                    Object.DestroyImmediate(door);
-                }
-
-                var ground = FloorY(at.x, at.y);
-                holder.localScale = Vector3.one * scale;
-                holder.position = new Vector3(at.x, ground - 0.03f, at.y);
-                Physics.SyncTransforms();
-
-                Vector3 Local(float x, float z) => holder.position + new Vector3(x - ShrineOrigin.x, 0f, z - ShrineOrigin.y) * scale;
-                float FloorAt(Vector3 w) => Physics.RaycastAll(new Vector3(w.x, holder.position.y + 1.6f * scale, w.z), Vector3.down, 3f * scale,
-                        ~0, QueryTriggerInteraction.Ignore).Where(h => h.normal.y > 0.7f).OrderBy(h => h.distance)
-                    .Select(h => h.point.y).DefaultIfEmpty(ground).First();
-
-                var seats = new List<Transform>();
-                var middle = Local(ShrineOrigin.x, ShrineInteriorZ);
-                for (var i = 0; i < seatOffsets.Length; i++)
-                {
-                    var w = Local(ShrineOrigin.x + seatOffsets[i].x, ShrineInteriorZ + seatOffsets[i].y);
-                    var seat = new GameObject($"Seat {i + 1}").transform;
-                    seat.SetParent(holder, true);
-                    // Turned towards the middle of the room, so people face each other.
-                    var look = middle - w;
-                    look.y = 0f;
-                    var facing = look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.Euler(0f, 180f, 0f);
-                    seat.SetPositionAndRotation(new Vector3(w.x, FloorAt(w) + 0.05f, w.z), facing);
-                    seats.Add(seat);
-                }
-                var porchPoint = Local(ShrineOrigin.x, ShrinePorchZ);
-                var outside = new GameObject("Outside").transform;
-                outside.SetParent(holder, true);
-                outside.SetPositionAndRotation(new Vector3(porchPoint.x, FloorAt(porchPoint) + 0.05f, porchPoint.z), Quaternion.Euler(0f, 180f, 0f));
-
-                holder.gameObject.AddComponent<TalkRoomPlace>().Configure(id, seats.ToArray(), outside, doors.ToArray());
+                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                go.name = name;
+                if (!solid) Object.DestroyImmediate(go.GetComponent<Collider>());
+                go.transform.SetParent(holder, false);
+                go.transform.localPosition = (min + max) / 2f;
+                go.transform.localScale = max - min;
+                if (mat != null) go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+                return go;
             }
+            // A plastered wall between two points on a post line, with a wooden sill and head.
+            void Wall(string name, Vector2 from, Vector2 to, float bottom, float top)
+            {
+                const float t = 0.06f;
+                var min = new Vector3(Mathf.Min(from.x, to.x) - (from.x == to.x ? t : 0f), bottom, Mathf.Min(from.y, to.y) - (from.y == to.y ? t : 0f));
+                var max = new Vector3(Mathf.Max(from.x, to.x) + (from.x == to.x ? t : 0f), top, Mathf.Max(from.y, to.y) + (from.y == to.y ? t : 0f));
+                Box(name, min, max, wall);
+                var trim = new Vector3(from.x == to.x ? 0.02f : 0f, 0f, from.y == to.y ? 0.02f : 0f);
+                Box(name + " sill", new Vector3(min.x, bottom, min.z) - trim, new Vector3(max.x, bottom + 0.12f, max.z) + trim, wood, false);
+                if (top - bottom > 0.5f)
+                    Box(name + " rail", new Vector3(min.x, 2.2f, min.z) - trim, new Vector3(max.x, 2.3f, max.z) + trim, wood, false);
+            }
+
+            // Wall up every way out but the hall's own doors from the 툇마루.
+            foreach (var leaf in leaves.ToList())
+            {
+                var rs = leaf.GetComponentsInChildren<Renderer>();
+                var b = rs[0].bounds;
+                foreach (var r in rs) b.Encapsulate(r.bounds);
+                var at = Local(b.center);
+                var hallEntrance = Mathf.Abs(at.y - HallFront) < 0.15f && at.x > HallWall + 0.3f;
+                if (hallEntrance) continue;
+                // Fill the opening: the leaf's own extent in the house frame.
+                var corners = new List<Vector3>();
+                foreach (var mf in leaf.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (mf.sharedMesh == null) continue;
+                    var mb = mf.sharedMesh.bounds;
+                    for (var i = 0; i < 8; i++)
+                        corners.Add(holder.InverseTransformPoint(mf.transform.TransformPoint(new Vector3(
+                            (i & 1) == 0 ? mb.min.x : mb.max.x, (i & 2) == 0 ? mb.min.y : mb.max.y, (i & 4) == 0 ? mb.min.z : mb.max.z))));
+                }
+                var lo = new Vector3(corners.Min(c => c.x), corners.Min(c => c.y), corners.Min(c => c.z));
+                var hi = new Vector3(corners.Max(c => c.x), corners.Max(c => c.y), corners.Max(c => c.z));
+                var alongU = hi.x - lo.x > hi.z - lo.z;
+                var mid = (lo + hi) / 2f;
+                if (alongU) { lo.z = mid.z - 0.07f; hi.z = mid.z + 0.07f; }
+                else { lo.x = mid.x - 0.07f; hi.x = mid.x + 0.07f; }
+                Box("Walled-up door", lo, hi, wall);
+                leaves.Remove(leaf);
+                Object.DestroyImmediate(leaf.gameObject);
+            }
+
+            // Floors level with the 툇마루, and a ceiling under the rafters.
+            Box("Floor (hall and rooms)", new Vector3(WestEnd, HallFloor - 0.12f, HallFront), new Vector3(EastEnd, HallFloor, Back), boards);
+            Box("Porch boards", new Vector3(HallWall, HallFloor - 0.12f, Front), new Vector3(EastEnd, HallFloor, HallFront), boards);
+            Box("Floor (front room)", new Vector3(WestEnd, HallFloor - 0.12f, Front), new Vector3(HallWall, HallFloor, HallFront), boards);
+            Box("Ceiling", new Vector3(WestEnd, HouseCeiling, HallFront), new Vector3(EastEnd, HouseCeiling + 0.04f, Back), wall, false);
+            Box("Ceiling (front room)", new Vector3(WestEnd, HouseCeiling, Front), new Vector3(HallWall, HouseCeiling + 0.04f, HallFront), wall, false);
+
+            // The partition between the hall and the small rooms, with a door to each, and the wall between them.
+            var doorTop = HallFloor + DoorHeight;
+            var edges = new List<float> { HallFront };
+            foreach (var (_, _, door) in SmallRooms.OrderBy(r => r.door))
+            {
+                edges.Add(door - DoorWidth / 2f);
+                edges.Add(door + DoorWidth / 2f);
+            }
+            edges.Add(Back);
+            for (var i = 0; i + 1 < edges.Count; i += 2)
+                Wall("Partition", new Vector2(HallWall, edges[i]), new Vector2(HallWall, edges[i + 1]), HallFloor, HouseCeiling);
+            foreach (var (_, _, door) in SmallRooms)
+                Wall("Partition over door", new Vector2(HallWall, door - DoorWidth / 2f), new Vector2(HallWall, door + DoorWidth / 2f), doorTop, HouseCeiling);
+            Wall("Wall between the small rooms", new Vector2(WestEnd, RoomSplit), new Vector2(HallWall, RoomSplit), HallFloor, HouseCeiling);
+
+            // Stone steps up to the 툇마루 in front of the hall doors.
+            foreach (var (u0, u1) in new[] { (-0.8f, 0.65f), (2.4f, 3.5f) })
+                for (var i = 0; i < 4; i++)
+                {
+                    var top = HallFloor - 0.184f * (i + 1);
+                    Box($"Step {i + 1}", new Vector3(u0, TemplateGround - 0.2f, Front - 0.25f * (i + 1)), new Vector3(u1, top, Front), stone);
+                }
+
+            // While the council sits, the hall doors are shut: a collider in each doorway.
+            var entrances = leaves.Select(l => l.GetComponentInChildren<ProximityDoor>()).Where(d => d != null).ToArray();
+            var barriers = new List<Collider>();
+            foreach (var (u0, u1) in new[] { (-0.8f, 0.65f), (2.45f, 3.45f) })
+                barriers.Add(Box("Council barrier", new Vector3(u0, HallFloor, HallFront - 0.15f), new Vector3(u1, HallFloor + 2f, HallFront + 0.15f), null)
+                    .GetComponent<Collider>());
+            foreach (var b in barriers) Object.DestroyImmediate(b.GetComponent<MeshRenderer>());
+
+            // Door leaves of the small rooms (solid: the room rules let people in and out).
+            var leafPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(KhsAssetTools.Root + "/KimMyeonggwanHouse/Prefabs/SM_Door02B.prefab");
+            var roomDoors = new Dictionary<string, Collider[]>();
+            foreach (var (id, _, door) in SmallRooms)
+            {
+                var leaf = (GameObject)PrefabUtility.InstantiatePrefab(leafPrefab);
+                leaf.name = $"Door ({id})";
+                leaf.transform.SetParent(holder, false);
+                leaf.transform.localRotation = Quaternion.identity;
+                var mf = leaf.GetComponentInChildren<MeshFilter>();
+                var size = mf.sharedMesh.bounds.size;
+                if (size.x > size.z) leaf.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+                var bounds = LocalBounds(holder, leaf.transform);
+                var scaleUp = new Vector3(1f, DoorHeight / Mathf.Max(0.1f, bounds.size.y), 1f);
+                leaf.transform.localScale = Vector3.Scale(leaf.transform.localScale, scaleUp);
+                bounds = LocalBounds(holder, leaf.transform);
+                var width = bounds.size.z;
+                leaf.transform.localScale = Vector3.Scale(leaf.transform.localScale, new Vector3(1f, 1f, DoorWidth / Mathf.Max(0.1f, width)));
+                bounds = LocalBounds(holder, leaf.transform);
+                leaf.transform.localPosition += new Vector3(HallWall, HallFloor, door) - new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+                foreach (var d in leaf.GetComponentsInChildren<ProximityDoor>()) Object.DestroyImmediate(d);
+                var colliders = new List<Collider>();
+                foreach (var f in leaf.GetComponentsInChildren<MeshFilter>())
+                {
+                    if (!f.TryGetComponent<MeshCollider>(out var mc)) mc = f.gameObject.AddComponent<MeshCollider>();
+                    mc.sharedMesh = f.sharedMesh;
+                    colliders.Add(mc);
+                }
+                // A thin box too, so the doorway is shut even where the lattice leaves gaps.
+                var plug = Box($"Door plug ({id})", new Vector3(HallWall - 0.03f, HallFloor, door - DoorWidth / 2f), new Vector3(HallWall + 0.03f, doorTop, door + DoorWidth / 2f), null);
+                Object.DestroyImmediate(plug.GetComponent<MeshRenderer>());
+                colliders.Add(plug.GetComponent<Collider>());
+                roomDoors[id] = colliders.ToArray();
+            }
+
+            // Lamps, cushions and a low table, so the rooms look lived in and are not dark.
+            var cushion = AssetDatabase.LoadAssetAtPath<GameObject>(PropDir + "SM_FloorCusion.prefab");
+            var table = AssetDatabase.LoadAssetAtPath<GameObject>(PropDir + "SM_TongyeongTable.prefab");
+            void Lamp(string name, Vector2 at)
+            {
+                var go = new GameObject(name);
+                go.transform.SetParent(holder, false);
+                go.transform.localPosition = new Vector3(at.x, HouseCeiling - 0.35f, at.y);
+                var l = go.AddComponent<Light>();
+                l.type = LightType.Point;
+                l.color = new Color(1f, 0.82f, 0.6f);
+                l.intensity = 1.6f;
+                l.range = 6f;
+                l.shadows = LightShadows.None;
+            }
+            Lamp("Hall light", HallCentre);
+            if (table != null)
+            {
+                var t = (GameObject)PrefabUtility.InstantiatePrefab(table);
+                t.transform.SetParent(holder, false);
+                t.transform.localScale = Vector3.one / HouseScale;   // furniture keeps its size when the house grows
+                t.transform.localPosition = new Vector3(HallCentre.x, HallFloor, HallCentre.y);
+            }
+
+            Transform Point(string name, Vector2 at, Vector2 lookAt)
+            {
+                var t = new GameObject(name).transform;
+                t.SetParent(holder, false);
+                t.localPosition = new Vector3(at.x, HallFloor + 0.03f, at.y);
+                var look = new Vector3(lookAt.x - at.x, 0f, lookAt.y - at.y);
+                t.localRotation = look.sqrMagnitude > 0.001f ? Quaternion.LookRotation(look) : Quaternion.identity;
+                return t;
+            }
+            Transform[] Seats(string room, Vector2 centre, int count, float radius, float startDeg)
+            {
+                var seats = new Transform[count];
+                for (var i = 0; i < count; i++)
+                {
+                    var ang = (startDeg + i * 360f / count) * Mathf.Deg2Rad;
+                    var at = centre + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * radius;
+                    seats[i] = Point($"Seat {i + 1}", at, centre);
+                    if (cushion != null)
+                    {
+                        var c = (GameObject)PrefabUtility.InstantiatePrefab(cushion);
+                        c.transform.SetParent(seats[i], false);
+                        c.transform.localPosition = new Vector3(0f, -0.03f, 0f);
+                        c.transform.localScale = Vector3.one / HouseScale;
+                    }
+                }
+                return seats;
+            }
+
+            var places = new List<(GameObject go, string id, Transform[] seats, Transform outside, Collider[] doors)>();
+            var council = new GameObject("Talk room (council)");
+            council.transform.SetParent(holder, false);
+            council.transform.localPosition = new Vector3(HallCentre.x, HallFloor, HallCentre.y);
+            places.Add((council, "council", Seats("council", HallCentre, 5, 0.95f, 90f), Point("Outside", HallCentre, HallCentre), new Collider[0]));
+            foreach (var (id, centre, door) in SmallRooms)
+            {
+                var room = new GameObject($"Talk room ({id})");
+                room.transform.SetParent(holder, false);
+                room.transform.localPosition = new Vector3(centre.x, HallFloor, centre.y);
+                var outside = Point("Outside", new Vector2(HallWall + 0.55f, door), new Vector2(HallCentre.x, door));
+                places.Add((room, id, Seats(id, centre, 3, 0.55f, 0f), outside, roomDoors[id]));
+                Lamp($"Light ({id})", centre);
+            }
+
+            // Into place: straightened, half again as large, on the ground of the back yard.
+            var ground = FloorY(HouseAt.x, HouseAt.y);
+            holder.rotation = Quaternion.identity;
+            holder.localScale = Vector3.one * HouseScale;
+            holder.position = new Vector3(HouseAt.x, ground - TemplateGround * HouseScale - 0.03f, HouseAt.y);
+            Physics.SyncTransforms();
+
+            foreach (var (go, id, seats, outside, doors) in places)
+            {
+                foreach (var s in seats.Append(outside)) s.SetParent(go.transform, true);
+                go.AddComponent<TalkRoomPlace>().Configure(id, seats, outside, doors);
+            }
+            holder.gameObject.AddComponent<CouncilGate>().Configure(barriers.ToArray(), entrances);
+        }
+
+        /// <summary>The bounds of a piece's meshes in another transform's frame.</summary>
+        private static Bounds LocalBounds(Transform frame, Transform piece)
+        {
+            var first = true;
+            var result = new Bounds();
+            foreach (var mf in piece.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null) continue;
+                var mb = mf.sharedMesh.bounds;
+                for (var i = 0; i < 8; i++)
+                {
+                    var c = frame.InverseTransformPoint(mf.transform.TransformPoint(new Vector3(
+                        (i & 1) == 0 ? mb.min.x : mb.max.x, (i & 2) == 0 ? mb.min.y : mb.max.y, (i & 4) == 0 ? mb.min.z : mb.max.z)));
+                    if (first) { result = new Bounds(c, Vector3.zero); first = false; }
+                    else result.Encapsulate(c);
+                }
+            }
+            return result;
         }
 
         // ---------------------------------------------------------------- gameplay
