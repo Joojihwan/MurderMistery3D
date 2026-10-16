@@ -1039,7 +1039,6 @@ namespace MurderMystery.EditorTools
             Prop("별당 방석 (변 행수)", 12.4f, -28.3f, 0f, "SM_FloorCusion"),
             Prop("19 사랑방 의걸이장", 8.7f, -8.85f, 180f, "SM_Cabinet238"),
             new PropDef { Label = "20 사당 앞 제상", X = 12.6f, Z = 19.8f, Straddle = true, Parts = new[] { "SM_SquareTable" } },
-            PropOn("20 제상 위 촛대", 12.8f, 19.8f, 0.84f, "SM_Candlestick128"),
             new PropDef { Label = "21 사당 향로", X = 11.6f, Z = 19.8f, Scale = 4f, Straddle = true, Parts = new[] { "SM_CeladonglazedSmall" } },
             Prop("23 수채의 사발", -20.5f, 4.5f, 30f, "SM_WhitePorcelainDish"),
             Prop("26 건넌방 경대", -0.25f, 12.6f, 270f, "SM_Cabinet237"),
