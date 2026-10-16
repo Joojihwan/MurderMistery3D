@@ -249,6 +249,9 @@ namespace MurderMystery.EditorTools
             (new Vector2(14.0f, -26.5f), "storeroom"),
             (new Vector2(-9.5f, -0.2f), "storeroom"),
             (new Vector2(-8.1f, -1.6f), "storeroom"), // west doors of the 행랑채 room 도 검률 sleeps in
+            // Inner doors from a room down into a padlocked store room (a 0.9 m drop nobody could climb back up).
+            (new Vector2(-10.9f, -0.6f), "storeroom"),  // 곳간 → the bay beside it
+            (new Vector2(13.4f, -29.2f), "storeroom"),  // guests' room → the 행랑채 east arm store room
         };
 
         private static bool IsLockedGate(Vector3 leafCenter) => LockedGateAt(leafCenter) != null;
@@ -1696,13 +1699,13 @@ namespace MurderMystery.EditorTools
             new PropDef { Label = "21 사당 향로", X = 11.7f, Z = 19.45f, Scale = 4f, Parts = new[] { "SM_CeladonglazedSmall" } },
             Prop("23 수채의 사발", -20.5f, 4.5f, 30f, "SM_WhitePorcelainDish"),
             Prop("26 건넌방 경대", -0.25f, 12.6f, 270f, "SM_Cabinet237"),
-            Prop("27 우물가 바가지", -17.6f, 20.5f, 0f, "SM_ScoopedWoodenVessel"),
+            Prop("27 우물가 바가지", -17.2f, 20.1f, 0f, "SM_ScoopedWoodenVessel"),
             Prop("33 곳간 궤짝", -13.0f, -2.3f, 0f, "SM_Chest_body", "SM_Chest_door", "SM_Chest_lock"),
             // Markers for finds lying about, so each spot shows something to look at.
             new PropDef { Label = "22 마루 밑 침통", X = 5.0f, Z = -13.7f, Yaw = 20f, Under = true, Scale = 0.5f, Parts = new[] { "SM_WoodenSmoothingRollerw" } },
             Prop("24 부엌 체와 앞치마", -16.6f, 5.6f, 0f, "SM_Sieve397"),
             new PropDef { Label = "25 마루 밑 버선 자리", X = 9.8f, Z = -13.9f, Under = true, Parts = new[] { "SM_WoodenBowl_B" } },
-            Prop("28 장독대 뚜껑", -14.3f, 21.8f, 25f, "SM_WhitePorcelainLid"),
+            Prop("28 장독대 뚜껑", -14.0f, 21.3f, 25f, "SM_WhitePorcelainLid"),
             Prop("30 대청 구석 부채 자리", 14.0f, -10.8f, 0f, "SM_WoodenTray322"),
             Prop("31 안마당 노리개 자리", -6.0f, 4.0f, 0f, "SM_WhitePorcelainDish194"),
             Prop("34 부엌 찬장", -18.5f, 1.4f, 90f, "SM_CupBoard205_Body", "SM_CupBoard205_DoorL", "SM_CupBoard205_DoorR"),
@@ -2058,6 +2061,9 @@ namespace MurderMystery.EditorTools
         /// front of and behind the leaf. Returns one line per door: OK, BLOCKED (no path) or AROUND (only a
         /// long detour, i.e. the doorway itself is shut), with the gates marked.
         /// </summary>
+        /// <summary>VerifyDoors with every lock that opens during the game open: what stays shut is shut for good.</summary>
+        public static string VerifyDoorsWithLocksOpen() => WithLocksOpen(VerifyDoors);
+
         public static string VerifyDoors()
         {
             Physics.SyncTransforms();

@@ -2063,7 +2063,6 @@
   {"group": "DoorSteps", "name": "Door step stone (SM_Door01A)", "center": [7.55, 0.33, -50.28], "size": [1.06, 0.43, 0.52], "bottom": 0.12},
   {"group": "DoorSteps", "name": "Door step stone (SM_Door02B2)", "center": [-10.31, 0.59, -22.18], "size": [0.93, 0.59, 0.51], "bottom": 0.29},
   {"group": "DoorSteps", "name": "Door step stone (SM_Door02D)", "center": [-12.66, 0.69, -25.17], "size": [0.95, 0.60, 0.52], "bottom": 0.39},
-  {"group": "DoorSteps", "name": "Door step stone (SM_Door08A)", "center": [13.72, 0.90, -29.23], "size": [0.52, 0.57, 0.94], "bottom": 0.62},
   {"group": "DoorSteps", "name": "Door step stone (SM_Door02A14)", "center": [4.18, 0.66, -11.30], "size": [0.42, 0.60, 1.40], "bottom": 0.37},
   {"group": "DoorSteps", "name": "Door step stone (SM_Door04C4)", "center": [12.29, 0.28, 21.59], "size": [2.40, 0.56, 0.45], "bottom": 0.00},
   {"group": "DoorSteps", "name": "Door step stone (SM_Door03A2)", "center": [-27.16, -0.06, 11.63], "size": [3.07, 0.54, 0.49], "bottom": -0.33},

@@ -62,7 +62,7 @@ namespace MurderMystery.EditorTools
             var issues = DataValidator.Validate(data);
             var walk = Lines(KhsManorBuilder.VerifyWalkability());
             var pockets = Lines(KhsManorBuilder.VerifyPockets());
-            var doors = Lines(KhsManorBuilder.VerifyDoors());
+            var doors = Lines(KhsManorBuilder.VerifyDoorsWithLocksOpen());
             var duck = Lines(KhsManorBuilder.VerifyDuckOnly());
             var (floating, buried) = SurveyGrounding();
             var furniture = Props().Where(p => p.Contains("\"flag\"")).ToList();
@@ -85,7 +85,7 @@ namespace MurderMystery.EditorTools
             File.WriteAllText(Path.Combine(OutDir, "checks.json"), sb.ToString());
 
             return $"data issues {issues.Count}; walk problems {walkBad.Count}; {pockets.FirstOrDefault()}; doors not OK {doorBad.Count} " +
-                   $"(gates and locks are expected); floating {floating.Count}; buried {buried.Count}; furniture flags {furniture.Count}; hidden clues {hidden.Count}";
+                   $"(locked for good: outer gates, store rooms, 밀담 rooms); floating {floating.Count}; buried {buried.Count}; furniture flags {furniture.Count}; hidden clues {hidden.Count}";
         }
 
         // ------------------------------------------------------------------ records
